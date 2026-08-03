@@ -597,3 +597,35 @@ rg "@EventListener" server/
 - **OpenSkills**: https://agents.md/ (skill package format reference)
 - **OpenClaw**: https://github.com/openclaw/openclaw (CLI compatibility)
 - **AstronClaw**: https://agent.xfyun.cn/astron-claw (cloud AI assistant integration)
+
+## Downstream Frontend-Only Boundary
+
+This section governs all custom implementation work in this downstream repository and takes
+precedence over the upstream-oriented workflows above whenever they conflict.
+
+- This repository is an unofficial frontend-only downstream distribution of SkillHub.
+- The backend is an independently deployed official SkillHub service; it is not built or
+  deployed from this repository.
+- Custom implementation work may modify only:
+  - `web/**`
+  - `docs/downstream/**`
+  - explicitly approved repository governance files
+- Custom implementation work must never modify:
+  - `server/**`
+  - `cli/**`
+  - `scanner/**`
+  - `deploy/**`
+  - `monitoring/**`
+  - backend authentication or authorization
+  - backend APIs
+  - backend database or storage behavior
+  - `web/src/api/generated/**`
+- Non-frontend changes are allowed only when they arrive unchanged from an official upstream
+  synchronization process.
+- If a requested feature appears to require backend modification, stop and report the
+  limitation instead of editing backend code.
+- The only deployable downstream product artifact is the frontend static output produced
+  from `web/`.
+- Internal hosts, IP addresses, credentials, tokens, passwords, cookies, and private
+  deployment configuration must never be committed.
+- Repository instructions must be read before any code change.

@@ -1,0 +1,78 @@
+name: Frontend Boundary
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  frontend-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check changed file paths
+        uses: actions/github-script@v9
+        with:
+          script: |
+            // Paths that ordinary downstream PRs must never touch. Evaluated first.
+            const rejectPatterns = [
+              /^server\//,
+              /^cli\//,
+              /^scanner\//,
+              /^deploy\//,
+              /^monitoring\//,
+              /^web\/src\/api\/generated\//,
+              /^compose[^/]*\.ya?ml$/,
+              /^docker-compose[^/]*\.ya?ml$/,
+            ];
+
+            // The only paths an ordinary downstream PR may modify.
+            const allowPatterns = [
+              /^web\//,
+              /^docs\/downstream\//,
+              /^AGENTS\.md$/,
+              /^\.github\/CODEOWNERS$/,
+              /^\.github\/pull_request_template\.md$/,
+              /^\.github\/workflows\/(frontend-boundary|web-build|upstream-integrity)\.yml$/,
+            ];
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const changedFiles = files.map((file) => file.filename);
+            core.info(`Changed files (${changedFiles.length}):`);
+            for (const filename of changedFiles) {
+              core.info(`- ${filename}`);
+            }
+
+            const explicitlyRejected = changedFiles.filter((filename) =>
+              rejectPatterns.some((pattern) => pattern.test(filename)),
+            );
+
+            const notAllowed = changedFiles.filter(
+              (filename) => !allowPatterns.some((pattern) => pattern.test(filename)),
+            );
+
+            const rejected = [...new Set([...explicitlyRejected, ...notAllowed])];
+
+            if (rejected.length > 0) {
+              core.setFailed(
+                'Ordinary downstream PRs are frontend-only. Rejected paths:\n' +
+                  rejected.map((filename) => `- ${filename}`).join('\n'),
+              );
+              return;
+            }
+
+            core.info('All changed files are within the approved frontend-only boundary.');
