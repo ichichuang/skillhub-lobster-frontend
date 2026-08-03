@@ -1,0 +1,18 @@
+upstream:
+  repository: https://github.com/iflytek/skillhub
+  branch: main
+  baseline_tag: v0.2.13
+  baseline_commit: e32f05b375379d887bd3766b40f993c70d39db54
+
+downstream:
+  repository: https://github.com/ichichuang/skillhub-lobster-frontend
+  default_branch: main
+  official_mirror_branch: official-main
+  recovery_branch: bootstrap-main
+  deployable_component: web
+  customization_scope: frontend-only
+
+backend:
+  ownership: independently-deployed-official
+  compatibility_status: provisional
+  compatibility_reason: deployed backend version has not been independently verified
