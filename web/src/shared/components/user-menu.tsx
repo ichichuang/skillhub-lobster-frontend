@@ -142,7 +142,7 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
         >
           <div
             role="menu"
-            className="overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+            className="overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-popover"
           >
             <Link to="/dashboard" className={menuItemClassName} onClick={closeMenu}>
               {t('user.menu.dashboard')}

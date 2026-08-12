@@ -5,6 +5,11 @@ import { useUnreadCount } from './use-notifications'
 import { useNotificationSse } from './use-notification-sse'
 import { NotificationDropdown } from './notification-dropdown'
 
+export const NOTIFICATION_BELL_CLASS_NAME =
+  'relative flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-surface-hover'
+export const NOTIFICATION_BADGE_CLASS_NAME =
+  'absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-0.5 text-[10px] font-semibold leading-none text-destructive-foreground'
+
 export function resolveNotificationUserId(user?: { userId?: string } | null) {
   return user?.userId
 }
@@ -45,7 +50,7 @@ export function NotificationBell() {
         type="button"
         aria-label={t('notification.title')}
         onClick={() => setOpen((v) => !v)}
-        className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 transition-colors"
+        className={NOTIFICATION_BELL_CLASS_NAME}
       >
         {/* Bell SVG */}
         <svg
@@ -67,7 +72,7 @@ export function NotificationBell() {
         {/* Unread badge */}
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-semibold leading-none"
+            className={NOTIFICATION_BADGE_CLASS_NAME}
             aria-label={`${unreadCount} unread`}
           >
             {badgeLabel}

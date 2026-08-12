@@ -83,9 +83,9 @@ export const FileTreeNodeComponent = memo(function FileTreeNodeComponent({
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         )}
         {isExpanded ? (
-          <FolderOpen className="h-4 w-4 text-amber-500 flex-shrink-0" />
+          <FolderOpen className="h-4 w-4 flex-shrink-0 text-warning" />
         ) : (
-          <Folder className="h-4 w-4 text-amber-500 flex-shrink-0" />
+          <Folder className="h-4 w-4 flex-shrink-0 text-warning" />
         )}
         <span className="font-mono text-sm text-foreground truncate">{node.name}</span>
       </div>

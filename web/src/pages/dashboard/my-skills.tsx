@@ -12,9 +12,12 @@ import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { Pagination } from '@/shared/components/pagination'
 import { useArchiveSkill, useUnarchiveSkill, useWithdrawSkillReview } from '@/shared/hooks/use-skill-queries'
 import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
-import { useMySkills, useSubmitPromotion } from '@/shared/hooks/use-user-queries'
+import { useAllMyPublishedSkills, useMySkills, useSubmitPromotion } from '@/shared/hooks/use-user-queries'
+import { useVisibleLabels } from '@/shared/hooks/use-label-queries'
+import { useLocalPublishedLabelMembership } from '@/shared/hooks/use-local-published-catalog'
 import { useDebounce } from '@/shared/hooks/use-debounce'
 import { getHeadlineVersion, getPublishedVersion, getOwnerPreviewVersion, hasPendingOwnerPreview } from '@/shared/lib/skill-lifecycle'
+import { createLocalPublishedSearchPage } from '@/shared/lib/local-published-catalog'
 import { formatCompactCount } from '@/shared/lib/number-format'
 import { toast } from '@/shared/lib/toast'
 import { buildReturnTo } from '@/shared/lib/auth-route'
@@ -23,6 +26,7 @@ import { getMySkillEmptyStateKey, getMySkillFilters, type MySkillFilter } from '
 
 const PAGE_SIZE = 10
 const ALL_NAMESPACES_VALUE = '__all_namespaces__'
+const ALL_LABELS_VALUE = '__all_labels__'
 
 /**
  * Dashboard page for skills owned by the current user.
@@ -45,7 +49,7 @@ export function MySkillsPage() {
   const location = useLocation()
   const search = useSearch({ from: '/dashboard/skills' })
   const { t } = useTranslation()
-  const { hasRole } = useAuth()
+  const { user, isLoading: isAuthLoading, hasRole } = useAuth()
 
   // The URL is the source of truth for page / filter / namespace / keyword so the
   // search context survives navigating into a skill and back via the returnTo link.
@@ -53,6 +57,8 @@ export function MySkillsPage() {
   const filter = (search.filter as MySkillFilter) ?? 'ALL'
   const namespaceFilter = search.namespace ?? ''
   const keyword = search.q ?? ''
+  const selectedLabel = filter === 'PUBLISHED' ? search.label ?? '' : ''
+  const hasSelectedLabel = selectedLabel !== ''
 
   // Keep an instant-feedback copy of the keyword input, debounced before it is
   // pushed to the URL so each keystroke does not create a history entry or query.
@@ -84,19 +90,51 @@ export function MySkillsPage() {
     setKeywordInput(keyword)
   }, [keyword])
 
-  const { data: skillPage, isLoading } = useMySkills({
+  useEffect(() => {
+    if (filter !== 'PUBLISHED' && search.label) {
+      updateSearch({ label: undefined }, { replace: true })
+    }
+  }, [filter, search.label, updateSearch])
+
+  const mySkillsQuery = useMySkills({
     page,
     size: PAGE_SIZE,
     filter: filter === 'ALL' ? undefined : filter,
     q: keyword || undefined,
     namespace: namespaceFilter || undefined,
-  })
+  }, !hasSelectedLabel)
+  const completePublishedQuery = useAllMyPublishedSkills({
+    q: keyword || undefined,
+    namespace: namespaceFilter || undefined,
+  }, hasSelectedLabel)
+  const labelMembershipQuery = useLocalPublishedLabelMembership(
+    hasSelectedLabel && user ? selectedLabel : undefined,
+    user?.userId,
+  )
+  const { data: visibleLabels } = useVisibleLabels(filter === 'PUBLISHED')
   const { data: namespaceOptions } = useMyNamespaces()
 
+  const labelFilteredPage = hasSelectedLabel
+    && completePublishedQuery.data !== undefined
+    && labelMembershipQuery.data !== undefined
+    ? createLocalPublishedSearchPage(completePublishedQuery.data, {
+        labelMembership: labelMembershipQuery.data,
+        page,
+        size: PAGE_SIZE,
+      })
+    : undefined
+  const skillPage = hasSelectedLabel ? labelFilteredPage : mySkillsQuery.data
+  const isLoading = hasSelectedLabel
+    ? isAuthLoading || completePublishedQuery.isLoading || labelMembershipQuery.isLoading
+    : mySkillsQuery.isLoading
+  const isLabelFilterError = hasSelectedLabel
+    && (completePublishedQuery.isError || labelMembershipQuery.isError)
   const skills = skillPage?.items ?? []
-  const totalPages = skillPage ? Math.max(Math.ceil(skillPage.total / skillPage.size), 1) : 1
+  const totalPages = skillPage && skillPage.size > 0
+    ? Math.max(Math.ceil(skillPage.total / skillPage.size), 1)
+    : 1
   const availableFilters = getMySkillFilters(hasRole('SUPER_ADMIN'))
-  const hasActiveSearch = keyword.trim() !== '' || namespaceFilter !== ''
+  const hasActiveSearch = keyword.trim() !== '' || namespaceFilter !== '' || hasSelectedLabel
   const emptyStateKey = getMySkillEmptyStateKey(filter)
   const archiveMutation = useArchiveSkill()
   const unarchiveMutation = useUnarchiveSkill()
@@ -112,7 +150,7 @@ export function MySkillsPage() {
 
   const handleClearSearch = () => {
     setKeywordInput('')
-    updateSearch({ q: undefined, namespace: undefined, page: 0 })
+    updateSearch({ q: undefined, namespace: undefined, label: undefined, page: 0 })
   }
 
   const handleUpdateSkill = (namespace: string, visibility?: string) => {
@@ -320,6 +358,26 @@ export function MySkillsPage() {
               ))}
             </SelectContent>
           </Select>
+          {filter === 'PUBLISHED' ? (
+            <Select
+              value={selectedLabel || ALL_LABELS_VALUE}
+              onValueChange={(value) => {
+                updateSearch({ label: value === ALL_LABELS_VALUE ? undefined : value, page: 0 })
+              }}
+            >
+              <SelectTrigger aria-label={t('mySkills.categoryFilterLabel')} className="sm:max-w-[14rem]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_LABELS_VALUE}>{t('mySkills.categoryFilterAll')}</SelectItem>
+                {(visibleLabels ?? []).map((label) => (
+                  <SelectItem key={label.slug} value={label.slug}>
+                    {label.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
           {hasActiveSearch ? (
             <Button
               type="button"
@@ -340,7 +398,11 @@ export function MySkillsPage() {
               size="sm"
               variant={filter === option ? 'default' : 'outline'}
               onClick={() => {
-                updateSearch({ filter: option === 'ALL' ? undefined : option, page: 0 })
+                updateSearch({
+                  filter: option === 'ALL' ? undefined : option,
+                  label: option === 'PUBLISHED' ? selectedLabel || undefined : undefined,
+                  page: 0,
+                })
               }}
             >
               {t(`mySkills.filters.${option}`)}
@@ -349,7 +411,14 @@ export function MySkillsPage() {
         </div>
       </div>
 
-      {skillPage && skillPage.total > 0 ? (
+      {isLabelFilterError ? (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-6 text-sm text-destructive"
+        >
+          {t('mySkills.loadError')}
+        </div>
+      ) : skillPage && skillPage.total > 0 ? (
         <>
           <div className="grid grid-cols-1 gap-4">
             {skills.map((skill, idx) => (

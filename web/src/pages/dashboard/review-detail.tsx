@@ -211,13 +211,13 @@ function ReviewDetailScreen({
             <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t('review.status')}</Label>
             <p className="font-semibold">
               {review.status === 'PENDING' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-sm">{t('review.statusPending')}</span>
+                <span className="rounded-full bg-warning-surface px-2.5 py-0.5 text-sm text-warning">{t('review.statusPending')}</span>
               )}
               {review.status === 'APPROVED' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-sm">{t('review.statusApproved')}</span>
+                <span className="rounded-full bg-success-surface px-2.5 py-0.5 text-sm text-success">{t('review.statusApproved')}</span>
               )}
               {review.status === 'REJECTED' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-400 text-sm">{t('review.statusRejected')}</span>
+                <span className="rounded-full bg-danger-surface px-2.5 py-0.5 text-sm text-danger">{t('review.statusRejected')}</span>
               )}
             </p>
           </div>

@@ -5,6 +5,19 @@
  * that config or a safe fallback object before importing the main entry.
  */
 import './legacy-polyfills'
+import {
+  applyThemeMode,
+  parseParentUrlTheme,
+  resolveParentThemeMode,
+} from './shared/lib/url-theme'
+import {
+  parseUrlAutoLoginCredentials,
+  performUrlAutoLogin,
+} from './shared/lib/url-auto-login'
+
+const parentTheme = parseParentUrlTheme(window.location.search)
+applyThemeMode(resolveParentThemeMode(parentTheme))
+
 async function loadRuntimeConfig() {
   await new Promise<void>((resolve, reject) => {
     const script = document.createElement('script')
@@ -30,13 +43,37 @@ function ensureRuntimeConfigFallback() {
   }
 }
 
+async function tryUrlAutoLogin() {
+  if (!parseUrlAutoLoginCredentials(window.location.search)) {
+    return
+  }
+
+  try {
+    const {
+      authApi,
+      getCurrentUser,
+      getDirectAuthRuntimeConfig,
+    } = await import('./api/client')
+
+    await performUrlAutoLogin(window.location.search, {
+      getCurrentUser,
+      getDirectAuthRuntimeConfig,
+      localLogin: (credentials) => authApi.localLogin(credentials),
+      directLogin: (provider, credentials) => authApi.directLogin(provider, credentials),
+    })
+  } catch (error) {
+    console.error(error)
+  }
+}
+
 void (async () => {
   try {
     await loadRuntimeConfig()
   } catch (error) {
     console.error(error)
-    ensureRuntimeConfigFallback()
   }
 
+  ensureRuntimeConfigFallback()
+  await tryUrlAutoLogin()
   await import('./main')
 })()

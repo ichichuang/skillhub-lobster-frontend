@@ -48,8 +48,8 @@ export function RatingInput({ skillId, onRequireLogin }: RatingInputProps) {
               <Star
                 className={`w-5 h-5 ${
                   isFilled
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
+                    ? 'fill-warning text-warning'
+                    : 'text-muted-foreground/40'
                 }`}
               />
             </button>

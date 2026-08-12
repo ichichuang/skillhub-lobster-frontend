@@ -71,7 +71,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
         <div className="absolute right-0 top-full z-50 pt-2">
           <div
             role="menu"
-            className="flex min-w-[9rem] flex-col gap-1.5 rounded-md border bg-popover p-2 text-popover-foreground shadow-md"
+            className="flex min-w-[9rem] flex-col gap-1.5 rounded-md border border-border bg-popover p-2 text-popover-foreground shadow-popover"
           >
             {languages.map((lang) => (
               <button

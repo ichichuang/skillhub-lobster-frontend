@@ -172,7 +172,7 @@ export function CreateTokenDialog({ children, existingNames = [] }: CreateTokenD
                   aria-invalid={nameError || hasDuplicateName ? 'true' : 'false'}
                 />
                 <div className="flex items-center justify-between gap-3 text-xs">
-                  <span className="text-red-600">
+                  <span className="text-danger">
                     {nameError ?? (hasDuplicateName && normalizedName ? t('createToken.nameDuplicate') : '')}
                   </span>
                   <span className="text-muted-foreground">
@@ -216,14 +216,14 @@ export function CreateTokenDialog({ children, existingNames = [] }: CreateTokenD
                   />
                 ) : null}
                 {expiresAtError ? (
-                  <p className="text-xs text-red-600">{expiresAtError}</p>
+                  <p className="text-xs text-danger">{expiresAtError}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground">{t('createToken.expirationHint')}</p>
                 )}
               </div>
             </div>
             {createMutation.error ? (
-              <p className="text-sm text-red-600">{createMutation.error.message}</p>
+              <p className="text-sm text-danger">{createMutation.error.message}</p>
             ) : null}
             <DialogFooter className="sm:justify-center sm:space-x-3">
               <Button variant="outline" onClick={handleClose}>

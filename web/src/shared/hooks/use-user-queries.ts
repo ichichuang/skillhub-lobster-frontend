@@ -1,9 +1,37 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import type { SkillSummary, PagedResponse } from '@/api/types'
 import { meApi, promotionApi, namespaceApi } from '@/api/client'
+import { fetchAllPagedItems } from '@/shared/lib/full-pagination'
 
-async function getMySkills(params: { page?: number; size?: number; filter?: string; q?: string; namespace?: string } = {}): Promise<PagedResponse<SkillSummary>> {
+export interface MySkillsParams {
+  page?: number
+  size?: number
+  filter?: string
+  q?: string
+  namespace?: string
+}
+
+export interface CompleteMyPublishedSkillsParams {
+  q?: string
+  namespace?: string
+}
+
+const COMPLETE_MY_SKILLS_STALE_TIME_MS = 5 * 60 * 1000
+
+async function getMySkills(params: MySkillsParams = {}): Promise<PagedResponse<SkillSummary>> {
   return meApi.getSkills(params)
+}
+
+export async function fetchAllMyPublishedSkills(
+  params: CompleteMyPublishedSkillsParams = {},
+): Promise<SkillSummary[]> {
+  return fetchAllPagedItems((page, size) => getMySkills({
+    page,
+    size,
+    filter: 'PUBLISHED',
+    q: params.q,
+    namespace: params.namespace,
+  }))
 }
 
 async function getMyStars(): Promise<SkillSummary[]> {
@@ -31,11 +59,21 @@ async function submitPromotion(params: { sourceSkillId: number; sourceVersionId:
   })
 }
 
-export function useMySkills(params: { page?: number; size?: number; filter?: string; q?: string; namespace?: string } = {}) {
+export function useMySkills(params: MySkillsParams = {}, enabled = true) {
   return useQuery({
     queryKey: ['skills', 'my', params],
     queryFn: () => getMySkills(params),
     placeholderData: keepPreviousData,
+    enabled,
+  })
+}
+
+export function useAllMyPublishedSkills(params: CompleteMyPublishedSkillsParams = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['skills', 'my', 'published-complete', params],
+    queryFn: () => fetchAllMyPublishedSkills(params),
+    enabled,
+    staleTime: COMPLETE_MY_SKILLS_STALE_TIME_MS,
   })
 }
 

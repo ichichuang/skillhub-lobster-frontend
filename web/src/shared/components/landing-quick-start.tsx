@@ -1,11 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bot, Check, Copy, Terminal, UserRound } from 'lucide-react'
+import { Bot, Check, Copy, Search, UserRound } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
 
-type LandingQuickStartTabId = 'agent' | 'human' | 'cli'
+type LandingQuickStartTabId = 'agent' | 'human'
 
 interface LandingQuickStartTab {
   id: LandingQuickStartTabId
@@ -14,21 +14,20 @@ interface LandingQuickStartTab {
   command: string
 }
 
+interface LandingQuickStartSectionProps {
+  onSearch: (query: string) => void
+}
+
 const tabIcons: Record<LandingQuickStartTabId, LucideIcon> = {
   agent: Bot,
   human: UserRound,
-  cli: Terminal,
 }
 
-/**
- * Get the base URL for the application.
- * Prefers the runtime config if set and not localhost.
- * Falls back to the current page origin.
- */
 function getAppBaseUrl(): string {
   if (typeof window === 'undefined') {
     return ''
   }
+
   const runtimeConfig = window.__SKILLHUB_RUNTIME_CONFIG__
   return resolvePublicRegistryUrl(
     runtimeConfig?.appBaseUrl,
@@ -56,114 +55,104 @@ function CompactCopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       aria-label={label}
       title={label}
-      className="absolute right-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border bg-white transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-      style={{ borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
+      className="absolute right-2.5 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-xl border bg-card transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
     </button>
   )
 }
 
-export function LandingQuickStartSection() {
+export function LandingQuickStartSection({ onSearch }: LandingQuickStartSectionProps) {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<LandingQuickStartTabId>('agent')
   const baseUrl = useMemo(() => getAppBaseUrl(), [])
-
-  // Build dynamic agent command with actual registry URL
-  const agentCommand = t('landing.quickStart.agent.commandTemplate', {
-    defaultValue: t('landing.quickStart.agent.command'),
-    url: `${baseUrl}/registry/skill.md`,
-  })
 
   const tabs: LandingQuickStartTab[] = [
     {
       id: 'agent',
       label: t('landing.quickStart.tabs.agent'),
       description: t('landing.quickStart.agent.description'),
-      command: agentCommand,
+      command: t('landing.quickStart.agent.commandTemplate', {
+        defaultValue: t('landing.quickStart.agent.command'),
+        baseUrl,
+        guideUrl: `${baseUrl}/registry/skill.md`,
+      }),
     },
     {
       id: 'human',
       label: t('landing.quickStart.tabs.human'),
       description: t('landing.quickStart.human.description'),
-      command: t('landing.quickStart.human.command'),
-    },
-    {
-      id: 'cli',
-      label: t('landing.quickStart.tabs.cli'),
-      description: t('landing.quickStart.cli.description'),
-      command: t('landing.quickStart.cli.command'),
+      command: t('landing.quickStart.human.commandTemplate', {
+        defaultValue: t('landing.quickStart.human.command'),
+        url: baseUrl,
+      }),
     },
   ]
 
   const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0]
 
   return (
-    <section className="relative z-10 w-full px-6 py-14 md:py-16" style={{ background: 'var(--bg-page, hsl(var(--background)))' }}>
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-7 md:mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3" style={{ color: 'hsl(var(--foreground))' }}>
-            {t('landing.quickStart.title')}
-          </h2>
-          <p className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: 'hsl(var(--text-secondary))' }}>
-            {t('landing.quickStart.description', { defaultValue: t('landing.quickStart.subtitle') })}
-          </p>
+    <section className="rounded-[32px] border border-border bg-card p-4 shadow-dialog md:p-5">
+      <div className="mb-4 px-2 pt-2">
+        <h3 className="text-2xl font-semibold tracking-tight">{t('landing.quickStart.title')}</h3>
+        <p className="mt-2 text-sm leading-6 md:text-base" style={{ color: 'hsl(var(--text-secondary))' }}>
+          {t('landing.quickStart.description')}
+        </p>
+      </div>
+
+      <div className="mb-4 flex items-center rounded-2xl border border-border bg-input px-5 py-3.5 shadow-card">
+        <Search className="mr-3 h-5 w-5 flex-shrink-0 text-muted-foreground" strokeWidth={1.5} />
+        <input
+          type="search"
+          aria-label={t('landing.quickStart.searchLabel')}
+          placeholder={t('landing.hero.searchPlaceholder')}
+          className="hero-input min-w-0 flex-1 bg-transparent text-base text-foreground outline-none"
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              onSearch(event.currentTarget.value)
+            }
+          }}
+        />
+      </div>
+
+      <div className="mx-auto max-w-2xl rounded-[28px] border border-border bg-card p-3 shadow-popover">
+        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted/70 p-1.5">
+          {tabs.map((tab) => {
+            const isActive = tab.id === currentTab.id
+            const Icon = tabIcons[tab.id]
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                aria-pressed={isActive}
+                className={`flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-base font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                  isActive
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:bg-card/50 hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-4 w-4" strokeWidth={1.75} />
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
 
-        <div
-          className="mx-auto max-w-2xl rounded-[28px] border bg-white p-3 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.25)]"
-          style={{ borderColor: 'hsl(var(--border-card))' }}
-        >
-          <div
-            className="grid grid-cols-1 gap-2 rounded-2xl p-1.5 md:grid-cols-3"
-            style={{ background: 'linear-gradient(180deg, rgba(248,250,252,0.98) 0%, rgba(241,245,249,0.92) 100%)' }}
-          >
-            {tabs.map((tab) => {
-              const isActive = tab.id === currentTab.id
-              const Icon = tabIcons[tab.id]
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  aria-pressed={isActive}
-                  className="flex min-h-11 items-center justify-center gap-2 rounded-[14px] px-4 py-3 text-base font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-                  style={{
-                    background: isActive ? 'rgba(255,255,255,0.96)' : 'transparent',
-                    color: isActive ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-                    boxShadow: isActive ? '0 6px 18px rgba(15, 23, 42, 0.08)' : 'none',
-                  }}
-                >
-                  <Icon className="h-4 w-4" strokeWidth={1.75} />
-                  <span>{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="px-4 pb-4 pt-8 md:px-8 md:pb-6 md:pt-9">
-            <p
-              className="mx-auto mb-6 max-w-xl text-center text-base font-medium leading-relaxed md:text-lg"
-              style={{ color: 'hsl(var(--foreground))' }}
+        <div className="px-1 pb-4 pt-8 md:pb-6 md:pt-9">
+          <p className="mx-auto mb-6 max-w-xl text-center text-base font-medium leading-relaxed md:text-lg">
+            {currentTab.description}
+          </p>
+          <div className="relative h-[64px] rounded-2xl border bg-muted/70 px-4 py-3 pr-14 shadow-inner md:h-[68px]">
+            <code
+              className={`flex h-full items-center overflow-hidden whitespace-normal break-all pr-1 font-mono text-[11px] leading-5 tracking-[-0.02em] md:text-xs ${
+                currentTab.id === 'agent' ? 'text-primary' : 'text-foreground'
+              }`}
             >
-              {currentTab.description}
-            </p>
-
-            <div
-              className="relative rounded-2xl border bg-slate-50/90 px-4 py-3 pr-14 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]"
-              style={{ borderColor: 'hsl(var(--border))' }}
-            >
-              <div className="overflow-x-auto whitespace-nowrap">
-                <code
-                  className="font-mono text-sm md:text-base"
-                  style={{ color: currentTab.id === 'agent' ? '#16A34A' : '#0F172A' }}
-                >
-                  {currentTab.command}
-                </code>
-              </div>
-              <CompactCopyButton text={currentTab.command} />
-            </div>
+              {currentTab.command}
+            </code>
+            <CompactCopyButton text={currentTab.command} />
           </div>
         </div>
       </div>

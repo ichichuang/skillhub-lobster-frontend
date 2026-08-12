@@ -46,6 +46,9 @@ const config: Config = {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
+          hover: 'hsl(var(--primary-hover))',
+          active: 'hsl(var(--primary-active))',
+          subtle: 'hsl(var(--primary-subtle))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
@@ -64,14 +67,42 @@ const config: Config = {
           foreground: 'hsl(var(--destructive-foreground))',
         },
         border: 'hsl(var(--border))',
+        'border-strong': 'hsl(var(--border-strong))',
+        divider: 'hsl(var(--divider))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        placeholder: 'hsl(var(--text-placeholder))',
+        'foreground-secondary': 'hsl(var(--text-secondary))',
+        surface: {
+          raised: 'hsl(var(--surface-raised))',
+          muted: 'hsl(var(--surface-muted))',
+          hover: 'hsl(var(--surface-hover))',
+          active: 'hsl(var(--surface-active))',
+        },
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          surface: 'hsl(var(--success-surface))',
+        },
+        warning: {
+          DEFAULT: 'hsl(var(--warning))',
+          surface: 'hsl(var(--warning-surface))',
+        },
+        danger: {
+          DEFAULT: 'hsl(var(--danger))',
+          surface: 'hsl(var(--danger-surface))',
+        },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          surface: 'hsl(var(--info-surface))',
+        },
       },
       boxShadow: {
         glow: '0 0 20px -5px hsl(var(--primary) / 0.3)',
         'glow-lg': '0 0 40px -10px hsl(var(--primary) / 0.25)',
-        'card': '0 4px 24px -4px hsl(0 0% 0% / 0.15)',
-        'card-hover': '0 20px 40px -12px hsl(var(--primary) / 0.1), 0 8px 16px -8px hsl(0 0% 0% / 0.2)',
+        card: 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-popover)',
+        popover: 'var(--shadow-popover)',
+        dialog: 'var(--shadow-dialog)',
       },
       animation: {
         'fade-up': 'fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',

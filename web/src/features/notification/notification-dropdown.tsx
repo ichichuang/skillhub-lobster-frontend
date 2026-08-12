@@ -11,6 +11,11 @@ interface Props {
   onClose: () => void
 }
 
+export const NOTIFICATION_DROPDOWN_CLASS_NAME =
+  'absolute right-0 top-10 z-50 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-popover'
+export const NOTIFICATION_ITEM_CLASS_NAME =
+  'flex items-start gap-3 px-4 py-3 transition-colors hover:bg-surface-hover'
+
 function formatRelativeTime(dateStr: string, lang: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const minutes = Math.floor(diff / 60_000)
@@ -51,33 +56,31 @@ export function NotificationDropdown({ onClose }: Props) {
 
   return (
     <div
-      className="absolute right-0 top-10 z-50 w-80 rounded-xl border bg-white shadow-lg"
-      style={{ borderColor: 'hsl(var(--border))' }}
+      className={NOTIFICATION_DROPDOWN_CLASS_NAME}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
-        <span className="text-sm font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
+      <div className="flex items-center justify-between border-b border-divider px-4 py-3">
+        <span className="text-sm font-semibold text-foreground">
           {t('notification.title')}
         </span>
         <button
           type="button"
           onClick={handleMarkAllRead}
           disabled={markAllRead.isPending || notifications.length === 0}
-          className="text-xs hover:opacity-70 transition-opacity disabled:opacity-40"
-          style={{ color: 'hsl(var(--text-secondary))' }}
+          className="text-xs text-foreground-secondary transition-opacity hover:opacity-70 disabled:opacity-40"
         >
           {t('notification.markAllRead')}
         </button>
       </div>
 
       {/* Body */}
-      <ul className="max-h-72 overflow-y-auto divide-y" style={{ borderColor: 'hsl(var(--border))' }}>
+      <ul className="max-h-72 divide-y divide-divider overflow-y-auto">
         {isLoading ? (
-          <li className="px-4 py-6 text-center text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <li className="px-4 py-6 text-center text-sm text-muted-foreground">
             …
           </li>
         ) : notifications.length === 0 ? (
-          <li className="px-4 py-6 text-center text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <li className="px-4 py-6 text-center text-sm text-muted-foreground">
             {t('notification.empty')}
           </li>
         ) : (
@@ -89,20 +92,20 @@ export function NotificationDropdown({ onClose }: Props) {
               <Link
                 to={resolveNotificationTarget(item)}
                 onClick={() => handleItemClick(item)}
-                className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                className={NOTIFICATION_ITEM_CLASS_NAME}
               >
                 {/* Unread dot */}
-                <span className={`mt-1.5 flex-shrink-0 w-2 h-2 rounded-full ${item.status === 'UNREAD' ? 'bg-red-500' : 'bg-transparent'}`} />
+                <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${item.status === 'UNREAD' ? 'bg-danger' : 'bg-transparent'}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate" style={{ color: 'hsl(var(--foreground))' }}>
+                  <p className="truncate text-sm text-foreground">
                     {display.title}
                   </p>
                   {display.description ? (
-                    <p className="mt-0.5 truncate text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {display.description}
                     </p>
                   ) : null}
-                  <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {t('notification.timeAgo', { time: formatRelativeTime(item.createdAt, i18n.language) })}
                   </p>
                 </div>
@@ -115,12 +118,11 @@ export function NotificationDropdown({ onClose }: Props) {
       </ul>
 
       {/* Footer */}
-      <div className="px-4 py-2.5 border-t text-center" style={{ borderColor: 'hsl(var(--border))' }}>
+      <div className="border-t border-divider px-4 py-2.5 text-center">
         <Link
           to="/dashboard/notifications"
           onClick={onClose}
-          className="text-xs hover:opacity-70 transition-opacity"
-          style={{ color: 'hsl(var(--text-secondary))' }}
+          className="text-xs text-foreground-secondary transition-opacity hover:opacity-70"
         >
           {t('notification.viewAll')}
         </Link>

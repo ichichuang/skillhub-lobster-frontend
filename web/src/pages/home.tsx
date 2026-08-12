@@ -36,7 +36,7 @@ export function HomePage() {
       <div className="text-center space-y-8 py-16 animate-fade-up">
         <div className="space-y-4">
           <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-brand-gradient leading-tight">
-            SkillHub
+            技能中心
           </h1>
           <p className="text-xl md:text-2xl max-w-2xl mx-auto" style={{ color: 'hsl(var(--text-secondary))' }}>
             {t('home.subtitle')}
@@ -52,14 +52,13 @@ export function HomePage() {
 
         <div className="flex items-center justify-center gap-4 animate-fade-up delay-2">
           <button
-            className="px-8 py-3.5 rounded-xl text-base font-medium text-white bg-brand-gradient shadow-sm hover:opacity-95 transition-opacity"
+            className="rounded-xl bg-primary px-8 py-3.5 text-base font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover"
             onClick={() => navigate({ to: '/search', search: { q: '', sort: 'relevance', page: 0, starredOnly: false } })}
           >
             {t('home.browseSkills')}
           </button>
           <button
-            className="px-8 py-3.5 rounded-xl text-base font-medium border transition-colors"
-            style={{ background: 'var(--bg-secondary-btn, #F7FAFC)', borderColor: 'hsl(var(--muted-foreground))', color: 'hsl(var(--muted-foreground))' }}
+            className="rounded-xl border border-border bg-secondary px-8 py-3.5 text-base font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
             onClick={() => navigate({ to: '/dashboard/publish' })}
           >
             {t('home.publishSkill')}

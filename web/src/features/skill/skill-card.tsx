@@ -26,8 +26,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true }: SkillCard
 
   return (
     <Card
-      className="h-full p-5 cursor-pointer group relative overflow-hidden bg-white border shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2"
-      style={{ borderColor: 'hsl(var(--border-card))' }}
+      className="group relative h-full cursor-pointer overflow-hidden border bg-card p-5 text-card-foreground shadow-sm transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       onClick={onClick}
       onKeyDown={(event) => {
         if (!isInteractive) {

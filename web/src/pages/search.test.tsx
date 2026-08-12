@@ -5,9 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const navigateMock = vi.fn()
 const useSearchMock = vi.fn()
 const buttonRecords: Array<{ label: string; variant?: string | null; onClick?: (() => void) | undefined }> = []
-const paginationProps: Array<{ onPageChange: (page: number) => void }> = []
+const paginationProps: Array<{ totalPages: number; onPageChange: (page: number) => void }> = []
 const searchBarProps: Array<{ value?: string; onSearch?: (query: string) => void }> = []
-const searchSkillParams: Array<Record<string, unknown>> = []
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -29,12 +28,6 @@ vi.mock('react-i18next', async () => {
   }
 })
 
-vi.mock('@/features/auth/use-auth', () => ({
-  useAuth: () => ({
-    isAuthenticated: true,
-  }),
-}))
-
 vi.mock('@/features/search/search-bar', () => ({
   SearchBar: (props: { value?: string; onSearch?: (query: string) => void }) => {
     searchBarProps.push(props)
@@ -43,7 +36,7 @@ vi.mock('@/features/search/search-bar', () => ({
 }))
 
 vi.mock('@/features/skill/skill-card', () => ({
-  SkillCard: () => <div>skill-card</div>,
+  SkillCard: ({ skill }: { skill: { displayName: string } }) => <div>skill-card:{skill.displayName}</div>,
 }))
 
 vi.mock('@/shared/components/skeleton-loader', () => ({
@@ -61,7 +54,7 @@ vi.mock('@/shared/components/empty-state', () => ({
 }))
 
 vi.mock('@/shared/components/pagination', () => ({
-  Pagination: (props: { onPageChange: (page: number) => void }) => {
+  Pagination: (props: { totalPages: number; onPageChange: (page: number) => void }) => {
     paginationProps.push(props)
     return <div>pagination</div>
   },
@@ -87,30 +80,23 @@ vi.mock('@/app/page-shell-style', () => ({
   APP_SHELL_PAGE_CLASS_NAME: 'page-shell',
 }))
 
-const useSearchSkillsMock = vi.fn()
+const useLocalPublishedCatalogMock = vi.fn()
+const useLocalPublishedLabelMembershipMock = vi.fn()
+const useVisibleLabelsMock = vi.fn()
 
 vi.mock('@/shared/hooks/use-skill-queries', () => ({
-  useSearchSkills: (params: Record<string, unknown>) => {
-    searchSkillParams.push(params)
-    return useSearchSkillsMock()
+  useSearchSkills: () => {
+    throw new Error('SearchPage must not use raw Portal Search results')
   },
 }))
 
-vi.mock('@/shared/hooks/use-label-queries', () => ({
-  useVisibleLabels: () => ({
-    data: [
-      { slug: 'code-generation', type: 'RECOMMENDED', displayName: 'Code Generation' },
-      { slug: 'official', type: 'RECOMMENDED', displayName: 'Official' },
-    ],
-  }),
+vi.mock('@/shared/hooks/use-local-published-catalog', () => ({
+  useLocalPublishedCatalog: () => useLocalPublishedCatalogMock(),
+  useLocalPublishedLabelMembership: (label?: string) => useLocalPublishedLabelMembershipMock(label),
 }))
 
-vi.mock('@/shared/hooks/use-user-queries', () => ({
-  useMyStars: () => ({
-    data: [],
-    isLoading: false,
-    isFetching: false,
-  }),
+vi.mock('@/shared/hooks/use-label-queries', () => ({
+  useVisibleLabels: () => useVisibleLabelsMock(),
 }))
 
 import { SearchPage } from './search'
@@ -126,10 +112,12 @@ function findButton(label: string) {
 describe('SearchPage', () => {
   beforeEach(() => {
     navigateMock.mockReset()
+    useLocalPublishedCatalogMock.mockReset()
+    useLocalPublishedLabelMembershipMock.mockReset()
+    useVisibleLabelsMock.mockReset()
     buttonRecords.length = 0
     paginationProps.length = 0
     searchBarProps.length = 0
-    searchSkillParams.length = 0
     useSearchMock.mockReturnValue({
       q: 'agent',
       namespace: 'team-ai',
@@ -138,60 +126,113 @@ describe('SearchPage', () => {
       page: 1,
       starredOnly: false,
     })
-    useSearchSkillsMock.mockReturnValue({
-      data: {
-        items: [{ id: 1, displayName: 'Demo Skill', summary: 'summary', namespace: 'global', slug: 'demo', downloadCount: 1, starCount: 1, ratingCount: 0, updatedAt: '2026-03-20T00:00:00Z', canSubmitPromotion: false }],
-        total: 24,
-        page: 1,
-        size: 12,
-      },
+    const catalog = Array.from({ length: 24 }, (_, index) => ({
+      id: index + 1,
+      displayName: `Agent Skill ${index + 1}`,
+      summary: 'agent summary',
+      namespace: 'team-ai',
+      slug: `agent-${index + 1}`,
+      downloadCount: 1,
+      starCount: 1,
+      ratingCount: 0,
+      updatedAt: '2026-03-20T00:00:00Z',
+      canSubmitPromotion: false,
+      publishedVersion: { id: index + 101, version: '1.0.0', status: 'PUBLISHED' },
+    }))
+    useLocalPublishedCatalogMock.mockReturnValue({
+      data: catalog,
       isLoading: false,
       isFetching: false,
+      isError: false,
+      error: null,
+    })
+    useLocalPublishedLabelMembershipMock.mockReturnValue({
+      data: new Set(catalog.map((skill) => `${skill.namespace}/${skill.slug}`)),
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    })
+    useVisibleLabelsMock.mockReturnValue({
+      data: [
+        { slug: 'code-generation', type: 'RECOMMENDED', displayName: 'Code Generation' },
+        { slug: 'operations', type: 'RECOMMENDED', displayName: 'Operations' },
+      ],
     })
   })
 
-  it('marks the selected label button as active on initial render', () => {
-    const html = renderToStaticMarkup(<SearchPage />)
-
-    expect(html).toContain('Code Generation')
-    expect(findButton('Code Generation').variant).toBe('default')
-    expect(findButton('Official').variant).toBe('outline')
-  })
-
-  it('wraps the filter chip row so many labels can flow onto multiple lines', () => {
-    const html = renderToStaticMarkup(<SearchPage />)
-
-    expect(html).toContain('flex flex-wrap items-center gap-2')
-  })
-
-  it('toggles the selected label off and resets paging', () => {
+  it('renders visible categories in server order with the active category selected', () => {
     renderToStaticMarkup(<SearchPage />)
 
-    findButton('Code Generation').onClick?.()
+    expect(buttonRecords.map((button) => button.label).slice(0, 3)).toEqual([
+      'search.filters.all',
+      'Code Generation',
+      'Operations',
+    ])
+    expect(findButton('search.filters.all').variant).toBe('outline')
+    expect(findButton('Code Generation').variant).toBe('default')
+    expect(useVisibleLabelsMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('selects a category through URL state and resets pagination', () => {
+    renderToStaticMarkup(<SearchPage />)
+
+    findButton('Operations').onClick?.()
 
     expect(navigateMock).toHaveBeenCalledWith({
       to: '/search',
       search: {
         q: 'agent',
         namespace: 'team-ai',
-        label: '',
-        sort: 'downloads',
+        label: 'operations',
+        sort: 'newest',
         page: 0,
         starredOnly: false,
       },
     })
   })
 
-  it('preserves the active label when changing sort', () => {
+  it('clears the category through the all option and resets pagination', () => {
     renderToStaticMarkup(<SearchPage />)
 
-    findButton('search.sort.newest').onClick?.()
+    findButton('search.filters.all').onClick?.()
 
     expect(navigateMock).toHaveBeenCalledWith({
       to: '/search',
       search: {
         q: 'agent',
         namespace: 'team-ai',
+        label: undefined,
+        sort: 'newest',
+        page: 0,
+        starredOnly: false,
+      },
+    })
+  })
+
+  it('renders the active namespace as a removable filter', () => {
+    const html = renderToStaticMarkup(<SearchPage />)
+
+    expect(html).toContain('search.namespaceFilter')
+    expect(findButton('search.namespaceFilter').variant).toBe('default')
+  })
+
+  it('wraps the result context row', () => {
+    const html = renderToStaticMarkup(<SearchPage />)
+
+    expect(html).toContain('flex flex-wrap items-center gap-4')
+  })
+
+  it('clears the namespace and resets paging', () => {
+    renderToStaticMarkup(<SearchPage />)
+
+    findButton('search.namespaceFilter').onClick?.()
+
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: '/search',
+      search: {
+        q: 'agent',
+        namespace: undefined,
         label: 'code-generation',
         sort: 'newest',
         page: 0,
@@ -200,47 +241,28 @@ describe('SearchPage', () => {
     })
   })
 
-  it('preserves the active label when paging and when toggling starred-only', () => {
+  it('preserves the query and namespace when paging', () => {
     renderToStaticMarkup(<SearchPage />)
 
     paginationProps[0]?.onPageChange(2)
-    findButton('search.filterStarred').onClick?.()
-
-    expect(navigateMock).toHaveBeenNthCalledWith(1, {
+    expect(navigateMock).toHaveBeenCalledWith({
       to: '/search',
       search: {
         q: 'agent',
         namespace: 'team-ai',
         label: 'code-generation',
-        sort: 'downloads',
+        sort: 'newest',
         page: 2,
         starredOnly: false,
       },
     })
-    expect(navigateMock).toHaveBeenNthCalledWith(2, {
-      to: '/search',
-      search: {
-        q: 'agent',
-        namespace: 'team-ai',
-        label: 'code-generation',
-        sort: 'downloads',
-        page: 0,
-        starredOnly: true,
-      },
-    })
   })
 
-  it('passes the namespace URL state into skill search', () => {
+  it('computes pagination after local query, namespace, and category intersection', () => {
     renderToStaticMarkup(<SearchPage />)
 
-    expect(searchSkillParams[0]).toMatchObject({
-      q: 'agent',
-      namespace: 'team-ai',
-      label: 'code-generation',
-      sort: 'downloads',
-      page: 1,
-      size: 12,
-    })
+    expect(useLocalPublishedLabelMembershipMock).toHaveBeenCalledWith('code-generation')
+    expect(paginationProps[0]?.totalPages).toBe(2)
   })
 
   it('extracts a leading namespace token from the search input', () => {
@@ -254,7 +276,7 @@ describe('SearchPage', () => {
         q: 'onboarding',
         namespace: 'product-team',
         label: 'code-generation',
-        sort: 'downloads',
+        sort: 'newest',
         page: 0,
         starredOnly: false,
       },
@@ -270,15 +292,12 @@ describe('SearchPage', () => {
       page: 0,
       starredOnly: false,
     })
-    useSearchSkillsMock.mockReturnValue({
-      data: {
-        items: [{ id: 1, displayName: 'Demo Skill', summary: 'summary', namespace: 'global', slug: 'demo', downloadCount: 1, starCount: 1, ratingCount: 0, updatedAt: '2026-03-20T00:00:00Z', canSubmitPromotion: false }],
-        total: 1,
-        page: 0,
-        size: 12,
-      },
+    useLocalPublishedCatalogMock.mockReturnValue({
+      data: [{ id: 1, displayName: 'Demo Skill', summary: 'summary', namespace: 'global', slug: 'demo', downloadCount: 1, starCount: 1, ratingCount: 0, updatedAt: '2026-03-20T00:00:00Z', canSubmitPromotion: false, publishedVersion: { id: 101, version: '1.0.0', status: 'PUBLISHED' } }],
       isLoading: false,
       isFetching: false,
+      isError: false,
+      error: null,
     })
 
     const html = renderToStaticMarkup(<SearchPage />)
@@ -295,15 +314,12 @@ describe('SearchPage', () => {
       page: 0,
       starredOnly: false,
     })
-    useSearchSkillsMock.mockReturnValue({
-      data: {
-        items: [],
-        total: 0,
-        page: 0,
-        size: 12,
-      },
+    useLocalPublishedCatalogMock.mockReturnValue({
+      data: [],
       isLoading: false,
       isFetching: false,
+      isError: false,
+      error: null,
     })
 
     const html = renderToStaticMarkup(<SearchPage />)
@@ -311,5 +327,46 @@ describe('SearchPage', () => {
     expect(html).toContain('empty-state')
     expect(html).toContain('search.noResults')
     expect(html).not.toContain('search.enterKeyword')
+  })
+
+  it('shows a query-specific description when filtered results are empty', () => {
+    useLocalPublishedCatalogMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    })
+
+    const html = renderToStaticMarkup(<SearchPage />)
+
+    expect(html).toContain('search.noResultsFor')
+  })
+
+  it('never renders an autonomous-execution-style stale catalog record', () => {
+    useSearchMock.mockReturnValue({ q: '', label: '', sort: 'newest', page: 0, starredOnly: false })
+    useLocalPublishedCatalogMock.mockReturnValue({
+      data: [
+        { id: 1, displayName: 'Published Skill', namespace: 'global', slug: 'published', downloadCount: 1, starCount: 0, ratingCount: 0, updatedAt: '2026-03-20T00:00:00Z', canSubmitPromotion: false, publishedVersion: { id: 101, version: '1.0.0', status: 'PUBLISHED' } },
+        { id: 2, displayName: 'Autonomous Execution', namespace: 'global', slug: 'autonomous-execution', downloadCount: 99, starCount: 0, ratingCount: 0, updatedAt: '2026-03-21T00:00:00Z', canSubmitPromotion: false, publishedVersion: undefined, resolutionMode: 'NONE' },
+      ],
+      isLoading: false,
+      isFetching: false,
+      isError: false,
+      error: null,
+    })
+
+    const html = renderToStaticMarkup(<SearchPage />)
+
+    expect(html).toContain('skill-card:Published Skill')
+    expect(html).not.toContain('Autonomous Execution')
+    expect(useLocalPublishedLabelMembershipMock).toHaveBeenCalledWith(undefined)
+  })
+
+  it('uses one label-membership query for the page rather than per-card label requests', () => {
+    renderToStaticMarkup(<SearchPage />)
+
+    expect(useLocalPublishedLabelMembershipMock).toHaveBeenCalledTimes(1)
+    expect(useVisibleLabelsMock).toHaveBeenCalledTimes(1)
   })
 })

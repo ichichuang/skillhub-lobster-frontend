@@ -1,15 +1,25 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from '@tanstack/react-router'
 import { Check, Copy } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
 
 interface InstallCommandProps {
   namespace: string
   slug: string
-  version?: string
+  visibility?: string
+  publishedVersion?: string
+}
+
+export type InstallState = 'ANONYMOUS_INSTALL' | 'AUTHENTICATED_INSTALL' | 'NOT_INSTALLABLE'
+
+export function resolveInstallState(visibility: string | undefined, publishedVersion: string | undefined): InstallState {
+  if (!publishedVersion) {
+    return 'NOT_INSTALLABLE'
+  }
+  return visibility === 'PUBLIC' ? 'ANONYMOUS_INSTALL' : 'AUTHENTICATED_INSTALL'
 }
 
 export function buildInstallTarget(namespace: string, slug: string): string {
@@ -37,12 +47,21 @@ export function buildSkillhubInstallCommand(namespace: string, slug: string, bas
   return `npx @astron-team/skillhub@latest install ${slug}${namespaceArg} --registry ${baseUrl}`
 }
 
+export function buildBrowserLoginCommand(baseUrl: string): string {
+  return `npx clawhub --site ${baseUrl} --registry ${baseUrl} login`
+}
+
+export function buildWhoamiCommand(baseUrl: string): string {
+  return `npx clawhub --registry ${baseUrl} whoami`
+}
+
+export function buildTokenLoginCommand(baseUrl: string): string {
+  return `npx clawhub --registry ${baseUrl} login --token YOUR_API_TOKEN`
+}
+
 interface CommandBlockProps {
   command: string
 }
-
-const installMethodTabTriggerClass =
-  "relative border-b-0 px-1 py-2 text-xs after:absolute after:bottom-[-1px] after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-transparent after:content-[''] data-[state=active]:after:bg-primary"
 
 function CommandBlock({ command }: CommandBlockProps) {
   const { t } = useTranslation()
@@ -78,28 +97,104 @@ function CommandBlock({ command }: CommandBlockProps) {
   )
 }
 
-export function InstallCommand({ namespace, slug }: InstallCommandProps) {
+interface TroubleshootingProps {
+  baseUrl: string
+}
+
+function Troubleshooting({ baseUrl }: TroubleshootingProps) {
   const { t } = useTranslation()
-  const baseUrl = useMemo(() => getBaseUrl(), [])
-  const clawhubCommand = useMemo(() => buildInstallCommand(namespace, slug, baseUrl), [baseUrl, namespace, slug])
-  const skillhubCommand = useMemo(() => buildSkillhubInstallCommand(namespace, slug, baseUrl), [baseUrl, namespace, slug])
+  const whoamiCommand = buildWhoamiCommand(baseUrl)
+  const tokenLoginCommand = buildTokenLoginCommand(baseUrl)
 
   return (
-    <Tabs defaultValue="clawhub" className="space-y-3">
-      <TabsList className="w-full gap-6 border-border/70 bg-transparent p-0 text-xs">
-        <TabsTrigger value="clawhub" className={installMethodTabTriggerClass}>
-          {t('skillDetail.installMethodClawhub')}
-        </TabsTrigger>
-        <TabsTrigger value="skillhub" className={installMethodTabTriggerClass}>
-          {t('skillDetail.installMethodSkillhub')}
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="clawhub">
+    <details className="group rounded-xl border border-border/60 bg-muted/20">
+      <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground marker:text-muted-foreground">
+        {t('skillDetail.installGuide.troubleshooting')}
+      </summary>
+      <div className="space-y-4 border-t border-border/50 px-4 py-4">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">{t('skillDetail.installGuide.checkLogin')}</p>
+          <CommandBlock command={whoamiCommand} />
+        </div>
+        <ul className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+          <li>{t('skillDetail.installGuide.error401')}</li>
+          <li>{t('skillDetail.installGuide.error403')}</li>
+          <li>{t('skillDetail.installGuide.error404')}</li>
+          <li>{t('skillDetail.installGuide.errorRedirect')}</li>
+          <li>{t('skillDetail.installGuide.errorNetwork')}</li>
+        </ul>
+        <details className="rounded-lg border border-border/50 bg-background/50">
+          <summary className="cursor-pointer px-3 py-2.5 text-sm font-medium text-foreground marker:text-muted-foreground">
+            {t('skillDetail.installGuide.advancedToken')}
+          </summary>
+          <div className="space-y-3 border-t border-border/40 px-3 py-3">
+            <p className="text-sm text-muted-foreground">
+              {t('skillDetail.installGuide.advancedTokenDescription')}
+            </p>
+            <Link to="/dashboard/tokens" className="inline-flex text-sm font-medium text-primary hover:underline">
+              {t('skillDetail.installGuide.manageTokens')}
+            </Link>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">{t('skillDetail.installGuide.tokenLogin')}</p>
+              <CommandBlock command={tokenLoginCommand} />
+            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {t('skillDetail.installGuide.tokenSafety')}
+            </p>
+          </div>
+        </details>
+      </div>
+    </details>
+  )
+}
+
+export function InstallCommand({ namespace, slug, visibility, publishedVersion }: InstallCommandProps) {
+  const { t } = useTranslation()
+  const baseUrl = useMemo(() => getBaseUrl(), [])
+  const installState = resolveInstallState(visibility, publishedVersion)
+
+  if (installState === 'NOT_INSTALLABLE') {
+    return <p className="text-sm text-muted-foreground">{t('skillDetail.installGuide.notInstallable')}</p>
+  }
+
+  const clawhubCommand = buildInstallCommand(namespace, slug, baseUrl)
+  const isAnonymousInstall = installState === 'ANONYMOUS_INSTALL'
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        {t(isAnonymousInstall
+          ? 'skillDetail.installGuide.anonymousStatus'
+          : 'skillDetail.installGuide.authenticatedStatus')}
+      </p>
+
+      {!isAnonymousInstall && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">{t('skillDetail.installGuide.loginStep')}</p>
+          <CommandBlock command={buildBrowserLoginCommand(baseUrl)} />
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-foreground">
+          {t('skillDetail.installGuide.installStep', { step: isAnonymousInstall ? 1 : 2 })}
+        </p>
         <CommandBlock command={clawhubCommand} />
-      </TabsContent>
-      <TabsContent value="skillhub">
-        <CommandBlock command={skillhubCommand} />
-      </TabsContent>
-    </Tabs>
+      </div>
+
+      <Troubleshooting baseUrl={baseUrl} />
+
+      {isAnonymousInstall && (
+        <details className="rounded-xl border border-border/60 bg-muted/20">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground marker:text-muted-foreground">
+            {t('skillDetail.installGuide.otherMethods')}
+          </summary>
+          <div className="space-y-3 border-t border-border/50 px-4 py-4">
+            <p className="text-sm text-muted-foreground">{t('skillDetail.installGuide.skillhubCliDescription')}</p>
+            <CommandBlock command={buildSkillhubInstallCommand(namespace, slug, baseUrl)} />
+          </div>
+        </details>
+      )}
+    </div>
   )
 }

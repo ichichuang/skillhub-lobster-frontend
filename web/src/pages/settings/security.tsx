@@ -116,7 +116,7 @@ export function SecuritySettingsPage() {
                   onChange={(event) => setNewPassword(event.target.value)}
                 />
               </div>
-              {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
+              {errorMessage ? <p className="text-sm text-danger">{errorMessage}</p> : null}
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? t('security.submitting') : t('security.submit')}
               </Button>

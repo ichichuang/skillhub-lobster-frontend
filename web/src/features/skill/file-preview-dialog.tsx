@@ -97,7 +97,7 @@ export function FilePreviewDialog({
                 disabled={copyState !== 'idle'}
               >
                 {copyState === 'done'
-                  ? <Check className="h-4 w-4 text-emerald-500" />
+                  ? <Check className="h-4 w-4 text-success" />
                   : <Copy className={`h-4 w-4 transition-transform duration-300 ${copyState === 'spinning' ? 'animate-spin' : 'hover:rotate-180'}`} />}
               </Button>
             )}

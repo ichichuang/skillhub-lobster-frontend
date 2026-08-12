@@ -13,17 +13,17 @@ type VersionStatus =
 
 const statusStyles: Record<VersionStatus, string> = {
   PUBLISHED:
-    'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+    'border-success/30 bg-success-surface text-success',
   UPLOADED:
-    'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400',
+    'border-info/30 bg-info-surface text-info',
   PENDING_REVIEW:
-    'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+    'border-warning/30 bg-warning-surface text-warning',
   REJECTED:
-    'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400',
+    'border-danger/30 bg-danger-surface text-danger',
   SCANNING:
-    'border-purple-500/30 bg-purple-500/10 text-purple-700 dark:text-purple-400',
+    'border-info/30 bg-info-surface text-info',
   SCAN_FAILED:
-    'border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400',
+    'border-danger/30 bg-danger-surface text-danger',
   YANKED:
     'border-border/60 bg-secondary/40 text-muted-foreground',
   DRAFT:
@@ -44,15 +44,15 @@ const i18nKeys: Record<VersionStatus, string> = {
 /** Color-coded row styles (left-border + subtle background) for version cards. */
 export const versionRowStyles: Record<VersionStatus, string> = {
   UPLOADED:
-    'border-l-[3px] !border-l-blue-500 bg-blue-500/[0.03]',
+    'border-l-[3px] !border-l-info bg-info-surface',
   PENDING_REVIEW:
-    'border-l-[3px] !border-l-amber-500 bg-amber-500/[0.03]',
+    'border-l-[3px] !border-l-warning bg-warning-surface',
   REJECTED:
-    'border-l-[3px] !border-l-red-500 bg-red-500/[0.04]',
+    'border-l-[3px] !border-l-danger bg-danger-surface',
   SCANNING:
-    'border-l-[3px] !border-l-purple-500 bg-purple-500/[0.03]',
+    'border-l-[3px] !border-l-info bg-info-surface',
   SCAN_FAILED:
-    'border-l-[3px] !border-l-red-500 bg-red-500/[0.04]',
+    'border-l-[3px] !border-l-danger bg-danger-surface',
   PUBLISHED: '',
   YANKED: '',
   DRAFT: '',

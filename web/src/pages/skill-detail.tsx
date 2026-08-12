@@ -2,7 +2,7 @@ import { startTransition, useCallback, useEffect, useRef, useState, type MouseEv
 import { useTranslation } from 'react-i18next'
 import { Link, useParams, useNavigate, useRouterState, useSearch } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, ArrowUpCircle, ChevronDown, ChevronUp, Clock, Folder, Globe, Lock, RefreshCw, ShieldCheck, Terminal, User, Users } from 'lucide-react'
+import { ArrowLeft, ArrowUpCircle, ChevronDown, ChevronUp, Clock, Folder, Globe, Lock, RefreshCw, ShieldCheck, Terminal, Users } from 'lucide-react'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { resolvePackageRelativeLink } from '@/features/skill/package-relative-link'
 import { FileTree } from '@/features/skill/file-tree'
@@ -805,7 +805,7 @@ export function SkillDetailPage() {
                 'badge-soft',
                 skill.status === 'ACTIVE' && 'badge-soft-green',
                 skill.status === 'ARCHIVED' && 'bg-secondary text-muted-foreground',
-                skill.status === 'HIDDEN' && 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+                skill.status === 'HIDDEN' && 'bg-warning-surface text-warning',
                 !['ACTIVE', 'ARCHIVED', 'HIDDEN'].includes(skill.status) && 'badge-soft-blue',
               )}>
                 {resolveSkillStatusLabel(skill.status)}
@@ -815,7 +815,7 @@ export function SkillDetailPage() {
               <span className={cn(
                 'badge-soft inline-flex items-center gap-1',
                 skill.visibility === 'PUBLIC' && 'badge-soft-green',
-                skill.visibility === 'PRIVATE' && 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+                skill.visibility === 'PRIVATE' && 'bg-surface-muted text-muted-foreground',
                 skill.visibility === 'NAMESPACE_ONLY' && 'badge-soft-blue',
               )}>
                 {skill.visibility === 'PUBLIC' && <Globe className="h-3 w-3" />}
@@ -827,27 +827,17 @@ export function SkillDetailPage() {
               </span>
             )}
             {isReviewFlowPending && (
-              <span className="badge-soft" style={{ background: '#fef3c7', color: '#92400e' }}>
+              <span className="badge-soft bg-warning-surface text-warning">
                 {t('skillDetail.versionStatusPendingReview')}
               </span>
             )}
             {!isPendingPreview && (isRejectedPreview || hasRejectedOwnerPreview) && skill.canManageLifecycle && (
-              <span className="badge-soft" style={{ background: '#fee2e2', color: '#991b1b' }}>
+              <span className="badge-soft bg-danger-surface text-danger">
                 {t('skillDetail.rejectedBadge')}
               </span>
             )}
           </div>
           <h1 className="text-balance text-4xl font-bold font-heading text-foreground">{skill.displayName}</h1>
-          {skill.ownerDisplayName && (
-            <div className="flex min-w-0">
-              <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
-                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold uppercase tracking-[0.08em] text-primary">
-                  <User className="h-3.5 w-3.5" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 truncate">{t('skillDetail.authorLabel', { name: skill.ownerDisplayName })}</span>
-              </div>
-            </div>
-          )}
           {skill.summary && (
             <p className="text-lg text-muted-foreground leading-relaxed">{skill.summary}</p>
           )}
@@ -861,8 +851,8 @@ export function SkillDetailPage() {
                   className={cn(
                     'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2',
                     label.type === 'PRIVILEGED'
-                      ? 'border-amber-500/40 bg-amber-100 text-amber-900 hover:bg-amber-200/80'
-                      : 'border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200/80',
+                      ? 'border-warning/40 bg-warning-surface text-warning hover:bg-warning-surface/80'
+                      : 'border-border bg-surface-muted text-foreground hover:bg-surface-hover',
                   )}
                 >
                   {label.displayName}
@@ -871,16 +861,16 @@ export function SkillDetailPage() {
             </div>
           )}
           {isPendingPreview && (
-            <Card className="border-amber-500/30 bg-amber-500/5 p-4 text-sm text-muted-foreground">
+            <Card className="border-warning/30 bg-warning-surface p-4 text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{t('skillDetail.pendingPreviewTitle')}</div>
               <p className="mt-1">{t('skillDetail.pendingPreviewDescription')}</p>
             </Card>
           )}
           {hasRejectedOwnerPreview && (
-            <Card className="border-red-500/30 bg-red-500/5 p-4 text-sm text-muted-foreground">
+            <Card className="border-danger/30 bg-danger-surface p-4 text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{t('skillDetail.rejectedFeedbackTitle')}</div>
               <p className="mt-1">{t('skillDetail.rejectedPreviewDescription')}</p>
-              <div className="mt-3 rounded-xl border border-red-500/20 bg-background/80 p-3">
+              <div className="mt-3 rounded-xl border border-danger/30 bg-card p-3">
                 <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   {t('skillDetail.rejectedFeedbackLabel')}
                 </div>
@@ -1175,7 +1165,7 @@ export function SkillDetailPage() {
           </div>
         </Card>
 
-        {publishedVersion && canInteract && (
+        {canInteract && (
           <Card className="p-5 space-y-4">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-muted-foreground" />
@@ -1187,16 +1177,17 @@ export function SkillDetailPage() {
             <InstallCommand
               namespace={namespace}
               slug={slug}
-              version={publishedVersion.version}
+              visibility={skill.visibility}
+              publishedVersion={publishedVersion?.version}
             />
           </Card>
         )}
 
         {hasPublishedPendingReview && ownerPreviewVersion && (
-          <Card className="border-amber-500/30 bg-amber-500/5 p-5 space-y-4">
+          <Card className="space-y-4 border-warning/30 bg-warning-surface p-5">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-amber-600" />
+                <Clock className="h-4 w-4 text-warning" />
                 <span className="text-sm font-semibold font-heading text-foreground">{t('skillDetail.pendingReviewSectionTitle')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -1207,7 +1198,7 @@ export function SkillDetailPage() {
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-amber-500/20 bg-background/70 p-3">
+              <div className="rounded-xl border border-warning/30 bg-card p-3">
                 <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   {t('skillDetail.pendingReviewVersionLabel')}
                 </div>
@@ -1215,11 +1206,11 @@ export function SkillDetailPage() {
                   v{ownerPreviewVersion.version}
                 </div>
               </div>
-              <div className="rounded-xl border border-amber-500/20 bg-background/70 p-3">
+              <div className="rounded-xl border border-warning/30 bg-card p-3">
                 <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   {t('skillDetail.pendingReviewStatusLabel')}
                 </div>
-                <div className="mt-2 text-sm font-semibold text-amber-700">
+                <div className="mt-2 text-sm font-semibold text-warning">
                   {t('skillDetail.pendingReviewStatusValue')}
                 </div>
               </div>

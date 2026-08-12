@@ -82,7 +82,7 @@ export function SessionBootstrapEntry({ onAuthenticated, methodDisplayName }: Se
       </Button>
 
       {manualError ? (
-        <p className="text-sm text-red-600">{manualError}</p>
+        <p className="text-sm text-danger">{manualError}</p>
       ) : null}
     </div>
   )

@@ -6,6 +6,7 @@ const mergedNoProxy = Array.from(new Set([
   ...(process.env.no_proxy?.split(',').filter(Boolean) ?? []),
   ...localNoProxyHosts,
 ])).join(',')
+const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
 
 process.env.NO_PROXY = mergedNoProxy
 process.env.no_proxy = mergedNoProxy
@@ -26,7 +27,10 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : undefined,
+      },
     },
   ],
   webServer: {

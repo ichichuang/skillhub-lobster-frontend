@@ -23,34 +23,35 @@ describe('SeverityBadge', () => {
     expect(html).toContain(`securityAudit.severity.${severity}`)
   })
 
-  it('applies the red color classes for CRITICAL severity', () => {
+  it('applies the semantic danger classes for CRITICAL severity', () => {
     const html = renderToStaticMarkup(<SeverityBadge severity="CRITICAL" />)
 
-    expect(html).toContain('text-red-700')
+    expect(html).toContain('bg-danger-surface')
+    expect(html).toContain('text-danger')
   })
 
-  it('applies the orange color classes for HIGH severity', () => {
+  it('applies the semantic danger classes for HIGH severity', () => {
     const html = renderToStaticMarkup(<SeverityBadge severity="HIGH" />)
 
-    expect(html).toContain('text-orange-700')
+    expect(html).toContain('text-danger')
   })
 
-  it('applies the amber color classes for MEDIUM severity', () => {
+  it('applies the semantic warning classes for MEDIUM severity', () => {
     const html = renderToStaticMarkup(<SeverityBadge severity="MEDIUM" />)
 
-    expect(html).toContain('text-amber-700')
+    expect(html).toContain('text-warning')
   })
 
-  it('applies the blue color classes for LOW severity', () => {
+  it('applies the semantic info classes for LOW severity', () => {
     const html = renderToStaticMarkup(<SeverityBadge severity="LOW" />)
 
-    expect(html).toContain('text-blue-700')
+    expect(html).toContain('text-info')
   })
 
-  it('applies the gray color classes for INFO severity', () => {
+  it('applies the semantic neutral classes for INFO severity', () => {
     const html = renderToStaticMarkup(<SeverityBadge severity="INFO" />)
 
-    expect(html).toContain('text-gray-700')
+    expect(html).toContain('text-muted-foreground')
   })
 
   it('renders as a span with rounded-full pill styling', () => {

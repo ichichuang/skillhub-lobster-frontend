@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card'
 
 describe('Card components', () => {
@@ -18,5 +20,13 @@ describe('Card components', () => {
     expect(CardDescription.displayName).toBe('CardDescription')
     expect(CardContent.displayName).toBe('CardContent')
     expect(CardFooter.displayName).toBe('CardFooter')
+  })
+
+  it('uses semantic card borders and shadows without inline color ownership', () => {
+    const html = renderToStaticMarkup(createElement(Card))
+
+    expect(html).toContain('border-border')
+    expect(html).toContain('shadow-card')
+    expect(html).not.toContain('style=')
   })
 })

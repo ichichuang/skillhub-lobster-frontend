@@ -74,6 +74,8 @@ describe('Dialog components', () => {
     )
 
     expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(screen.getByRole('dialog').className).toContain('bg-popover')
+    expect(screen.getByRole('dialog').className).toContain('shadow-dialog')
     expect(screen.getByText('Confirm delete')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
     expect(onOpenChange).toHaveBeenCalledWith(false)

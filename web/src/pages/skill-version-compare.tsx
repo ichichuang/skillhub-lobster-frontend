@@ -135,11 +135,11 @@ export function SkillVersionComparePage() {
           </div>
           <div>
             <div className="text-xs text-muted-foreground">{t('skillCompare.addedLines')}</div>
-            <div className="font-medium text-emerald-600">+{data.summary.addedLines}</div>
+            <div className="font-medium text-success">+{data.summary.addedLines}</div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground">{t('skillCompare.removedLines')}</div>
-            <div className="font-medium text-rose-600">-{data.summary.removedLines}</div>
+            <div className="font-medium text-danger">-{data.summary.removedLines}</div>
           </div>
         </div>
 
@@ -254,8 +254,8 @@ export function SkillVersionComparePage() {
                       key={`${file.path}-${index}`}
                       className={[
                         'grid grid-cols-[56px_56px_1fr] gap-0',
-                        line.type === 'ADD' ? 'bg-emerald-50 dark:bg-emerald-950/30' : '',
-                        line.type === 'DELETE' ? 'bg-rose-50 dark:bg-rose-950/30' : '',
+                        line.type === 'ADD' ? 'bg-success-surface' : '',
+                        line.type === 'DELETE' ? 'bg-danger-surface' : '',
                       ].join(' ')}
                     >
                       <span className="select-none border-r border-border/30 px-2 py-0.5 text-right text-xs text-muted-foreground">
@@ -267,8 +267,8 @@ export function SkillVersionComparePage() {
                       <span
                         className={[
                           'whitespace-pre overflow-x-auto px-3 py-0.5',
-                          line.type === 'ADD' ? 'text-emerald-700 dark:text-emerald-400' : '',
-                          line.type === 'DELETE' ? 'text-rose-700 dark:text-rose-400' : '',
+                          line.type === 'ADD' ? 'text-success' : '',
+                          line.type === 'DELETE' ? 'text-danger' : '',
                           line.type === 'CONTEXT' ? 'text-foreground' : '',
                         ].join(' ')}
                       >

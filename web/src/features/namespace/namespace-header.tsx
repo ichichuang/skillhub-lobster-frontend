@@ -22,10 +22,10 @@ export function NamespaceHeader({ namespace, canEdit = false }: NamespaceHeaderP
       ? t('namespaceStatus.archived')
       : t('namespaceStatus.active')
   const statusClassName = namespace.status === 'FROZEN'
-    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+    ? 'border-warning/30 bg-warning-surface text-warning'
     : namespace.status === 'ARCHIVED'
-      ? 'bg-slate-500/10 text-slate-500 border-slate-500/20'
-      : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+      ? 'border-border bg-surface-muted text-muted-foreground'
+      : 'border-success/30 bg-success-surface text-success'
   const hint = namespace.type === 'GLOBAL'
     ? t('namespaceStatus.immutableHint')
     : namespace.status === 'FROZEN'

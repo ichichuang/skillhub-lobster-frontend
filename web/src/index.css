@@ -4,76 +4,120 @@
 
 @layer base {
   :root {
-    /* SkillHub — 浅色主题 (indigo-violet brand) */
-    --background: 210 20% 98%;
-    --foreground: 220 26% 14%;
+    /* Frozen canonical Light palette. The runtime adapter remains active during migration. */
+    --theme-primary-anchor: #57b5cb;
+    --theme-page-anchor: #f6f6f6;
+    --theme-surface-anchor: #ffffff;
+    --background: 0 0% 96.4706%;
+    --foreground: 220.7143 37.8378% 14.5098%;
     --card: 0 0% 100%;
-    --card-foreground: 220 26% 14%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
-    /* Indigo primary (#6A6DFF) */
-    --primary: 239 100% 71%;
-    --primary-foreground: 0 0% 100%;
-    /* Surface tones */
-    --secondary: 210 30% 96%;
-    --secondary-foreground: 220 26% 14%;
-    --muted: 210 25% 95%;
-    --muted-foreground: 215 14% 46%;
-    /* Violet accent (#B85EFF) */
-    --accent: 271 100% 68%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 55%;
+    --card-foreground: 220.7143 37.8378% 14.5098%;
+    --popover: 219.8698 8.2716% 96.1512%;
+    --popover-foreground: 220.7143 37.8378% 14.5098%;
+    --primary: 191.3793 52.7273% 56.8627%;
+    --primary-foreground: 219.2308 52% 9.8039%;
+    --secondary: 43.8136 0.0005% 98.4088%;
+    --secondary-foreground: 220.7143 37.8378% 14.5098%;
+    --muted: 43.8136 0.0005% 98.4088%;
+    --muted-foreground: 219.9798 8.2152% 47.9765%;
+    --accent: 192.5465 50.8861% 96.7295%;
+    --accent-foreground: 220.7143 37.8378% 14.5098%;
+    --destructive: 0 72.2222% 50.5882%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 239 100% 71%;
+    --border: 219.875 8.2123% 90.4314%;
+    --input: 43.8136 0.0008% 99.1154%;
+    --ring: 191.3793 52.7273% 56.8627%;
     --radius: 0.75rem;
-
-    /* Extended palette */
-    --surface-glass: 210 30% 97%;
-    --glow-primary: 239 100% 71%;
-    --glow-accent: 271 100% 68%;
-    --success: 160 60% 45%;
-    --warning: 38 92% 58%;
-
-    /* Brand */
-    --brand-start: #6A6DFF;
-    --brand-end: #B85EFF;
-    --brand-gradient: linear-gradient(135deg, #6A6DFF 0%, #B85EFF 100%);
-
-    /* Text semantic */
-    --text-secondary: 215 19% 35%;
-    --text-muted: 215 14% 46%;
-    --text-placeholder: 213 12% 63%;
-
-    /* Border semantic */
-    --border-card: 220 26% 94%;
+    --surface-raised: 219.8698 8.2716% 96.1512%;
+    --surface-muted: 43.8136 0.0005% 98.4088%;
+    --surface-hover: 192.5465 50.8861% 96.7295%;
+    --surface-active: 192.5314 50.8702% 94.273%;
+    --divider: 219.8715 8.2522% 94.2374%;
+    --border-strong: 219.88 8.1601% 85.7154%;
+    --primary-hover: 192.106 44.7427% 52.7138%;
+    --primary-active: 192.7096 40.255% 49.6388%;
+    --primary-subtle: 192.5418 50.8801% 95.9111%;
+    --selection: 192.5257 50.8665% 93.4533%;
+    --text-secondary: 220.023 10.4936% 41.443%;
+    --text-muted: 219.9798 8.2152% 47.9765%;
+    --text-placeholder: 219.9827 8.3752% 47.4587%;
+    --border-card: 219.875 8.2123% 90.4314%;
+    --success: 142.1277 76.2162% 36.2745%;
+    --success-surface: 127.4569 37.9201% 95.506%;
+    --warning: 32.1327 94.6188% 43.7255%;
+    --warning-surface: 25.0707 79.693% 96.3069%;
+    --danger: 0 72.2222% 50.5882%;
+    --danger-surface: 7.6888 100% 96.5774%;
+    --info: 200.4061 98.01% 39.4118%;
+    --info-surface: 206.8001 62.9976% 95.889%;
+    --shadow-card: 0 1px 2px rgb(12 21 38 / 0.04), 0 8px 24px rgb(12 21 38 / 0.08);
+    --shadow-popover: 0 12px 32px rgb(12 21 38 / 0.12);
+    --shadow-dialog: 0 24px 64px rgb(12 21 38 / 0.16);
+    --surface-glass: var(--surface-raised);
+    --glow-primary: var(--primary);
+    --glow-accent: var(--primary);
+    --brand-start: #57b5cb;
+    --brand-end: #57b5cb;
+    --brand-gradient: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+    --bg-page: hsl(0 0% 96.4706%);
   }
 
   .dark {
-    /* Dark theme (preserved, not default) */
-    --background: 222 47% 6%;
-    --foreground: 210 40% 96%;
-    --card: 222 40% 9%;
-    --card-foreground: 210 40% 96%;
-    --popover: 222 40% 9%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 239 100% 75%;
-    --primary-foreground: 222 47% 6%;
-    --secondary: 222 30% 13%;
-    --secondary-foreground: 210 30% 85%;
-    --muted: 222 25% 15%;
-    --muted-foreground: 215 20% 55%;
-    --accent: 271 100% 72%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 55%;
+    /* Frozen canonical Dark palette. Keep every runtime-owned value explicit in this block. */
+    --theme-primary-anchor: #57b5cb;
+    --theme-page-anchor: #0c1526;
+    --theme-surface-anchor: #131d2d;
+    --background: 219.2308 52% 9.8039%;
+    --foreground: 210 40% 98.0392%;
+    --card: 216.9231 40.625% 12.549%;
+    --card-foreground: 210 40% 98.0392%;
+    --popover: 216.8431 32.9391% 15.3776%;
+    --popover-foreground: 210 40% 98.0392%;
+    --primary: 191.3793 52.7273% 56.8627%;
+    --primary-foreground: 219.2308 52% 9.8039%;
+    --secondary: 217.947 45.1633% 11.3027%;
+    --secondary-foreground: 210 40% 98.0392%;
+    --muted: 217.947 45.1633% 11.3027%;
+    --muted-foreground: 216.0311 7.6076% 53.7597%;
+    --accent: 211.3626 39.6709% 15.7413%;
+    --accent-foreground: 210 40% 98.0392%;
+    --destructive: 0 72.2222% 50.5882%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 20% 18%;
-    --input: 222 20% 18%;
-    --ring: 239 100% 75%;
-    --surface-glass: 222 35% 11%;
-    --glow-primary: 239 100% 75%;
-    --glow-accent: 271 100% 72%;
+    --border: 216.7407 25.215% 19.7466%;
+    --input: 217.4902 43.0468% 11.8545%;
+    --ring: 191.3793 52.7273% 56.8627%;
+    --surface-raised: 216.8431 32.9391% 15.3776%;
+    --surface-muted: 217.947 45.1633% 11.3027%;
+    --surface-hover: 211.3626 39.6709% 15.7413%;
+    --surface-active: 208.1564 39.2989% 18.1833%;
+    --divider: 216.807 29.9761% 16.8175%;
+    --border-strong: 216.6652 20.7576% 23.4956%;
+    --primary-hover: 192.106 44.7427% 52.7138%;
+    --primary-active: 192.7096 40.255% 49.6388%;
+    --primary-subtle: 208.1564 39.2989% 18.1833%;
+    --selection: 207.2254 39.2161% 19.0061%;
+    --text-secondary: 215.6169 8.2366% 65.2663%;
+    --text-muted: 216.0311 7.6076% 53.7597%;
+    --text-placeholder: 216.0801 7.5287% 52.0143%;
+    --border-card: 216.7407 25.215% 19.7466%;
+    --success: 142.1277 76.2162% 36.2745%;
+    --success-surface: 187.226 38.5045% 14.7858%;
+    --warning: 32.1327 94.6188% 43.7255%;
+    --warning-surface: 286.3649 5.4879% 18.269%;
+    --danger: 0 72.2222% 50.5882%;
+    --danger-surface: 311.9933 15.8589% 17.2296%;
+    --info: 200.4061 98.01% 39.4118%;
+    --info-surface: 211.3431 49.3048% 17.5702%;
+    --shadow-card: 0 8px 24px rgb(0 0 0 / 0.14);
+    --shadow-popover: 0 14px 36px rgb(0 0 0 / 0.2);
+    --shadow-dialog: 0 24px 64px rgb(0 0 0 / 0.28);
+    --surface-glass: var(--surface-raised);
+    --glow-primary: var(--primary);
+    --glow-accent: var(--primary);
+    --brand-start: #57b5cb;
+    --brand-end: #57b5cb;
+    --brand-gradient: linear-gradient(135deg, var(--brand-start) 0%, var(--brand-end) 100%);
+    --bg-page: hsl(219.2308 52% 9.8039%);
   }
 }
 
@@ -240,7 +284,7 @@
 
 /* ─── Gradient text ─── */
 .text-gradient-primary {
-  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+  background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -248,13 +292,6 @@
 
 .text-gradient-hero {
   background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.dark .text-gradient-hero {
-  background: linear-gradient(135deg, #8183FF, #C77EFF);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -269,8 +306,7 @@
 
 .card-hover:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px hsl(var(--primary) / 0.1),
-              0 8px 16px -8px hsl(0 0% 0% / 0.2);
+  box-shadow: var(--shadow-popover);
   border-color: hsl(var(--primary) / 0.3);
 }
 
@@ -295,7 +331,7 @@
 
 /* ─── Selection ─── */
 ::selection {
-  background: hsl(var(--primary) / 0.3);
+  background: hsl(var(--selection));
   color: hsl(var(--foreground));
 }
 
@@ -323,9 +359,9 @@
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 500;
-  color: #0369a1;
-  background: #e0f2fe;
-  border: 1px solid #7dd3fc;
+  color: hsl(var(--info));
+  background: hsl(var(--info-surface));
+  border: 1px solid hsl(var(--info) / 0.35);
   border-radius: 9999px;
 }
 
@@ -338,13 +374,12 @@
   font-size: 12px;
   font-weight: 500;
   border-radius: 9999px;
-  color: white;
 }
 
-.status-pill--published { background: #16a34a; }
-.status-pill--review { background: #ea580c; }
-.status-pill--archived { background: #6b7280; }
-.status-pill--rejected { background: #dc2626; }
+.status-pill--published { background: hsl(var(--success-surface)); color: hsl(var(--success)); }
+.status-pill--review { background: hsl(var(--warning-surface)); color: hsl(var(--warning)); }
+.status-pill--archived { background: hsl(var(--surface-muted)); color: hsl(var(--text-secondary)); }
+.status-pill--rejected { background: hsl(var(--danger-surface)); color: hsl(var(--danger)); }
 
 /* ─── Role pill ─── */
 .role-pill {
@@ -369,19 +404,19 @@
 }
 
 .badge-soft-green {
-  background: #dcfce7;
-  color: #166534;
+  background: hsl(var(--success-surface));
+  color: hsl(var(--success));
 }
 
 .badge-soft-blue {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: hsl(var(--info-surface));
+  color: hsl(var(--info));
 }
 
 /* ─── Tab active ─── */
 .tab-active {
-  border-bottom: 2px solid #3b82f6;
-  color: #1d4ed8;
+  border-bottom: 2px solid hsl(var(--primary));
+  color: hsl(var(--primary));
 }
 
 /* ─── Code block ─── */
@@ -458,8 +493,8 @@
 }
 
 .upload-zone:hover {
-  border-color: var(--brand-start);
-  background: rgba(106, 109, 255, 0.04);
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary-subtle));
 }
 
 .upload-zone .upload-zone-icon {
@@ -468,12 +503,12 @@
 }
 
 .upload-zone:hover .upload-zone-icon {
-  color: var(--brand-start);
+  color: hsl(var(--primary));
 }
 
 /* ─── Feature icon shadow ─── */
 .feature-icon {
-  box-shadow: 0 14px 30px rgba(106, 109, 255, 0.45);
+  box-shadow: 0 14px 30px hsl(var(--primary) / 0.3);
 }
 
 /* ─── Hero input placeholder ─── */

@@ -85,7 +85,7 @@ export function EditNamespaceDialog({ namespace, children }: EditNamespaceDialog
               }}
               aria-invalid={displayNameError ? 'true' : 'false'}
             />
-            {displayNameError ? <p className="text-xs text-red-600">{displayNameError}</p> : null}
+            {displayNameError ? <p className="text-xs text-danger">{displayNameError}</p> : null}
           </div>
 
           <div className="space-y-2">
@@ -100,7 +100,7 @@ export function EditNamespaceDialog({ namespace, children }: EditNamespaceDialog
         </div>
 
         {updateMutation.error ? (
-          <p className="text-sm text-red-600">{updateMutation.error.message}</p>
+          <p className="text-sm text-danger">{updateMutation.error.message}</p>
         ) : null}
 
         <DialogFooter className="sm:justify-center sm:space-x-3">

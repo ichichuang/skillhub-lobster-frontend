@@ -176,7 +176,7 @@ export function CreateNamespaceDialog({ children }: CreateNamespaceDialogProps) 
               aria-invalid={errors.slug ? 'true' : 'false'}
             />
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="text-red-600">{errors.slug ?? t('myNamespaces.createSlugHint')}</span>
+              <span className="text-danger">{errors.slug ?? t('myNamespaces.createSlugHint')}</span>
               <span className="text-muted-foreground">{slugLength}/{MAX_SLUG_LENGTH}</span>
             </div>
           </div>
@@ -203,7 +203,7 @@ export function CreateNamespaceDialog({ children }: CreateNamespaceDialogProps) 
               aria-invalid={errors.displayName ? 'true' : 'false'}
             />
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="text-red-600">{errors.displayName ?? ''}</span>
+              <span className="text-danger">{errors.displayName ?? ''}</span>
               <span className="text-muted-foreground">{displayNameLength}/{MAX_DISPLAY_NAME_LENGTH}</span>
             </div>
           </div>
@@ -224,14 +224,14 @@ export function CreateNamespaceDialog({ children }: CreateNamespaceDialogProps) 
               aria-invalid={errors.description ? 'true' : 'false'}
             />
             <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="text-red-600">{errors.description ?? t('myNamespaces.createDescriptionHint')}</span>
+              <span className="text-danger">{errors.description ?? t('myNamespaces.createDescriptionHint')}</span>
               <span className="text-muted-foreground">{descriptionLength}/{MAX_DESCRIPTION_LENGTH}</span>
             </div>
           </div>
         </div>
 
         {createMutation.error ? (
-          <p className="text-sm text-red-600">{createMutation.error.message}</p>
+          <p className="text-sm text-danger">{createMutation.error.message}</p>
         ) : null}
 
         <DialogFooter className="sm:justify-center sm:space-x-3">

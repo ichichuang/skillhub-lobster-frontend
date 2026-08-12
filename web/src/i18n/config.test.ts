@@ -1,64 +1,83 @@
-import { describe, expect, it, vi } from 'vitest'
+// @vitest-environment jsdom
 
-// The i18n config module performs side-effect-only initialization.
-// We mock i18next to verify that init is called with expected config.
+import { afterAll, describe, expect, it } from 'vitest'
 
-const initMock = vi.fn().mockReturnThis()
-const useMock = vi.fn().mockReturnThis()
-
-vi.mock('i18next', () => ({
-  default: {
-    use: useMock,
-    init: initMock,
+const localStorageDescriptor = Object.getOwnPropertyDescriptor(window, 'localStorage')
+const navigatorLanguage = Object.getOwnPropertyDescriptor(window.navigator, 'language')
+const navigatorLanguages = Object.getOwnPropertyDescriptor(window.navigator, 'languages')
+const storedValues = new Map<string, string>([['i18nextLng', 'en']])
+const localStorage: Storage = {
+  get length() {
+    return storedValues.size
   },
-}))
+  clear() {
+    storedValues.clear()
+  },
+  getItem(key) {
+    return storedValues.get(key) ?? null
+  },
+  key(index) {
+    return [...storedValues.keys()][index] ?? null
+  },
+  removeItem(key) {
+    storedValues.delete(key)
+  },
+  setItem(key, value) {
+    storedValues.set(key, value)
+  },
+}
 
-vi.mock('react-i18next', () => ({
-  initReactI18next: { type: '3rdParty', init: vi.fn() },
-}))
+Object.defineProperty(window, 'localStorage', {
+  configurable: true,
+  value: localStorage,
+})
+Object.defineProperty(window.navigator, 'language', {
+  configurable: true,
+  value: 'en-US',
+})
+Object.defineProperty(window.navigator, 'languages', {
+  configurable: true,
+  value: ['en-US', 'en'],
+})
 
-vi.mock('i18next-browser-languagedetector', () => ({
-  default: class MockDetector {},
-}))
+const { default: i18n } = await import('./config')
 
-vi.mock('./locales/en.json', () => ({
-  default: { greeting: 'Hello' },
-}))
+afterAll(() => {
+  if (localStorageDescriptor) {
+    Object.defineProperty(window, 'localStorage', localStorageDescriptor)
+  } else {
+    Reflect.deleteProperty(window, 'localStorage')
+  }
 
-vi.mock('./locales/zh.json', () => ({
-  default: { greeting: '你好' },
-}))
+  if (navigatorLanguage) {
+    Object.defineProperty(window.navigator, 'language', navigatorLanguage)
+  } else {
+    Reflect.deleteProperty(window.navigator, 'language')
+  }
 
-// Import triggers the side-effect initialization
-await import('./config')
+  if (navigatorLanguages) {
+    Object.defineProperty(window.navigator, 'languages', navigatorLanguages)
+  } else {
+    Reflect.deleteProperty(window.navigator, 'languages')
+  }
+})
 
 describe('i18n config', () => {
-  it('chains the language detector and react-i18next plugins', () => {
-    expect(useMock).toHaveBeenCalledTimes(2)
+  it('keeps the runtime language fixed to Simplified Chinese', () => {
+    expect(i18n.language).toBe('zh-CN')
+    expect(i18n.resolvedLanguage).toBe('zh-CN')
+    expect(i18n.options.supportedLngs).toContain('zh-CN')
   })
 
-  it('calls init with the english fallback language', () => {
-    expect(initMock).toHaveBeenCalledTimes(1)
-    const initOptions = initMock.mock.calls[0][0]
-    expect(initOptions.fallbackLng).toBe('en')
+  it('ignores stale storage and browser language preferences without rewriting storage', () => {
+    expect(window.navigator.language).toBe('en-US')
+    expect(window.localStorage.getItem('i18nextLng')).toBe('en')
+    expect(i18n.resolvedLanguage).toBe('zh-CN')
   })
 
-  it('disables HTML escaping for React interpolation', () => {
-    const initOptions = initMock.mock.calls[0][0]
-    expect(initOptions.interpolation.escapeValue).toBe(false)
-  })
-
-  it('configures localStorage-first detection order', () => {
-    const initOptions = initMock.mock.calls[0][0]
-    expect(initOptions.detection.order).toEqual(['localStorage', 'navigator'])
-    expect(initOptions.detection.caches).toEqual(['localStorage'])
-  })
-
-  it('registers both english and chinese resource bundles', () => {
-    const initOptions = initMock.mock.calls[0][0]
-    expect(initOptions.resources).toHaveProperty('en')
-    expect(initOptions.resources).toHaveProperty('zh')
-    expect(initOptions.resources.en).toHaveProperty('translation')
-    expect(initOptions.resources.zh).toHaveProperty('translation')
+  it('uses the zh-CN resource as the Chinese fallback', () => {
+    expect(i18n.options.fallbackLng).toEqual(['zh-CN'])
+    expect(i18n.hasResourceBundle('zh-CN', 'translation')).toBe(true)
+    expect(i18n.t('nav.home')).toBe('技能中心')
   })
 })

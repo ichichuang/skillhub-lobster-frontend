@@ -311,6 +311,14 @@ describe('SkillDetailPage', () => {
     expect(html).toContain('skillDetail.deleteSkill')
   })
 
+  it('omits public author presentation while preserving owner actions', () => {
+    const html = renderToStaticMarkup(<SkillDetailPage />)
+
+    expect(html).not.toContain('skillDetail.authorLabel')
+    expect(html).not.toContain('Owner One')
+    expect(html).toContain('skillDetail.deleteSkill')
+  })
+
   it('hides hard delete action when the viewer is not the owner or super admin', () => {
     useSkillDetailMock.mockReturnValue({
       data: createSkill({ ownerId: 'someone-else' }),

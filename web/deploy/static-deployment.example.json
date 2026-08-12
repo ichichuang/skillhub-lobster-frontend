@@ -1,0 +1,5 @@
+{
+  "appBaseUrl": "http://10.100.5.133:2380/skillhub",
+  "webBasePath": "/skillhub/",
+  "output": "dist-static"
+}

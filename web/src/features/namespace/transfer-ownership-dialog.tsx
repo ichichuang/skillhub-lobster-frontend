@@ -83,7 +83,7 @@ export function TransferOwnershipDialog({ namespace, members, children }: Transf
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
+          <div className="rounded-lg border border-warning/30 bg-warning-surface p-3 text-sm text-warning">
             {t('members.transferWarning')}
           </div>
 
@@ -125,7 +125,7 @@ export function TransferOwnershipDialog({ namespace, members, children }: Transf
         </div>
 
         {transferMutation.error ? (
-          <p className="text-sm text-red-600">{transferMutation.error.message}</p>
+          <p className="text-sm text-danger">{transferMutation.error.message}</p>
         ) : null}
 
         <DialogFooter className="sm:justify-center sm:space-x-3">

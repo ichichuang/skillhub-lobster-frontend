@@ -240,13 +240,13 @@ export function ProfileSettingsPage() {
                   )}
 
                   {errors[field] ? (
-                    <p className="text-sm text-red-600">{errors[field]}</p>
+                    <p className="text-sm text-danger">{errors[field]}</p>
                   ) : null}
                 </div>
               )
             })}
 
-            {errors._form ? <p className="text-sm text-red-600">{errors._form}</p> : null}
+            {errors._form ? <p className="text-sm text-danger">{errors._form}</p> : null}
 
             {/* Review hint */}
             {hasReviewFields ? (
@@ -267,12 +267,12 @@ export function ProfileSettingsPage() {
 
           {/* Review status banner */}
           {pendingChanges?.status === 'PENDING' ? (
-            <div className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+            <div className="rounded-lg border border-warning/30 bg-warning-surface p-3 text-sm text-warning">
               {t('profile.pendingReview', { name: pendingChanges.changes?.displayName })}
             </div>
           ) : null}
           {pendingChanges?.status === 'REJECTED' ? (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-400">
+            <div className="rounded-lg border border-danger/30 bg-danger-surface p-3 text-sm text-danger">
               <p>{t('profile.rejected')}</p>
               {pendingChanges.reviewComment ? (
                 <p className="mt-1 text-xs opacity-80">{t('profile.rejectedReason', { reason: pendingChanges.reviewComment })}</p>

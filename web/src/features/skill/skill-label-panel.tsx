@@ -147,8 +147,8 @@ export function SkillLabelPanel({ namespace, slug, initialLabels, canManage, isS
                       className={cn(
                         'inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium',
                         label.type === 'PRIVILEGED'
-                          ? 'border-amber-500/40 bg-amber-100 text-amber-900'
-                          : 'border-slate-300 bg-slate-100 text-slate-800',
+                          ? 'border-warning/40 bg-warning-surface text-warning'
+                          : 'border-border bg-surface-muted text-foreground',
                       )}
                     >
                       {label.displayName}

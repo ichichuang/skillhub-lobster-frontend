@@ -23,28 +23,29 @@ describe('VerdictBadge', () => {
     expect(html).toContain(`securityAudit.verdict.${verdict}`)
   })
 
-  it('applies emerald color classes for SAFE verdict', () => {
+  it('applies semantic success classes for SAFE verdict', () => {
     const html = renderToStaticMarkup(<VerdictBadge verdict="SAFE" />)
 
-    expect(html).toContain('text-emerald-700')
+    expect(html).toContain('bg-success-surface')
+    expect(html).toContain('text-success')
   })
 
-  it('applies amber color classes for SUSPICIOUS verdict', () => {
+  it('applies semantic warning classes for SUSPICIOUS verdict', () => {
     const html = renderToStaticMarkup(<VerdictBadge verdict="SUSPICIOUS" />)
 
-    expect(html).toContain('text-amber-700')
+    expect(html).toContain('text-warning')
   })
 
-  it('applies orange color classes for DANGEROUS verdict', () => {
+  it('applies semantic danger classes for DANGEROUS verdict', () => {
     const html = renderToStaticMarkup(<VerdictBadge verdict="DANGEROUS" />)
 
-    expect(html).toContain('text-orange-700')
+    expect(html).toContain('text-danger')
   })
 
-  it('applies red color classes for BLOCKED verdict', () => {
+  it('applies semantic danger classes for BLOCKED verdict', () => {
     const html = renderToStaticMarkup(<VerdictBadge verdict="BLOCKED" />)
 
-    expect(html).toContain('text-red-700')
+    expect(html).toContain('text-danger')
   })
 
   it('renders the scanning label for pending scan display state', () => {

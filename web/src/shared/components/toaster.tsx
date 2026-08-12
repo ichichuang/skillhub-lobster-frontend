@@ -15,16 +15,16 @@ export function Toaster() {
         toastOptions={{
           toasterId: CENTER_TOASTER_ID,
           classNames: {
-            toast: 'glass-strong mx-auto w-fit max-w-[min(100vw-2rem,32rem)] border border-border/40',
+            toast: 'mx-auto w-fit max-w-[min(100vw-2rem,32rem)] border border-border bg-popover text-popover-foreground shadow-popover',
             title: 'text-foreground font-semibold text-center',
             description: 'text-muted-foreground text-center',
             content: 'w-full text-center',
             actionButton: 'bg-primary text-primary-foreground',
             cancelButton: 'bg-muted text-muted-foreground',
-            error: 'border-destructive/40',
-            success: 'border-emerald-500/40',
-            warning: 'border-amber-500/40',
-            info: 'border-blue-500/40',
+            error: 'border-danger bg-danger-surface',
+            success: 'border-success bg-success-surface',
+            warning: 'border-warning bg-warning-surface',
+            info: 'border-info bg-info-surface',
           },
         }}
       />

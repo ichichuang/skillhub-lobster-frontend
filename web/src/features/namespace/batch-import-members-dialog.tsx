@@ -229,7 +229,7 @@ export function BatchImportMembersDialog({ slug, children }: BatchImportMembersD
                     <tr key={index} className="border-b border-border/40 last:border-b-0">
                       <td className="p-2 font-mono text-xs">{row.userId || '-'}</td>
                       <td className="p-2">{row.role || '-'}</td>
-                      <td className={`p-2 text-xs ${row.validation === 'valid' ? 'text-green-600' : 'text-red-600'}`}>
+                      <td className={`p-2 text-xs ${row.validation === 'valid' ? 'text-success' : 'text-danger'}`}>
                         {validationLabel(row)}
                       </td>
                     </tr>
@@ -264,7 +264,7 @@ export function BatchImportMembersDialog({ slug, children }: BatchImportMembersD
                     <tr key={index} className="border-b border-border/40 last:border-b-0">
                       <td className="p-2 font-mono text-xs">{result.userId}</td>
                       <td className="p-2">{result.role}</td>
-                      <td className={`p-2 text-xs ${result.success ? 'text-green-600' : 'text-red-600'}`}>
+                      <td className={`p-2 text-xs ${result.success ? 'text-success' : 'text-danger'}`}>
                         {result.success ? t('members.batchResultSuccess') : mapResultError(result.error, t)}
                       </td>
                     </tr>

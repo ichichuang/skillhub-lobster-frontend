@@ -5,9 +5,9 @@ description: Use this when you need to search, inspect, install, or publish agen
 
 # SkillHub Registry
 
-Use this skill when you need to work with a SkillHub registry: search skills, inspect metadata, install a package, or publish a new version.
+Use this skill when you need to work with this SkillHub registry: search skills, inspect metadata, install a package, or publish a new version.
 
-> Important: Prefer the `clawhub` CLI for registry workflows. SkillHub exposes a ClawHub-compatible API surface and a discovery endpoint at `/.well-known/clawhub.json`, so the CLI is the safest path for auth, resolution, and download behavior. Only fall back to raw HTTP when debugging the server itself.
+> Important: For private or internal deployments, use terminal/Exec rather than browser or web-fetch access. Run `clawhub` with the explicit Registry base shown below; well-known discovery is not required for this workflow.
 
 ## What SkillHub Is
 
@@ -19,42 +19,31 @@ Key facts:
 - If using the clawhub CLI, the compatible format is `{namespace}--{skill_slug}`.
 - ClawHub-compatible clients use a `{namespace}--{skill_slug}` slug instead.
 - `latest` always means the latest published version, never draft or pending review.
-- Public skills in `@global` can be downloaded anonymously.
+- Skills that are both `@global` and `PUBLIC` can be searched, inspected, and installed anonymously.
 - If no namespace is specified, it defaults to `@global`.
 - `{skill_slug}` can be used instead of `global--{skill_slug}`
 - Team namespace skills and non-public skills require authentication.
 
-## Configure The CLI
+## Use The Explicit Registry Base
 
-Point `clawhub` at the SkillHub base URL:
-
-```bash
-export CLAWHUB_REGISTRY=${SKILLHUB_PUBLIC_BASE_URL}
-```
-
-Alternatively, use the `--registry` parameter every time, for example:
+Use `--registry ${SKILLHUB_PUBLIC_BASE_URL}` on every Registry operation. This is the supported workflow for this deployment:
 
 ```bash
+npx clawhub search email --registry ${SKILLHUB_PUBLIC_BASE_URL}
+npx clawhub info my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 npx clawhub install my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
+If you received this instruction without the full guide, you may fetch it with terminal `curl`:
+
+```bash
+curl -fsSL ${SKILLHUB_PUBLIC_BASE_URL}/registry/skill.md
+```
 
 If you need authenticated access, provide an API token:
 
 ```bash
-clawhub login --token sk_your_api_token_here
-```
-
-Optional local check:
-
-```bash
-curl ${SKILLHUB_PUBLIC_BASE_URL}/.well-known/clawhub.json
-```
-
-Expected response:
-
-```json
-{"apiBase":"/api/v1"}
+npx clawhub --registry ${SKILLHUB_PUBLIC_BASE_URL} login --token sk_your_api_token_here
 ```
 
 ## Coordinate Rules - IMPORTANT
@@ -75,9 +64,9 @@ Rules:
 Examples:
 
 ```bash
-npx clawhub install my-skill
-npx clawhub install my-skill@1.2.0
-npx clawhub install team-name--my-skill
+npx clawhub install my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
+npx clawhub install my-skill@1.2.0 --registry ${SKILLHUB_PUBLIC_BASE_URL}
+npx clawhub install team-name--my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
 ## Common Workflows
@@ -85,28 +74,28 @@ npx clawhub install team-name--my-skill
 ### Search
 
 ```bash
-npx clawhub search email
+npx clawhub search email --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
 Use an empty query when you want a broad listing:
 
 ```bash
-npx clawhub search ""
+npx clawhub search "" --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
 ### Inspect A Skill
 
 ```bash
-npx clawhub info my-skill
-npx clawhub info team-name--my-skill
+npx clawhub info my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
+npx clawhub info team-name--my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
 ### Install
 
 ```bash
-npx clawhub install my-skill
-npx clawhub install my-skill@1.2.0
-npx clawhub install team-name--my-skill
+npx clawhub install my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
+npx clawhub install my-skill@1.2.0 --registry ${SKILLHUB_PUBLIC_BASE_URL}
+npx clawhub install team-name--my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
 ### Publish
@@ -114,7 +103,7 @@ npx clawhub install team-name--my-skill
 Prepare a skill package directory, then publish it:
 
 ```bash
-npx clawhub publish ./my-skill
+npx clawhub publish ./my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
 Publishing requires authentication and sufficient permissions in the target namespace.

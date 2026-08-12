@@ -4,24 +4,24 @@ import { useDropzone } from 'react-dropzone'
 import { cn } from '@/shared/lib/utils'
 
 interface UploadZoneProps {
-  onFileSelect: (file: File) => void
+  onFilesSelect: (files: File[]) => void
   disabled?: boolean
 }
 
 /**
- * Provides the publish page dropzone for uploading one zip package at a time.
+ * Provides the publish page dropzone for adding zip packages to a local queue.
  * The component is intentionally stateless so packaging validation can remain in
  * the publish flow that knows the surrounding form and backend constraints.
  */
-export function UploadZone({ onFileSelect, disabled }: UploadZoneProps) {
+export function UploadZone({ onFilesSelect, disabled }: UploadZoneProps) {
   const { t } = useTranslation()
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
-        onFileSelect(acceptedFiles[0])
+        onFilesSelect(acceptedFiles)
       }
     },
-    [onFileSelect]
+    [onFilesSelect]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -29,7 +29,7 @@ export function UploadZone({ onFileSelect, disabled }: UploadZoneProps) {
     accept: {
       'application/zip': ['.zip'],
     },
-    maxFiles: 1,
+    multiple: true,
     disabled,
   })
 
@@ -42,7 +42,7 @@ export function UploadZone({ onFileSelect, disabled }: UploadZoneProps) {
         disabled && 'opacity-50 cursor-not-allowed'
       )}
     >
-      <input {...getInputProps()} />
+      <input {...getInputProps()} disabled={disabled} />
       <div className="flex flex-col items-center gap-3">
         <div className="w-14 h-14 rounded-2xl bg-secondary/60 flex items-center justify-center">
           <svg

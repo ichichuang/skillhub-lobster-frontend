@@ -152,7 +152,7 @@ export function GovernancePage() {
 
       {canRebuildSearchIndex ? (
         <>
-          <Card className="p-5 space-y-4 border border-amber-500/20 bg-amber-500/5">
+          <Card className="space-y-4 border border-warning/30 bg-warning-surface p-5">
             <div className="space-y-1">
               <h2 className="text-xl font-semibold font-heading">{t('governance.searchMaintenanceTitle')}</h2>
               <p className="text-sm text-muted-foreground">{t('governance.searchMaintenanceDescription')}</p>

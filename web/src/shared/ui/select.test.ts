@@ -12,8 +12,8 @@ describe('shared select contract', () => {
   it('keeps the trigger aligned with the existing input styling language', () => {
     expect(SELECT_TRIGGER_CLASS_NAME).toContain('h-11')
     expect(SELECT_TRIGGER_CLASS_NAME).toContain('rounded-lg')
-    expect(SELECT_TRIGGER_CLASS_NAME).toContain('border-border/60')
-    expect(SELECT_TRIGGER_CLASS_NAME).toContain('bg-secondary/50')
+    expect(SELECT_TRIGGER_CLASS_NAME).toContain('border-border')
+    expect(SELECT_TRIGGER_CLASS_NAME).toContain('bg-input')
     expect(SELECT_TRIGGER_CLASS_NAME).toContain('focus-visible:outline-none')
     expect(SELECT_TRIGGER_CLASS_NAME).toContain('focus-visible:ring-2')
     expect(SELECT_TRIGGER_CLASS_NAME).toContain('focus-visible:ring-primary/40')
@@ -35,7 +35,7 @@ describe('shared select contract', () => {
   })
 
   it('keeps the dropdown and selected items visually discoverable', () => {
-    expect(SELECT_CONTENT_CLASS_NAME).toContain('shadow-md')
+    expect(SELECT_CONTENT_CLASS_NAME).toContain('shadow-popover')
     expect(SELECT_ITEM_CLASS_NAME).toContain('pl-8')
     expect(SELECT_ITEM_CLASS_NAME).toContain('rounded-md')
   })

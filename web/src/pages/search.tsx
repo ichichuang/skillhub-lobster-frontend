@@ -2,22 +2,21 @@ import { startTransition, useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Loader2 } from 'lucide-react'
-import type { SkillSummary } from '@/api/types'
-import { useAuth } from '@/features/auth/use-auth'
 import { SearchBar } from '@/features/search/search-bar'
 import { SkillCard } from '@/features/skill/skill-card'
 import { SkeletonList } from '@/shared/components/skeleton-loader'
 import { EmptyState } from '@/shared/components/empty-state'
 import { Pagination } from '@/shared/components/pagination'
-import { useSearchSkills } from '@/shared/hooks/use-skill-queries'
 import { useVisibleLabels } from '@/shared/hooks/use-label-queries'
-import { useMyStars } from '@/shared/hooks/use-user-queries'
+import { useLocalPublishedCatalog, useLocalPublishedLabelMembership } from '@/shared/hooks/use-local-published-catalog'
 import { toRouterPath } from '@/shared/lib/base-path'
+import { createLocalPublishedSearchPage } from '@/shared/lib/local-published-catalog'
 import { formatNamespaceSearchInput, normalizeSearchQuery, parseNamespaceSearchInput } from '@/shared/lib/search-query'
 import { Button } from '@/shared/ui/button'
 import { APP_SHELL_PAGE_CLASS_NAME } from '@/app/page-shell-style'
 
 const PAGE_SIZE = 12
+const ROUTER_COMPAT_SEARCH = { sort: 'newest', starredOnly: false } as const
 
 function blurActiveElement() {
   if (typeof document === 'undefined' || typeof HTMLElement === 'undefined') {
@@ -51,52 +50,22 @@ function scrollToTopOnPageChange() {
 }
 
 /**
- * Skill discovery page with synchronized URL state.
+ * Local published skill discovery with synchronized URL state.
  *
- * Search text, sorting, pagination, and the starred-only filter are mirrored into router search
- * params so the page can be shared, restored, and revisited without losing state.
+ * Search text, namespace, category, and pagination are mirrored into router search params so the
+ * page can be shared, restored, and revisited without losing state. The router still requires
+ * legacy sort and starred-only fields, so SearchPage writes their inert defaults without exposing
+ * the removed controls.
  */
-function filterStarredSkills(skills: SkillSummary[], query: string, namespace: string): SkillSummary[] {
-  const normalizedQuery = query.trim().toLowerCase()
-  const normalizedNamespace = namespace.trim().toLowerCase()
-
-  return skills.filter((skill) => {
-    const matchesNamespace = !normalizedNamespace || skill.namespace.toLowerCase() === normalizedNamespace
-    if (!matchesNamespace) {
-      return false
-    }
-    if (!normalizedQuery) {
-      return true
-    }
-    return [skill.displayName, skill.summary, skill.namespace, skill.slug]
-        .filter(Boolean)
-        .some((value) => value!.toLowerCase().includes(normalizedQuery))
-  })
-}
-
-function sortStarredSkills(skills: SkillSummary[], sort: string): SkillSummary[] {
-  const sorted = [...skills]
-  if (sort === 'downloads') {
-    return sorted.sort((left, right) => right.downloadCount - left.downloadCount)
-  }
-  if (sort === 'newest' || sort === 'relevance') {
-    return sorted.sort((left, right) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime())
-  }
-  return sorted
-}
-
 export function SearchPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const searchParams = useSearch({ from: '/search' })
-  const { isAuthenticated } = useAuth()
 
   const q = normalizeSearchQuery(searchParams.q || '')
   const namespace = (searchParams.namespace || '').replace(/^@/, '')
   const selectedLabel = searchParams.label || ''
-  const sort = searchParams.sort || 'newest'
   const page = searchParams.page ?? 0
-  const starredOnly = searchParams.starredOnly ?? false
   const [queryInput, setQueryInput] = useState(formatNamespaceSearchInput(namespace, q))
   const previousPageRef = useRef(page)
 
@@ -118,21 +87,21 @@ export function SearchPage() {
     previousPageRef.current = page
   }, [page])
 
-  const { data, isLoading, isFetching } = useSearchSkills({
-    q,
-    namespace: namespace || undefined,
-    label: selectedLabel || undefined,
-    sort,
-    page,
-    size: PAGE_SIZE,
-    starredOnly,
-  })
+  const catalogQuery = useLocalPublishedCatalog()
+  const labelMembershipQuery = useLocalPublishedLabelMembership(selectedLabel || undefined)
   const { data: labels } = useVisibleLabels()
-  const {
-    data: starredSkills,
-    isLoading: isLoadingStarred,
-    isFetching: isFetchingStarred,
-  } = useMyStars(starredOnly && isAuthenticated)
+
+  const hasRequiredLabelMembership = !selectedLabel || labelMembershipQuery.data !== undefined
+  const data = hasRequiredLabelMembership
+    ? createLocalPublishedSearchPage(catalogQuery.data ?? [], {
+        q: q || undefined,
+        namespace: namespace || undefined,
+        labelMembership: selectedLabel ? labelMembershipQuery.data : undefined,
+        page,
+        size: PAGE_SIZE,
+      })
+    : { items: [], total: 0, page, size: PAGE_SIZE }
+
   useEffect(() => {
     // Debounce URL updates while the user is typing so query state stays shareable without
     // triggering a navigation on every keystroke.
@@ -143,58 +112,72 @@ export function SearchPage() {
 
     if (!parsedInput.query && !parsedInput.namespace) {
       startTransition(() => {
-        navigate({ to: '/search', search: { q: '', namespace: '', label: selectedLabel, sort, page: 0, starredOnly }, replace: page === 0 })
+        navigate({
+          to: '/search',
+          search: { q: '', namespace: undefined, label: selectedLabel || undefined, page: 0, ...ROUTER_COMPAT_SEARCH },
+          replace: page === 0,
+        })
       })
       return
     }
 
     const timeoutId = window.setTimeout(() => {
       startTransition(() => {
-        navigate({ to: '/search', search: { q: parsedInput.query, namespace: parsedInput.namespace, label: selectedLabel, sort, page: 0, starredOnly }, replace: true })
+        navigate({
+          to: '/search',
+          search: {
+            q: parsedInput.query,
+            namespace: parsedInput.namespace || undefined,
+            label: selectedLabel || undefined,
+            page: 0,
+            ...ROUTER_COMPAT_SEARCH,
+          },
+          replace: true,
+        })
       })
     }, 250)
 
     return () => window.clearTimeout(timeoutId)
-  }, [navigate, namespace, page, q, queryInput, selectedLabel, sort, starredOnly])
+  }, [navigate, namespace, page, q, queryInput, selectedLabel])
 
   const handleSearch = (query: string) => {
     const parsedInput = parseNamespaceSearchInput(query)
     setQueryInput(query)
     startTransition(() => {
-      navigate({ to: '/search', search: { q: parsedInput.query, namespace: parsedInput.namespace, label: selectedLabel, sort, page: 0, starredOnly }, replace: true })
+      navigate({
+        to: '/search',
+        search: {
+          q: parsedInput.query,
+          namespace: parsedInput.namespace || undefined,
+          label: selectedLabel || undefined,
+          page: 0,
+          ...ROUTER_COMPAT_SEARCH,
+        },
+        replace: true,
+      })
     })
-  }
-
-  const handleSortChange = (newSort: string) => {
-    navigate({ to: '/search', search: { q, namespace, label: selectedLabel, sort: newSort, page: 0, starredOnly } })
   }
 
   const handlePageChange = (newPage: number) => {
     blurActiveElement()
-    navigate({ to: '/search', search: { q, namespace, label: selectedLabel, sort, page: newPage, starredOnly } })
+    navigate({
+      to: '/search',
+      search: { q, namespace: namespace || undefined, label: selectedLabel || undefined, page: newPage, ...ROUTER_COMPAT_SEARCH },
+    })
   }
 
-  const handleLabelToggle = (label: string) => {
-    const nextLabel = selectedLabel === label ? '' : label
-    navigate({ to: '/search', search: { q, namespace, label: nextLabel, sort, page: 0, starredOnly } })
+  const handleLabelChange = (label?: string) => {
+    navigate({
+      to: '/search',
+      search: { q, namespace: namespace || undefined, label, page: 0, ...ROUTER_COMPAT_SEARCH },
+    })
   }
 
   const handleNamespaceClear = () => {
-    navigate({ to: '/search', search: { q, namespace: '', label: selectedLabel, sort, page: 0, starredOnly } })
-  }
-
-  const handleStarredToggle = () => {
-    if (!isAuthenticated) {
-      navigate({
-        to: '/login',
-        search: {
-          returnTo: toRouterPath(window.location.pathname, window.location.search, window.location.hash),
-        },
-      })
-      return
-    }
-
-    navigate({ to: '/search', search: { q, namespace, label: selectedLabel, sort, page: 0, starredOnly: !starredOnly } })
+    navigate({
+      to: '/search',
+      search: { q, namespace: undefined, label: selectedLabel || undefined, page: 0, ...ROUTER_COMPAT_SEARCH },
+    })
   }
 
   const handleSkillClick = (namespace: string, slug: string) => {
@@ -204,21 +187,14 @@ export function SearchPage() {
     })
   }
 
-  const filteredStarredSkills = starredOnly
-    ? sortStarredSkills(filterStarredSkills(starredSkills ?? [], q, namespace), sort)
-    : []
-  const starredPageItems = starredOnly
-    ? filteredStarredSkills.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-    : []
-  const totalPages = starredOnly
-    ? Math.ceil(filteredStarredSkills.length / PAGE_SIZE)
-    : data
-      ? Math.ceil(data.total / data.size)
-      : 0
-  const displayItems = starredOnly ? starredPageItems : (data?.items ?? [])
-  const isPageLoading = starredOnly ? isLoadingStarred : isLoading
-  const isUpdatingResults = starredOnly ? isFetchingStarred && !isLoadingStarred : isFetching && !isLoading
-  const resultCount = starredOnly ? filteredStarredSkills.length : (data?.total ?? 0)
+  const totalPages = data && data.size > 0 ? Math.ceil(data.total / data.size) : 0
+  const displayItems = data?.items ?? []
+  const isPageLoading = catalogQuery.isLoading || Boolean(selectedLabel && labelMembershipQuery.isLoading)
+  const isPageError = catalogQuery.isError || Boolean(selectedLabel && labelMembershipQuery.isError)
+  const isUpdatingResults = (
+    catalogQuery.isFetching || Boolean(selectedLabel && labelMembershipQuery.isFetching)
+  ) && !isPageLoading
+  const resultCount = data?.total ?? 0
 
   return (
     <div className={APP_SHELL_PAGE_CLASS_NAME}>
@@ -232,42 +208,50 @@ export function SearchPage() {
         />
       </div>
 
-      {/* Sort And Filters */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-muted-foreground">{t('search.sort.label')}</span>
-            <div className="flex gap-2">
-              <Button
-                variant={sort === 'relevance' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleSortChange('relevance')}
-              >
-                {t('search.sort.relevance')}
-              </Button>
-              <Button
-                variant={sort === 'downloads' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleSortChange('downloads')}
-              >
-                {t('search.sort.downloads')}
-              </Button>
-              <Button
-                variant={sort === 'newest' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleSortChange('newest')}
-              >
-                {t('search.sort.newest')}
-              </Button>
-            </div>
-          </div>
+      {/* Category filter */}
+      <section className="flex flex-wrap items-center gap-2" aria-labelledby="search-category-filter">
+        <h2 id="search-category-filter" className="mr-1 text-sm font-medium text-muted-foreground">
+          {t('search.filters.category')}
+        </h2>
+        <Button
+          variant={selectedLabel ? 'outline' : 'default'}
+          size="sm"
+          onClick={() => handleLabelChange(undefined)}
+        >
+          {t('search.filters.all')}
+        </Button>
+        {labels?.map((label) => (
+          <Button
+            key={label.slug}
+            variant={selectedLabel === label.slug ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleLabelChange(label.slug)}
+          >
+            {label.displayName}
+          </Button>
+        ))}
+      </section>
 
-          {resultCount > 0 && (
-            <div className="text-sm text-muted-foreground">
-              {t('search.results', { count: resultCount })}
-            </div>
-          )}
-        </div>
+      {/* Result context */}
+      <div className="space-y-4">
+        {(namespace || resultCount > 0) && (
+          <div className="flex flex-wrap items-center gap-4">
+            {namespace ? (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleNamespaceClear}
+              >
+                {t('search.namespaceFilter', { namespace })}
+              </Button>
+            ) : null}
+            {resultCount > 0 && (
+              <div className="ml-auto text-sm text-muted-foreground">
+                {t('search.results', { count: resultCount })}
+              </div>
+            )}
+          </div>
+        )}
 
         {isUpdatingResults ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -275,41 +259,18 @@ export function SearchPage() {
             <span>{t('search.loadingMore')}</span>
           </div>
         ) : null}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="shrink-0 text-sm font-medium text-muted-foreground">{t('search.filters.label')}</span>
-          <Button
-            variant={starredOnly ? 'default' : 'outline'}
-            size="sm"
-            onClick={handleStarredToggle}
-          >
-            {t('search.filterStarred')}
-          </Button>
-          {!starredOnly && labels?.map((label) => (
-            <Button
-              key={label.slug}
-              variant={selectedLabel === label.slug ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => handleLabelToggle(label.slug)}
-            >
-              {label.displayName}
-            </Button>
-          ))}
-          {namespace ? (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleNamespaceClear}
-            >
-              {t('search.namespaceFilter', { namespace })}
-            </Button>
-          ) : null}
-        </div>
       </div>
 
       {/* Results */}
       {isPageLoading ? (
         <SkeletonList count={PAGE_SIZE} />
+      ) : isPageError ? (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-6 text-sm text-destructive"
+        >
+          {t('search.loadError')}
+        </div>
       ) : displayItems.length > 0 ? (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -325,7 +286,7 @@ export function SearchPage() {
           </div>
           {totalPages > 1 && (
             <Pagination
-              page={page}
+              page={data?.page ?? page}
               totalPages={totalPages}
               onPageChange={handlePageChange}
             />
@@ -333,12 +294,8 @@ export function SearchPage() {
         </>
       ) : (
         <EmptyState
-          title={starredOnly ? t('search.noStarredResults') : t('search.noResults')}
-          description={
-            starredOnly
-              ? (q ? t('search.noStarredResultsFor', { q }) : t('search.noStarredSkills'))
-              : (q ? t('search.noResultsFor', { q }) : undefined)
-          }
+          title={t('search.noResults')}
+          description={q ? t('search.noResultsFor', { q }) : undefined}
         />
       )}
     </div>

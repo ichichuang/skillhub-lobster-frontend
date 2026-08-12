@@ -140,7 +140,7 @@ export function AddNamespaceMemberDialog({ slug, children }: AddNamespaceMemberD
                 {t('members.searchAction')}
               </Button>
             </div>
-            <p className={`text-xs ${searchError ? 'text-red-600' : 'text-muted-foreground'}`}>
+            <p className={`text-xs ${searchError ? 'text-danger' : 'text-muted-foreground'}`}>
               {searchError ?? t('members.searchHint')}
             </p>
           </div>
@@ -155,7 +155,7 @@ export function AddNamespaceMemberDialog({ slug, children }: AddNamespaceMemberD
                   ))}
                 </div>
               ) : candidatesError ? (
-                <p className="text-sm text-red-600">{candidatesError.message}</p>
+                <p className="text-sm text-danger">{candidatesError.message}</p>
               ) : candidates && candidates.length > 0 ? (
                 <div className="space-y-2">
                   {candidates.map((candidate) => (
@@ -214,7 +214,7 @@ export function AddNamespaceMemberDialog({ slug, children }: AddNamespaceMemberD
               }}
               aria-invalid={userIdError ? 'true' : 'false'}
             />
-            <p className={`text-xs ${userIdError ? 'text-red-600' : 'text-muted-foreground'}`}>
+            <p className={`text-xs ${userIdError ? 'text-danger' : 'text-muted-foreground'}`}>
               {userIdError ?? t('members.manualUserIdHint')}
             </p>
           </div>
@@ -237,7 +237,7 @@ export function AddNamespaceMemberDialog({ slug, children }: AddNamespaceMemberD
         </div>
 
         {addMemberMutation.error ? (
-          <p className="text-sm text-red-600">{addMemberMutation.error.message}</p>
+          <p className="text-sm text-danger">{addMemberMutation.error.message}</p>
         ) : null}
 
         <DialogFooter className="sm:justify-center sm:space-x-3">

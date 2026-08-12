@@ -27,12 +27,12 @@ export function ComplianceSnapshotPanel({ snapshot, className }: ComplianceSnaps
   }
 
   return (
-    <div className={cn('rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4', className)}>
+    <div className={cn('rounded-2xl border border-success/30 bg-success-surface p-4', className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <ShieldCheck className="h-4 w-4 text-success" />
           {t('compliance.title')}
-          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+          <span className="rounded-full bg-success-surface px-2 py-0.5 text-xs font-medium text-success">
             {t('compliance.mappingCount', { count: items.length })}
           </span>
         </div>

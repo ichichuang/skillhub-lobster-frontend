@@ -138,8 +138,8 @@ export function DeviceAuthPage() {
             <div
               className={`p-4 rounded-xl text-sm ${
                 message.type === 'success'
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                  ? 'border border-success/30 bg-success-surface text-success'
+                  : 'border border-danger/30 bg-danger-surface text-danger'
               }`}
             >
               {message.text}

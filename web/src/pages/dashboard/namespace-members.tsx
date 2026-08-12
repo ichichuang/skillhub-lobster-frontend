@@ -185,7 +185,7 @@ export function NamespaceMembersPage() {
         </div>
 
         {membersError ? (
-          <Card className="p-6 text-center text-red-600">
+          <Card className="p-6 text-center text-danger">
             {membersError.message}
           </Card>
         ) : isLoadingMembers ? (

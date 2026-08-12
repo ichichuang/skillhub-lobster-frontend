@@ -20,11 +20,83 @@ vi.mock('@/shared/lib/search-query', () => ({
   normalizeSearchQuery: (q: string) => q.trim(),
 }))
 
-import { ORIGINAL_URL_SEARCH, router } from './router'
+import {
+  ORIGINAL_URL_SEARCH,
+  ROOT_RETAINED_SEARCH_KEYS,
+  router,
+  validateDashboardSkillsSearch,
+  validateRootSearch,
+} from './router'
+
+describe('validateRootSearch', () => {
+  it('keeps only valid embed and fixed dark-mode values', () => {
+    expect(validateRootSearch({
+      embed: true,
+      dark: '0',
+      theme: 'light',
+      color: '#FF0000',
+      bg: '#FFFFFF',
+      surface: '#FFFFFF',
+    })).toEqual({
+      embed: true,
+      dark: '0',
+    })
+
+    expect(validateRootSearch({ embed: true, dark: '1' })).toEqual({ embed: true, dark: '1' })
+  })
+
+  it('drops invalid or duplicate dark values and every retired theme parameter', () => {
+    expect(validateRootSearch({
+      embed: true,
+      dark: ['0', '1'],
+      theme: 'dark',
+      color: '#57b5cb',
+      bg: '#0c1526',
+      surface: '#131d2d',
+    })).toEqual({ embed: true })
+
+    expect(validateRootSearch({ embed: 'false', dark: 'true' })).toEqual({})
+  })
+
+  it('retains only the two parent-owned global keys', () => {
+    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark'])
+  })
+})
 
 describe('ORIGINAL_URL_SEARCH', () => {
   it('is a string (captured from window.location.search at load time)', () => {
     expect(typeof ORIGINAL_URL_SEARCH).toBe('string')
+  })
+})
+
+describe('validateDashboardSkillsSearch', () => {
+  it('keeps label as a route-local My Skills search field', () => {
+    expect(validateDashboardSkillsSearch({
+      page: 3,
+      q: 'release',
+      namespace: 'team-ai',
+      filter: 'PUBLISHED',
+      label: 'operations',
+      embed: true,
+      dark: '1',
+    })).toEqual({
+      page: 3,
+      q: 'release',
+      namespace: 'team-ai',
+      filter: 'PUBLISHED',
+      label: 'operations',
+    })
+  })
+
+  it('drops an empty label without changing the global retained parameters', () => {
+    expect(validateDashboardSkillsSearch({ label: '' })).toEqual({
+      page: undefined,
+      q: undefined,
+      namespace: undefined,
+      filter: undefined,
+      label: undefined,
+    })
+    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark'])
   })
 })
 

@@ -138,14 +138,14 @@ export function ProfileReviewTable() {
     if (!result || result === 'SKIPPED') return <span className="text-xs text-muted-foreground">-</span>
     if (result === 'PASS') {
       return (
-        <span className="inline-flex items-center rounded-full bg-emerald-500/12 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+        <span className="inline-flex items-center rounded-full bg-success-surface px-2.5 py-1 text-xs font-semibold text-success">
           PASS
         </span>
       )
     }
     if (result === 'FAIL') {
       return (
-        <span className="inline-flex items-center rounded-full bg-rose-500/12 px-2.5 py-1 text-xs font-semibold text-rose-700">
+        <span className="inline-flex items-center rounded-full bg-danger-surface px-2.5 py-1 text-xs font-semibold text-danger">
           FAIL
         </span>
       )
@@ -163,7 +163,7 @@ export function ProfileReviewTable() {
             </p>
             <p className="mt-2 text-3xl font-semibold text-foreground">{count}</p>
           </div>
-          <div className="rounded-xl bg-amber-100 p-3 text-amber-700">
+          <div className="rounded-xl bg-warning-surface p-3 text-warning">
             <Clock3 className="h-5 w-5" />
           </div>
         </div>
@@ -323,7 +323,7 @@ export function ProfileReviewTable() {
     <>
       <div className="space-y-6">
         <Card className="glass-strong overflow-hidden border-border/60 shadow-sm hover:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-slate-900 via-slate-700 to-emerald-500" />
+          <div className="h-1 bg-primary" />
           <CardHeader className="pb-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">

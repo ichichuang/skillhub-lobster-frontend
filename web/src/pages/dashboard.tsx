@@ -54,7 +54,7 @@ export function DashboardPage() {
               <div className="text-sm text-muted-foreground">{user?.email}</div>
               <div className="text-sm text-muted-foreground">{t('dashboard.userId')}: {user?.userId}</div>
               <div className="text-xs text-muted-foreground flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="h-2 w-2 rounded-full bg-success" />
                 {t('dashboard.loginVia', { provider: user?.oauthProvider })}
               </div>
             </div>

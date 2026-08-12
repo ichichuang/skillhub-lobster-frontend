@@ -1,12 +1,14 @@
 import { lazy, Suspense, type ComponentType } from 'react'
-import { createRouter, createRoute, createRootRoute, redirect } from '@tanstack/react-router'
+import { createRouter, createRoute, createRootRoute, redirect, retainSearchParams } from '@tanstack/react-router'
 import { Layout } from './layout'
 import { getCurrentUser } from '@/api/client'
 import { RoleGuard } from '@/shared/components/role-guard'
 import { RouteError } from '@/shared/components/route-error'
 import { createRequireAuth } from '@/shared/lib/auth-route'
 import { clearDynamicImportReloadGuard, recoverFromDynamicImportError } from '@/shared/lib/dynamic-import-recovery'
+import { isEmbeddedMode } from '@/shared/lib/embed-mode'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
+import { parseParentThemeRecord, type ParentUrlTheme } from '@/shared/lib/url-theme'
 
 /**
  * Central route registry for the SkillHub web app.
@@ -155,7 +157,24 @@ function DefaultNotFound() {
   )
 }
 
+export interface RootSearch extends ParentUrlTheme {
+  readonly embed?: true
+}
+
+export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark'] as const
+
+export function validateRootSearch(search: Record<string, unknown>): RootSearch {
+  return {
+    ...(isEmbeddedMode(search) ? { embed: true as const } : {}),
+    ...parseParentThemeRecord(search),
+  }
+}
+
 const rootRoute = createRootRoute({
+  validateSearch: validateRootSearch,
+  search: {
+    middlewares: [retainSearchParams<RootSearch>([...ROOT_RETAINED_SEARCH_KEYS])],
+  },
   component: Layout,
   notFoundComponent: DefaultNotFound,
   errorComponent: RouteError,
@@ -261,16 +280,29 @@ const dashboardRoute = createRoute({
   component: DashboardPage,
 })
 
-const dashboardSkillsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: 'dashboard/skills',
-  beforeLoad: requireAuth,
-  validateSearch: (search: Record<string, unknown>): { page?: number; q?: string; namespace?: string; filter?: string } => ({
+export interface DashboardSkillsSearch {
+  page?: number
+  q?: string
+  namespace?: string
+  filter?: string
+  label?: string
+}
+
+export function validateDashboardSkillsSearch(search: Record<string, unknown>): DashboardSkillsSearch {
+  return {
     page: typeof search.page === 'number' ? search.page : undefined,
     q: typeof search.q === 'string' && search.q ? search.q : undefined,
     namespace: typeof search.namespace === 'string' && search.namespace ? search.namespace : undefined,
     filter: typeof search.filter === 'string' && search.filter ? search.filter : undefined,
-  }),
+    label: typeof search.label === 'string' && search.label ? search.label : undefined,
+  }
+}
+
+const dashboardSkillsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'dashboard/skills',
+  beforeLoad: requireAuth,
+  validateSearch: validateDashboardSkillsSearch,
   component: MySkillsPage,
 })
 
