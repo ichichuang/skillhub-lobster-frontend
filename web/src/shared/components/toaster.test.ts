@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import * as mod from './toaster'
 
 /**
@@ -12,5 +14,12 @@ import * as mod from './toaster'
 describe('toaster module exports', () => {
   it('exports the Toaster component', () => {
     expect(mod.Toaster).toBeTypeOf('function')
+  })
+
+  it('uses a Chinese accessible label for the notification region', () => {
+    const html = renderToStaticMarkup(createElement(mod.Toaster))
+
+    expect(html).toContain('aria-label="通知中心 alt+T"')
+    expect(html).not.toContain('aria-label="Notifications alt+T"')
   })
 })

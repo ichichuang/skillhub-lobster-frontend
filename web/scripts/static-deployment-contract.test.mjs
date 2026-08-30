@@ -67,10 +67,12 @@ describe('static deployment packaging', () => {
       path.join(fixtureWebRoot, 'dist/runtime-config.js'),
       "window.__SKILLHUB_RUNTIME_CONFIG__ = { apiBaseUrl: '', appBaseUrl: '' }",
     )
-    await writeFixture(
+    await cp(
+      path.join(webRoot, 'src/docs/skill.md.template'),
       path.join(fixtureWebRoot, 'src/docs/skill.md.template'),
-      '# SkillHub Registry\n\nUse --registry ${SKILLHUB_PUBLIC_BASE_URL}\n',
     )
+    const template = await readFile(path.join(fixtureWebRoot, 'src/docs/skill.md.template'), 'utf8')
+    expect(template).toContain('${SKILLHUB_PUBLIC_BASE_URL}')
     await writeFixture(
       path.join(fixtureWebRoot, 'deploy.json'),
       JSON.stringify({ appBaseUrl: publicBaseUrl, output: 'dist-static', webBasePath: '/skillhub/' }),
@@ -84,7 +86,38 @@ describe('static deployment packaging', () => {
 
     const guide = await readFile(path.join(fixtureWebRoot, 'dist-static/registry/skill.md'), 'utf8')
     const runtimeConfig = await readFile(path.join(fixtureWebRoot, 'dist-static/runtime-config.js'), 'utf8')
-    expect(guide).toContain(`--registry ${publicBaseUrl}`)
+    expect(guide).toContain('name: skillhub-registry')
+    expect(guide).toContain('技能注册中心')
+    expect(guide).toContain('ClawHub')
+    expect(guide).toContain('OpenClaw')
+    expect(guide).toContain('SKILL.md')
+    expect(guide).toContain('YAML')
+    expect(guide).toContain('YAML 头部元数据')
+    expect(guide).toContain('HTTP')
+    expect(guide).toContain('API')
+    expect(guide).toContain('终端/Exec')
+    expect(guide).toContain('规范标识')
+    expect(guide).toContain('本流程不要求自动发现')
+    expect(guide).not.toContain('well-known 自动发现')
+    expect(guide).toContain('@{namespace}/{skill_slug}')
+    expect(guide).toContain('NAMESPACE_ONLY')
+    expect(guide).toContain('PRIVATE')
+    for (const command of [
+      `npx clawhub search email --registry ${publicBaseUrl}`,
+      `npx clawhub search "" --registry ${publicBaseUrl}`,
+      `npx clawhub info my-skill --registry ${publicBaseUrl}`,
+      `npx clawhub info team-name--my-skill --registry ${publicBaseUrl}`,
+      `npx clawhub install my-skill --registry ${publicBaseUrl}`,
+      `npx clawhub install my-skill@1.2.0 --registry ${publicBaseUrl}`,
+      `npx clawhub install team-name--my-skill --registry ${publicBaseUrl}`,
+      `npx clawhub publish ./my-skill --registry ${publicBaseUrl}`,
+      `curl -fsSL ${publicBaseUrl}/registry/skill.md`,
+      `npx clawhub --registry ${publicBaseUrl} login --token sk_your_api_token_here`,
+    ]) {
+      expect(guide).toContain(command)
+    }
+    expect(guide).toContain(publicBaseUrl)
+    expect(guide).not.toContain('SkillHub')
     expect(guide).not.toContain('${SKILLHUB_PUBLIC_BASE_URL}')
     expect(runtimeConfig).toContain(`appBaseUrl: ${JSON.stringify(publicBaseUrl)}`)
   })

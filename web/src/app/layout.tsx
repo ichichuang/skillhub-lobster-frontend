@@ -10,7 +10,6 @@ import { getAppHeaderClassName } from './layout-header-style'
 import { getAppMainContentLayout, resolveAppMainContentPathname } from './layout-main-content'
 
 export const APP_SHELL_CLASS_NAME = 'relative flex min-h-screen flex-col bg-background'
-export const APP_FOOTER_CLASS_NAME = 'relative z-10 mt-auto rounded-t-2xl border-t border-border bg-card'
 export const APP_ACTIVE_NAV_CLASS_NAME =
   'rounded-full bg-primary px-4 py-1.5 text-primary-foreground shadow-sm'
 export const APP_SHELL_GLOW_STYLE = {
@@ -21,8 +20,8 @@ export const APP_SHELL_GLOW_STYLE = {
 /**
  * Application shell shared by all routed pages.
  *
- * It owns the global header, footer, auth-aware navigation, and suspense
- * fallback used while lazy route modules are loading.
+ * It owns the global header, auth-aware navigation, and suspense fallback used
+ * while lazy route modules are loading.
  */
 export function Layout() {
   const { t, i18n } = useTranslation()
@@ -160,85 +159,6 @@ export function Layout() {
         </Suspense>
       </main>
 
-      {/* Footer */}
-      <footer className={APP_FOOTER_CLASS_NAME}>
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-10">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 md:gap-12">
-            <div className="flex-shrink-0">
-              <div className="mb-3">
-                <span className="text-lg font-bold text-foreground">技能中心</span>
-              </div>
-              <p className="max-w-xs text-sm text-foreground-secondary">
-                {t('layout.footerDescription')}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-12 md:gap-16">
-              <div>
-                <h4 className="mb-3 text-sm font-semibold text-foreground">
-                  {t('nav.home')}
-                </h4>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <Link to="/" className="text-foreground-secondary transition-opacity hover:opacity-80">
-                      {t('nav.home')}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/search"
-                      search={{ q: '', sort: 'relevance', page: 0, starredOnly: false }}
-                      className="text-foreground-secondary transition-opacity hover:opacity-80"
-                    >
-                      {t('nav.search')}
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/dashboard" className="text-foreground-secondary transition-opacity hover:opacity-80">
-                      {t('nav.dashboard')}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="mb-3 text-sm font-semibold text-foreground">
-                  {t('footer.resources')}
-                </h4>
-                <ul className="space-y-2 text-sm">
-                  <li>
-                    <a href="#" className="text-foreground-secondary transition-opacity hover:opacity-80">
-                      {t('footer.docs')}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-foreground-secondary transition-opacity hover:opacity-80">
-                      {t('footer.api')}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="text-foreground-secondary transition-opacity hover:opacity-80">
-                      {t('footer.community')}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div
-            className="mt-10 flex flex-col gap-4 border-t border-divider pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between"
-          >
-            <span>{t('footer.copyright')}</span>
-            <div className="flex items-center gap-2">
-              <Link to="/privacy" className="hover:opacity-80 transition-opacity">
-                {t('footer.privacy')}
-              </Link>
-              <span>|</span>
-              <Link to="/terms" className="hover:opacity-80 transition-opacity">
-                {t('footer.terms')}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

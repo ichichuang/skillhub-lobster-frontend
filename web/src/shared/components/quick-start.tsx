@@ -27,16 +27,18 @@ function CopyButton({ text }: { text: string }) {
     }
   }
 
+  const label = copied ? (t('copyButton.copied') || '已复制') : (t('copyButton.copy') || '复制')
+
   return (
     <button
       type="button"
       onClick={handleCopy}
       className="ml-4 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors hover:bg-white/10"
       style={{ color: 'var(--code-url, #CBD5E0)' }}
-      title={copied ? (t('copyButton.copied') || 'Copied') : (t('copyButton.copy') || 'Copy')}
+      title={label}
     >
       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? t('copyButton.copied') : t('copyButton.copy')}
+      {label}
     </button>
   )
 }
@@ -181,7 +183,7 @@ $env:CLAWHUB_REGISTRY = '${baseUrl}'`
               {t(`${ns}.quickStart.title`)}
             </h2>
             <p className="text-sm uppercase tracking-widest font-medium mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              Quick Start
+              快速开始
             </p>
             <p className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: 'hsl(var(--text-secondary))' }}>
               {t(`${ns}.quickStart.description`, { defaultValue: t(`${ns}.quickStart.subtitle`) })}

@@ -23,12 +23,12 @@ describe('landing quick start locales', () => {
     expect(en.landing.quickStart.agent.commandTemplate).toContain('{{guideUrl}}')
   })
 
-  it('exposes CLI install command in both locales', () => {
-    expect(zh.landing.quickStart.tabs.cli).toBe('CLI')
-    expect(zh.landing.quickStart.cli.command).toBe('npm i -g @astron-team/skillhub')
-    expect(zh.landing.quickStart.cli.description).toBe('安装 SkillHub CLI 到本地，后续可运行 skillhub install 安装技能')
-    expect(en.landing.quickStart.tabs.cli).toBe('CLI')
-    expect(en.landing.quickStart.cli.command).toBe('npm i -g @astron-team/skillhub')
-    expect(en.landing.quickStart.cli.description).toBe('Install the SkillHub CLI locally to run skillhub install for skills.')
+  it('keeps the landing quick-start focused on agent and user tabs', () => {
+    expect(zh.landing.quickStart.tabs).toEqual({ agent: '我是智能体', human: '我是用户' })
+    expect(en.landing.quickStart.tabs).toEqual({ agent: 'I am an Agent', human: 'I am a User' })
+    expect(zh.landing.quickStart.human.command).toContain('npx clawhub')
+    expect(zh.landing.quickStart.human.command).toContain('--registry')
+    expect(en.landing.quickStart.human.command).toContain('npx clawhub')
+    expect(en.landing.quickStart.human.command).toContain('--registry')
   })
 })

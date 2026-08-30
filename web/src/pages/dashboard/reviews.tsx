@@ -250,7 +250,7 @@ export function ReviewsPage() {
       <div className="space-y-8 animate-fade-up">
         <DashboardPageHeader title={t('reviews.title')} subtitle={t('reviews.subtitle')} />
         <Card className="p-8 text-center text-muted-foreground">
-          Loading...
+          加载中…
         </Card>
       </div>
     )

@@ -47,7 +47,7 @@ function CompactCopyButton({ text }: { text: string }) {
     }
   }
 
-  const label = copied ? (t('copyButton.copied') || 'Copied') : (t('copyButton.copy') || 'Copy')
+  const label = copied ? (t('copyButton.copied') || '已复制') : (t('copyButton.copy') || '复制')
 
   return (
     <button

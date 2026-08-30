@@ -23,7 +23,7 @@ function isValidRedirectUri(uri: string): boolean {
   }
 }
 
-function decodeLabel(labelB64?: string, labelPlain?: string): string {
+export function decodeLabel(labelB64?: string, labelPlain?: string): string {
   if (labelB64) {
     try {
       // Base64-URL decode
@@ -33,7 +33,7 @@ function decodeLabel(labelB64?: string, labelPlain?: string): string {
       // Fallback to plain label
     }
   }
-  return labelPlain || 'CLI token'
+  return labelPlain || 'CLI 令牌'
 }
 
 export function resolveCliRegistryUrl(appBaseUrl: string | undefined, origin: string, basePath = BASE_PATH): string {

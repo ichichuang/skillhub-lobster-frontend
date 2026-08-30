@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
-// Layout is a component-only file with no exported pure functions or constants.
-// We verify that the named export exists for the router to consume.
+// Verify that the router can consume Layout and that its rendered shell stays intact.
 
 vi.mock('@tanstack/react-router', () => ({
-  Outlet: () => null,
+  Outlet: () => createElement('div', { 'data-testid': 'route-outlet' }),
   Link: ({ children }: { children: unknown }) => children,
   useRouterState: () => ({ pathname: '/', resolvedPathname: '/' }),
 }))
@@ -49,7 +50,6 @@ vi.mock('./layout-main-content', () => ({
 
 import {
   APP_ACTIVE_NAV_CLASS_NAME,
-  APP_FOOTER_CLASS_NAME,
   APP_SHELL_CLASS_NAME,
   APP_SHELL_GLOW_STYLE,
   Layout,
@@ -63,11 +63,19 @@ describe('Layout', () => {
 
   it('defines the application shell entirely with semantic theme values', () => {
     expect(APP_SHELL_CLASS_NAME).toContain('bg-background')
-    expect(APP_FOOTER_CLASS_NAME).toContain('bg-card')
     expect(APP_ACTIVE_NAV_CLASS_NAME).toContain('bg-primary')
     expect(APP_ACTIVE_NAV_CLASS_NAME).toContain('text-primary-foreground')
     expect(APP_ACTIVE_NAV_CLASS_NAME).not.toContain('text-white')
     expect(APP_SHELL_GLOW_STYLE.background).toContain('hsl(var(--primary)')
     expect(APP_SHELL_GLOW_STYLE.background).not.toContain('rgba(184,94,255')
+  })
+
+  it('renders the header, main content, and route outlet without a global footer', () => {
+    const html = renderToStaticMarkup(createElement(Layout))
+
+    expect(html).toContain('<header')
+    expect(html).toContain('<main')
+    expect(html).toContain('data-testid="route-outlet"')
+    expect(html).not.toContain('<footer')
   })
 })

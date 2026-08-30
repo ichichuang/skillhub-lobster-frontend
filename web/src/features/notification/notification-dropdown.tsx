@@ -16,26 +16,24 @@ export const NOTIFICATION_DROPDOWN_CLASS_NAME =
 export const NOTIFICATION_ITEM_CLASS_NAME =
   'flex items-start gap-3 px-4 py-3 transition-colors hover:bg-surface-hover'
 
-function formatRelativeTime(dateStr: string, lang: string): string {
+export function formatNotificationRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const minutes = Math.floor(diff / 60_000)
   const hours = Math.floor(diff / 3_600_000)
   const days = Math.floor(diff / 86_400_000)
 
-  const isChinese = lang.startsWith('zh')
-
-  if (minutes < 1) return isChinese ? '刚刚' : 'just now'
-  if (minutes < 60) return isChinese ? `${minutes}分钟` : `${minutes}m`
-  if (hours < 24) return isChinese ? `${hours}小时` : `${hours}h`
-  if (days < 30) return isChinese ? `${days}天` : `${days}d`
-  return new Date(dateStr).toLocaleDateString()
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟`
+  if (hours < 24) return `${hours}小时`
+  if (days < 30) return `${days}天`
+  return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
 /**
  * Dropdown panel showing the latest 5 notifications with mark-all-read and view-all actions.
  */
 export function NotificationDropdown({ onClose }: Props) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { data, isLoading } = useNotifications(user?.userId, 0, 5)
   const markAllRead = useMarkAllRead(user?.userId)
@@ -87,7 +85,7 @@ export function NotificationDropdown({ onClose }: Props) {
           notifications.map((item) => (
             <li key={item.id}>
               {(() => {
-                const display = resolveNotificationDisplay(item, i18n.language)
+                const display = resolveNotificationDisplay(item)
                 return (
               <Link
                 to={resolveNotificationTarget(item)}
@@ -106,7 +104,7 @@ export function NotificationDropdown({ onClose }: Props) {
                     </p>
                   ) : null}
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {t('notification.timeAgo', { time: formatRelativeTime(item.createdAt, i18n.language) })}
+                    {t('notification.timeAgo', { time: formatNotificationRelativeTime(item.createdAt) })}
                   </p>
                 </div>
               </Link>

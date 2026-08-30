@@ -41,7 +41,7 @@ vi.mock('@/features/notification/notification-target', () => ({
   resolveNotificationTarget: () => '/dashboard/notifications',
 }))
 
-import { NotificationsPage } from './notifications'
+import { formatNotificationRelativeTime, NotificationsPage } from './notifications'
 
 describe('NotificationsPage', () => {
   beforeEach(() => {
@@ -125,5 +125,18 @@ describe('NotificationsPage', () => {
     const html = renderToStaticMarkup(<NotificationsPage />)
 
     expect(html).toContain('notification.empty')
+  })
+
+  it('uses fixed Chinese relative time regardless of the active i18n language', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-20T12:00:00Z'))
+
+    expect(formatNotificationRelativeTime('2026-03-20T11:59:30Z')).toBe('刚刚')
+    expect(formatNotificationRelativeTime('2026-03-20T11:55:00Z')).toBe('5分钟')
+    expect(formatNotificationRelativeTime('2026-03-20T10:00:00Z')).toBe('2小时')
+    expect(formatNotificationRelativeTime('2026-03-18T12:00:00Z')).toBe('2天')
+    expect(formatNotificationRelativeTime('2026-01-02T12:00:00Z')).toBe('2026/1/2')
+
+    vi.useRealTimers()
   })
 })

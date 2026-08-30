@@ -36,7 +36,7 @@ vi.mock('@/app/router', () => ({
   ORIGINAL_URL_SEARCH: '',
 }))
 
-import { CliAuthPage, resolveCliRegistryUrl } from './cli-auth'
+import { CliAuthPage, decodeLabel, resolveCliRegistryUrl } from './cli-auth'
 
 describe('resolveCliRegistryUrl', () => {
   it('uses the configured public base URL for the CLI registry', () => {
@@ -54,5 +54,10 @@ describe('CliAuthPage', () => {
   it('exports a named component function', () => {
     expect(typeof CliAuthPage).toBe('function')
     expect(CliAuthPage.name).toBe('CliAuthPage')
+  })
+
+  it('uses a Chinese default label when no CLI label is supplied', () => {
+    expect(decodeLabel()).toBe('CLI 令牌')
+    expect(decodeLabel(undefined, '自定义令牌')).toBe('自定义令牌')
   })
 })

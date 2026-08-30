@@ -1,11 +1,9 @@
 import { expect, test } from '@playwright/test'
-import { setEnglishLocale } from './helpers/auth-fixtures'
 import { registerSession } from './helpers/session'
 import { E2eTestDataBuilder } from './helpers/test-data-builder'
 
 test.describe('Skill Detail Relative Links (Real API)', () => {
   test.beforeEach(async ({ page }, testInfo) => {
-    await setEnglishLocale(page)
     await registerSession(page, testInfo)
   })
 
@@ -50,13 +48,13 @@ test.describe('Skill Detail Relative Links (Real API)', () => {
       await expect(page.getByRole('dialog')).toContainText('nested.md')
       await expect(page.getByRole('dialog')).toContainText('Second-level linked documentation.')
 
-      await page.getByRole('button', { name: 'Close' }).click()
+      await page.getByRole('button', { name: '关闭' }).click()
       await expect(page.getByRole('dialog')).toBeHidden()
 
       await page.getByRole('link', { name: 'Missing' }).click()
       await expect(page).toHaveURL(new RegExp(`/space/${namespace.slug}/${skill.slug}$`))
-      await expect(page.getByText('File not found')).toBeVisible()
-      await expect(page.getByText('not included in the current skill version')).toBeVisible()
+      await expect(page.getByText('文件未找到')).toBeVisible()
+      await expect(page.getByText('该链接指向的文件不在当前技能版本中。')).toBeVisible()
     } finally {
       await builder.cleanup()
     }

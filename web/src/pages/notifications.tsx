@@ -29,17 +29,16 @@ function getCategoryKey(cat: Category): string {
   }
 }
 
-function formatRelativeTime(dateStr: string, lang: string): string {
+export function formatNotificationRelativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const minutes = Math.floor(diff / 60_000)
   const hours = Math.floor(diff / 3_600_000)
   const days = Math.floor(diff / 86_400_000)
-  const isChinese = lang.startsWith('zh')
-  if (minutes < 1) return isChinese ? '刚刚' : 'just now'
-  if (minutes < 60) return isChinese ? `${minutes}分钟` : `${minutes}m`
-  if (hours < 24) return isChinese ? `${hours}小时` : `${hours}h`
-  if (days < 30) return isChinese ? `${days}天` : `${days}d`
-  return new Date(dateStr).toLocaleDateString()
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟`
+  if (hours < 24) return `${hours}小时`
+  if (days < 30) return `${days}天`
+  return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
 function CategoryBadge({ category }: { category: NotificationItem['category'] }) {
@@ -58,7 +57,7 @@ function CategoryBadge({ category }: { category: NotificationItem['category'] })
 }
 
 export function NotificationsPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [page, setPage] = useState(0)
@@ -139,7 +138,7 @@ export function NotificationsPage() {
         <>
           <Card className="divide-y overflow-hidden p-0">
             {notifications.map((item) => {
-              const display = resolveNotificationDisplay(item, i18n.language)
+              const display = resolveNotificationDisplay(item)
               return (
                 <div key={item.id} className="flex items-start gap-3 px-5 py-4 hover:bg-muted/40 transition-colors">
                   <button
@@ -160,7 +159,7 @@ export function NotificationsPage() {
                         <p className="mt-0.5 text-xs text-muted-foreground truncate">{display.description}</p>
                       ) : null}
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {t('notification.timeAgo', { time: formatRelativeTime(item.createdAt, i18n.language) })}
+                        {t('notification.timeAgo', { time: formatNotificationRelativeTime(item.createdAt) })}
                       </p>
                     </div>
                   </button>

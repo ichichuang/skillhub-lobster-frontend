@@ -5,7 +5,6 @@ import {
   InstallCommand,
   buildInstallCommand,
   buildInstallTarget,
-  buildSkillhubInstallCommand,
   getBaseUrl,
 } from './install-command'
 
@@ -72,18 +71,6 @@ describe('install-command', () => {
     )
   })
 
-  it('builds a one-line SkillHub npx command for the global namespace', () => {
-    expect(buildSkillhubInstallCommand('global', 'my-skill', 'https://skill.xfyun.cn')).toBe(
-      'npx @astron-team/skillhub@latest install my-skill --registry https://skill.xfyun.cn',
-    )
-  })
-
-  it('builds a one-line SkillHub npx command with namespace for team skills', () => {
-    expect(buildSkillhubInstallCommand('team-alpha', 'my-skill', 'https://skill.xfyun.cn')).toBe(
-      'npx @astron-team/skillhub@latest install my-skill --namespace team-alpha --registry https://skill.xfyun.cn',
-    )
-  })
-
   it('uses the runtime app base url when available', () => {
     setMockWindow('https://app.example.com')
 
@@ -120,7 +107,7 @@ describe('install-command', () => {
     expect(html).toContain('break-all')
   })
 
-  it('offers the secondary CLI under the anonymous-install alternatives', () => {
+  it('renders only the ClawHub install command for anonymous public skills', () => {
     setMockWindow('https://app.example.com')
 
     const html = renderToStaticMarkup(createElement(InstallCommand, {
@@ -130,9 +117,9 @@ describe('install-command', () => {
       publishedVersion: '1.0.0',
     }))
 
-    expect(html).toContain('skillDetail.installGuide.otherMethods')
     expect(html).toContain('npx clawhub install meeting-minutes-generator --registry https://app.example.com')
-    expect(html).toContain('npx @astron-team/skillhub@latest install meeting-minutes-generator --registry https://app.example.com')
+    expect(html).not.toContain('skillDetail.installGuide.otherMethods')
+    expect(html).not.toContain('@astron-team/skillhub')
   })
 
   it('renders login then ClawHub install for authenticated skills', () => {
@@ -148,6 +135,6 @@ describe('install-command', () => {
     expect(html).toContain('skillDetail.installGuide.loginStep')
     expect(html).toContain('npx clawhub --site https://app.example.com --registry https://app.example.com login')
     expect(html).toContain('npx clawhub install team-alpha--meeting-minutes-generator --registry https://app.example.com')
-    expect(html).not.toContain('npx @astron-team/skillhub@latest install meeting-minutes-generator --namespace team-alpha --registry https://app.example.com')
+    expect(html).not.toContain('@astron-team/skillhub')
   })
 })

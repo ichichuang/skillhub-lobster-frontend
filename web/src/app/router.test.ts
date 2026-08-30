@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createElement, type ComponentType } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 // The router module captures window.location.search at module load time.
 // We test the exported ORIGINAL_URL_SEARCH constant and the buildReturnTo
@@ -116,5 +118,17 @@ describe('router', () => {
     const children = (router.routeTree.children ?? []) as Array<{ fullPath?: string; path?: string }>
     const childPaths = children.map((route) => route.fullPath ?? route.path)
     expect(childPaths).toContain('/space/$namespace/$slug/compare')
+  })
+
+  it('renders Chinese copy for the root not-found and lazy-route loading states', () => {
+    const notFoundComponent = router.routeTree.options.notFoundComponent as ComponentType
+    const landingRoute = ((router.routeTree.children ?? []) as Array<{
+      fullPath?: string
+      options?: { component?: ComponentType }
+    }>).find((route) => route.fullPath === '/')
+
+    expect(renderToStaticMarkup(createElement(notFoundComponent))).toContain('页面不存在')
+    expect(landingRoute?.options?.component).toBeDefined()
+    expect(renderToStaticMarkup(createElement(landingRoute!.options!.component!))).toContain('加载中…')
   })
 })

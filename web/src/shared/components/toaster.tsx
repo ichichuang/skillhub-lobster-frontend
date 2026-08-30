@@ -8,6 +8,7 @@ export function Toaster() {
     <div translate="no">
       <Sonner
         id={CENTER_TOASTER_ID}
+        containerAriaLabel="通知中心"
         position="top-center"
         className="!left-1/2 !right-auto !top-4 !-translate-x-1/2 !z-[100]"
         offset={16}

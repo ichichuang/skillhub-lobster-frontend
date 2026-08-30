@@ -1,4 +1,8 @@
-import { describe, expect, it, vi } from 'vitest'
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const useProfileReviewListMock = vi.fn()
 
 vi.mock('lucide-react', () => ({
   Clock3: () => null,
@@ -75,7 +79,7 @@ vi.mock('@/shared/ui/textarea', () => ({
 
 vi.mock('@/features/review/use-profile-review-list', () => ({
   useApproveProfileReview: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useProfileReviewList: () => ({ data: null, isLoading: false }),
+  useProfileReviewList: (...args: unknown[]) => useProfileReviewListMock(...args),
   useRejectProfileReview: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
@@ -86,7 +90,61 @@ vi.mock('@/shared/components/empty-state', () => ({
 import { ProfileReviewTable } from './profile-review-table'
 
 describe('ProfileReviewTable', () => {
+  beforeEach(() => {
+    useProfileReviewListMock.mockReset()
+    useProfileReviewListMock.mockImplementation((status: string) => {
+      if (status !== 'PENDING') {
+        return { data: null, isLoading: false }
+      }
+
+      return {
+        data: {
+          items: [
+            {
+              id: 1,
+              userId: 'user-1',
+              username: 'one',
+              currentDisplayName: null,
+              requestedDisplayName: 'One',
+              status: 'PENDING',
+              machineResult: 'PASS',
+              reviewerId: null,
+              reviewerName: null,
+              reviewComment: null,
+              createdAt: '2026-08-30T00:00:00Z',
+              reviewedAt: null,
+            },
+            {
+              id: 2,
+              userId: 'user-2',
+              username: 'two',
+              currentDisplayName: null,
+              requestedDisplayName: 'Two',
+              status: 'PENDING',
+              machineResult: 'FAIL',
+              reviewerId: null,
+              reviewerName: null,
+              reviewComment: null,
+              createdAt: '2026-08-30T00:00:00Z',
+              reviewedAt: null,
+            },
+          ],
+          totalElements: 2,
+          totalPages: 1,
+        },
+        isLoading: false,
+      }
+    })
+  })
+
   it('exports a named component function', () => {
     expect(typeof ProfileReviewTable).toBe('function')
+  })
+
+  it('renders Chinese labels for machine pass and fail results', () => {
+    const html = renderToStaticMarkup(createElement(ProfileReviewTable))
+
+    expect(html).toContain('通过')
+    expect(html).toContain('未通过')
   })
 })

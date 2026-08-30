@@ -1,32 +1,32 @@
 ---
 name: skillhub-registry
-description: Use this when you need to search, inspect, install, or publish agent skills against a SkillHub registry. SkillHub is a skill registry with a ClawHub-compatible API layer, so prefer the `clawhub` CLI for registry operations instead of making raw HTTP calls.
+description: 当你需要在技能注册中心搜索、查看、安装或发布智能体技能时使用本指南。该注册中心提供兼容 ClawHub 的 API，因此应优先使用 `clawhub` CLI 执行注册中心操作，而不是直接发起原始 HTTP 请求。
 ---
 
-# SkillHub Registry
+# 技能注册中心指南
 
-Use this skill when you need to work with this SkillHub registry: search skills, inspect metadata, install a package, or publish a new version.
+当你需要使用此技能注册中心搜索技能、查看元数据、安装技能包或发布新版本时，请遵循本指南。
 
-> Important: For private or internal deployments, use terminal/Exec rather than browser or web-fetch access. Run `clawhub` with the explicit Registry base shown below; well-known discovery is not required for this workflow.
+> 重要：对于私有或内部部署，请使用终端/Exec，不要通过浏览器或 web-fetch 访问。请使用下方显示的明确注册中心基址运行 `clawhub`；本流程不要求自动发现。
 
-## What SkillHub Is
+## 注册中心说明
 
-SkillHub is an enterprise-oriented skill registry. It stores versioned skill packages, supports namespace-based skill management, and keeps `SKILL.md` compatibility with OpenSkills-style packages.
+这是面向企业的技能注册中心，用于存储带版本的技能包，支持基于命名空间的技能管理，并兼容 OpenClaw 与 OpenSkills 风格的 `SKILL.md` 技能包。
 
-Key facts:
+要点：
 
-- Internal coordinates use `@{namespace}/{skill_slug}`.
-- If using the clawhub CLI, the compatible format is `{namespace}--{skill_slug}`.
-- ClawHub-compatible clients use a `{namespace}--{skill_slug}` slug instead.
-- `latest` always means the latest published version, never draft or pending review.
-- Skills that are both `@global` and `PUBLIC` can be searched, inspected, and installed anonymously.
-- If no namespace is specified, it defaults to `@global`.
-- `{skill_slug}` can be used instead of `global--{skill_slug}`
-- Team namespace skills and non-public skills require authentication.
+- 内部坐标格式为 `@{namespace}/{skill_slug}`。
+- 使用 clawhub CLI 时，兼容格式为 `{namespace}--{skill_slug}`。
+- 兼容 ClawHub 的客户端使用 `{namespace}--{skill_slug}` 标识。
+- `latest` 始终表示最新已发布版本，不表示草稿或待审核版本。
+- 同时属于 `@global` 和 `PUBLIC` 的技能可匿名搜索、查看和安装。
+- 未指定命名空间时，默认使用 `@global`。
+- 可使用 `{skill_slug}` 代替 `global--{skill_slug}`。
+- 团队命名空间技能和非公开技能需要认证。
 
-## Use The Explicit Registry Base
+## 使用明确的注册中心基址
 
-Use `--registry ${SKILLHUB_PUBLIC_BASE_URL}` on every Registry operation. This is the supported workflow for this deployment:
+每次注册中心操作都使用 `--registry ${SKILLHUB_PUBLIC_BASE_URL}`。这是当前部署支持的工作方式：
 
 ```bash
 npx clawhub search email --registry ${SKILLHUB_PUBLIC_BASE_URL}
@@ -34,34 +34,34 @@ npx clawhub info my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 npx clawhub install my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-If you received this instruction without the full guide, you may fetch it with terminal `curl`:
+如果收到此说明时没有完整指南，可在终端通过 `curl` 获取：
 
 ```bash
 curl -fsSL ${SKILLHUB_PUBLIC_BASE_URL}/registry/skill.md
 ```
 
-If you need authenticated access, provide an API token:
+如需认证访问，请提供 API 令牌：
 
 ```bash
 npx clawhub --registry ${SKILLHUB_PUBLIC_BASE_URL} login --token sk_your_api_token_here
 ```
 
-## Coordinate Rules - IMPORTANT
+## 坐标规则
 
-SkillHub has two naming forms:
+注册中心有两种命名形式：
 
-| SkillHub coordinate | Canonical slug for `clawhub` |
+| 注册中心坐标 | `clawhub` 的规范标识 |
 |---|---|
 | `@global/my-skill` | `my-skill` |
 | `@team-name/my-skill` | `team-name--my-skill` |
 
-Rules:
+规则：
 
-- `--` is the namespace separator in the compatibility layer.
-- If there is no `--`, the skill is treated as `@global/...`.
-- `latest` resolves to the latest published version only.
+- `--` 是兼容层中的命名空间分隔符。
+- 没有 `--` 时，技能会被视为 `@global/...`。
+- `latest` 仅解析为最新已发布版本。
 
-Examples:
+示例：
 
 ```bash
 npx clawhub install my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
@@ -69,28 +69,28 @@ npx clawhub install my-skill@1.2.0 --registry ${SKILLHUB_PUBLIC_BASE_URL}
 npx clawhub install team-name--my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-## Common Workflows
+## 常用操作
 
-### Search
+### 搜索
 
 ```bash
 npx clawhub search email --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-Use an empty query when you want a broad listing:
+需要查看较广泛的列表时，使用空查询：
 
 ```bash
 npx clawhub search "" --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-### Inspect A Skill
+### 查看技能
 
 ```bash
 npx clawhub info my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 npx clawhub info team-name--my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-### Install
+### 安装
 
 ```bash
 npx clawhub install my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
@@ -98,37 +98,39 @@ npx clawhub install my-skill@1.2.0 --registry ${SKILLHUB_PUBLIC_BASE_URL}
 npx clawhub install team-name--my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-### Publish
+### 发布
 
-Prepare a skill package directory, then publish it:
+准备技能包目录后发布：
 
 ```bash
 npx clawhub publish ./my-skill --registry ${SKILLHUB_PUBLIC_BASE_URL}
 ```
 
-Publishing requires authentication and sufficient permissions in the target namespace.
+发布需要认证，以及目标命名空间中的足够权限。
 
-## Authentication And Visibility
+## 认证与可见性
 
-Download and search permissions depend on namespace and visibility:
+下载和搜索权限取决于命名空间与可见性：
 
-- `@global` + `PUBLIC`: anonymous search, inspect, and download are allowed.
-- Team namespace + `PUBLIC`: authentication required for download.
-- `NAMESPACE_ONLY`: authenticated namespace members only.
-- `PRIVATE`: owner or explicitly authorized users only.
-- Publish, star, and other write operations always require authentication.
+- `@global` + `PUBLIC`：允许匿名搜索、查看和下载。
+- 团队命名空间 + `PUBLIC`：下载需要认证。
+- `NAMESPACE_ONLY`：仅限已认证的命名空间成员。
+- `PRIVATE`：仅限所有者或被明确授权的用户。
+- 发布、收藏及其他写操作始终需要认证。
 
-If a request fails with `403`, check:
+如果 HTTP 请求返回 `403`，请检查：
 
-- whether the skill belongs to a team namespace,
-- whether the skill is `NAMESPACE_ONLY` or `PRIVATE`,
-- whether your token is valid,
-- whether you have namespace publish permissions.
+- 技能是否属于团队命名空间；
+- 是否为 `NAMESPACE_ONLY` 或 `PRIVATE`；
+- API 令牌是否有效；
+- 是否拥有命名空间发布权限。
 
-## Skill Package Contract
+## 技能包协议
 
-SkillHub expects OpenSkills-style packages with `SKILL.md` as the entry point.
+技能包使用 OpenSkills 风格的规范 `SKILL.md` 作为入口文件。上传会接受如 `skill.md` 这类文件名大小写变体，并将其规范化为 `SKILL.md`。
 
-## Publishing Guidance
+`SKILL.md` 顶部的 YAML 头部元数据必须包含技能所需的元数据。
 
-Just need to follow the OpenSkills-style standards.
+## 发布说明
+
+请遵循 OpenSkills 风格的技能包规范。

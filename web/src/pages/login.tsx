@@ -68,7 +68,7 @@ export function LoginPage() {
       <div className="w-full max-w-md space-y-8 animate-fade-up">
         <div className="text-center space-y-3">
           <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/70 items-center justify-center shadow-glow mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">S</span>
+            <span className="text-primary-foreground font-bold text-2xl">技</span>
           </div>
           <h1 className="text-4xl font-bold font-heading text-foreground">{t('login.title')}</h1>
           <p className="text-muted-foreground text-lg">

@@ -21,7 +21,8 @@ describe('LandingQuickStartSection agent prompt', () => {
 
     const html = renderToStaticMarkup(<LandingQuickStartSection onSearch={() => undefined} />)
 
-    expect(html).toContain('terminal/Exec')
+    expect(html).toContain('终端或 Exec')
+    expect(html).not.toContain('terminal/Exec')
     expect(html).toContain('web-fetch')
     expect(html).toContain('http://10.100.5.133/skillhub')
     expect(html).toContain('curl http://10.100.5.133/skillhub/registry/skill.md')

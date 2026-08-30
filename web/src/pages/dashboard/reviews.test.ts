@@ -194,4 +194,13 @@ describe('ReviewsPage', () => {
     expect(useReviewListMock).toHaveBeenCalled()
     expect(useReviewListMock.mock.calls.every((call) => call[5] === false)).toBe(true)
   })
+
+  it('renders a Chinese loading state while redirecting a user without global review access', () => {
+    hasRoleMock.mockReturnValue(false)
+    userMock.platformRoles = []
+
+    const html = renderToStaticMarkup(createElement(ReviewsPage))
+
+    expect(html).toContain('加载中…')
+  })
 })

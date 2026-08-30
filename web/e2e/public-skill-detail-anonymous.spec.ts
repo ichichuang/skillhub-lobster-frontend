@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test'
-import { setEnglishLocale } from './helpers/auth-fixtures'
 import { getSearchCard, prepareSearchSeed, type PreparedSearchSeed } from './helpers/search-seed'
 
 const SEARCH_URL = (q: string) => `/search?q=${encodeURIComponent(q)}&sort=relevance&page=0&starredOnly=false`
@@ -29,10 +28,6 @@ test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
     seeded = undefined
   })
 
-  test.beforeEach(async ({ page }) => {
-    await setEnglishLocale(page)
-  })
-
   test('allows anonymous users to open a public skill detail and view install content', async ({ page }) => {
     const current = latestSeed(seeded!)
 
@@ -45,22 +40,12 @@ test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
     await expect(page).toHaveURL(new RegExp(`/space/${current.skill.namespace}/${current.skill.slug}(\\?|$)`))
     await expect(page).not.toHaveURL(/\/login\?returnTo=/)
     await expect(page.getByRole('heading', { name: current.skillName, exact: true })).toBeVisible()
-    await expect(page.getByText('Install', { exact: true })).toBeVisible()
+    await expect(page.getByText('安装', { exact: true })).toBeVisible()
     const clawhubTarget = current.skill.namespace === 'global'
       ? current.skill.slug
       : `${current.skill.namespace}--${current.skill.slug}`
-    const skillhubNamespace = current.skill.namespace === 'global'
-      ? ''
-      : ` --namespace ${current.skill.namespace}`
-
-    await expect(page.getByRole('tab', { name: 'ClawHub CLI' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByText(new RegExp(`npx clawhub install ${escapeRegExp(clawhubTarget)} --registry`))).toBeVisible()
-    await expect(page.getByRole('tab', { name: 'SkillHub CLI' })).toBeVisible()
-
-    await page.getByRole('tab', { name: 'SkillHub CLI' }).click()
-
-    await expect(page.getByRole('tab', { name: 'SkillHub CLI' })).toHaveAttribute('aria-selected', 'true')
-    await expect(page.getByText(new RegExp(`npx @astron-team/skillhub@latest install ${escapeRegExp(current.skill.slug)}${escapeRegExp(skillhubNamespace)} --registry`))).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible()
+    await expect(page.getByText(/@astron-team\/skillhub/)).toHaveCount(0)
+    await expect(page.getByRole('button', { name: '复制' }).first()).toBeVisible()
   })
 })

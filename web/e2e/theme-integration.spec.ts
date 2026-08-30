@@ -6,8 +6,8 @@ const RETIRED_URL = '/?embed=true&theme=dark&color=%23ff0000&bg=%23000000&surfac
 
 async function mountParentHarness(page: Page, childUrl: string): Promise<FrameLocator> {
   const absoluteChildUrl = new URL(childUrl, 'http://127.0.0.1:3000').href
-  await page.setContent(`<iframe title="SkillHub child" src="${absoluteChildUrl}" style="width:1200px;height:900px"></iframe>`)
-  const frame = page.frameLocator('iframe[title="SkillHub child"]')
+  await page.setContent(`<iframe title="技能中心子页面" src="${absoluteChildUrl}" style="width:1200px;height:900px"></iframe>`)
+  const frame = page.frameLocator('iframe[title="技能中心子页面"]')
   await expect(frame.locator('#root')).toBeAttached()
   return frame
 }
@@ -108,7 +108,7 @@ test.describe('parent-owned URL theme integration', () => {
       inlineThemeVariables: [],
     })
 
-    await page.locator('iframe[title="SkillHub child"]').evaluate((iframe, src) => {
+    await page.locator('iframe[title="技能中心子页面"]').evaluate((iframe, src) => {
       const childFrame = iframe as HTMLIFrameElement
       childFrame.src = new URL(src, 'http://127.0.0.1:3000').href
     }, LIGHT_URL)

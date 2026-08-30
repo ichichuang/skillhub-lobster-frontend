@@ -42,11 +42,6 @@ export function buildInstallCommand(namespace: string, slug: string, baseUrl: st
   return `npx clawhub install ${installTarget} --registry ${baseUrl}`
 }
 
-export function buildSkillhubInstallCommand(namespace: string, slug: string, baseUrl: string): string {
-  const namespaceArg = namespace === 'global' ? '' : ` --namespace ${namespace}`
-  return `npx @astron-team/skillhub@latest install ${slug}${namespaceArg} --registry ${baseUrl}`
-}
-
 export function buildBrowserLoginCommand(baseUrl: string): string {
   return `npx clawhub --site ${baseUrl} --registry ${baseUrl} login`
 }
@@ -183,18 +178,6 @@ export function InstallCommand({ namespace, slug, visibility, publishedVersion }
       </div>
 
       <Troubleshooting baseUrl={baseUrl} />
-
-      {isAnonymousInstall && (
-        <details className="rounded-xl border border-border/60 bg-muted/20">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-foreground marker:text-muted-foreground">
-            {t('skillDetail.installGuide.otherMethods')}
-          </summary>
-          <div className="space-y-3 border-t border-border/50 px-4 py-4">
-            <p className="text-sm text-muted-foreground">{t('skillDetail.installGuide.skillhubCliDescription')}</p>
-            <CommandBlock command={buildSkillhubInstallCommand(namespace, slug, baseUrl)} />
-          </div>
-        </details>
-      )}
     </div>
   )
 }

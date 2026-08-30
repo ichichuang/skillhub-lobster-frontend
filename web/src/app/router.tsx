@@ -46,7 +46,7 @@ function createLazyRouteComponent<TModule extends Record<string, unknown>>(
       <Suspense
         fallback={
           <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-            Loading...
+            加载中…
           </div>
         }
       >
@@ -152,7 +152,7 @@ const AdminLabelsPage = createRoleProtectedRouteComponent(
 function DefaultNotFound() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-      Not Found
+      页面不存在
     </div>
   )
 }

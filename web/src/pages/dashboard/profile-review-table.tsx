@@ -139,14 +139,14 @@ export function ProfileReviewTable() {
     if (result === 'PASS') {
       return (
         <span className="inline-flex items-center rounded-full bg-success-surface px-2.5 py-1 text-xs font-semibold text-success">
-          PASS
+          通过
         </span>
       )
     }
     if (result === 'FAIL') {
       return (
         <span className="inline-flex items-center rounded-full bg-danger-surface px-2.5 py-1 text-xs font-semibold text-danger">
-          FAIL
+          未通过
         </span>
       )
     }

@@ -72,6 +72,7 @@ describe('LoginPage', () => {
   it('renders the login title and form elements', () => {
     const html = renderToStaticMarkup(<LoginPage />)
 
+    expect(html).toContain('>技<')
     expect(html).toContain('login.title')
     expect(html).toContain('login.subtitle')
     expect(html).toContain('login.submit')

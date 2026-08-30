@@ -1,12 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { setEnglishLocale } from './helpers/auth-fixtures'
 import { registerSession } from './helpers/session'
 
 test.describe('Route Guards (Real API)', () => {
-  test.beforeEach(async ({ page }) => {
-    await setEnglishLocale(page)
-  })
-
   test('redirects anonymous users to login for protected routes', async ({ page }) => {
     await page.goto('/dashboard')
     await expect(page).toHaveURL(/\/login\?returnTo=%2Fdashboard$/)
@@ -20,6 +15,6 @@ test.describe('Route Guards (Real API)', () => {
 
     await page.goto('/dashboard')
     await expect(page).toHaveURL('/dashboard')
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '控制台' })).toBeVisible()
   })
 })
