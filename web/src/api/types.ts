@@ -462,7 +462,7 @@ export interface GovernanceSummary {
 }
 
 export interface GovernanceInboxItem {
-  type: 'REVIEW' | 'PROMOTION' | 'REPORT' | string
+  type: 'REVIEW' | 'REPORT' | string
   id: number
   title: string
   subtitle?: string
@@ -501,6 +501,52 @@ export interface AdminUser {
   platformRoles: string[]
   status: string
   createdAt: string
+}
+
+/**
+ * Platform-admin skill inventory row from GET /api/v1/admin/skills.
+ * Unlike public skill summaries it carries owner identity and the hidden
+ * governance overlay; `hidden` drives availability, not lifecycle status.
+ */
+export interface AdminSkillSummary {
+  id: number
+  namespace?: string
+  slug: string
+  displayName?: string
+  labels?: LabelItem[]
+  ownerId?: string
+  ownerDisplayName?: string
+  visibility?: string
+  status?: string
+  hidden: boolean
+  createdAt?: string
+  updatedAt?: string
+  headlineVersion?: SkillLifecycleVersion
+  publishedVersion?: SkillLifecycleVersion
+  ownerPreviewVersion?: SkillLifecycleVersion
+  resolutionMode?: string
+}
+
+/** Administrator-readable version row inside the admin skill detail response. */
+export interface AdminSkillVersionSummary {
+  id: number
+  version: string
+  status: string
+  changelog?: string
+  fileCount?: number
+  totalSize?: number
+  publishedAt?: string
+}
+
+/**
+ * Response of GET /api/v1/admin/skills/{skillId}: the inventory row plus the
+ * skill summary text and the full version history, so the admin detail modal
+ * can explain what a hidden or archived skill actually does.
+ */
+export interface AdminSkillDetailResponse {
+  skill: AdminSkillSummary
+  summary?: string
+  versions: AdminSkillVersionSummary[]
 }
 
 export interface AuditLogItem {

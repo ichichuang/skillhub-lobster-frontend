@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearch } from '@tanstack/react-router'
-import { AlertTriangle, CheckCircle2, FileArchive, Loader2, XCircle } from 'lucide-react'
+import { AlertTriangle, Ban, CheckCircle2, FileArchive, Loader2, XCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { UploadZone } from '@/features/publish/upload-zone'
 import {
   addFilesToPublishQueue,
-  removePendingPublishQueueItem,
+  getPublishFileId,
+  removeQueuedPublishQueueItem,
   runPublishBatch,
   type PublishBatchWarningDecision,
   type PublishQueueItem,
   type PublishQueueStatus,
 } from '@/features/publish/publish-batch'
+import { runPackagePreflight, type PackagePreflightResult, type PreflightCheck } from '@/features/publish/package-preflight'
+import { matchServerPreflightFailure, type ServerPreflightFailureKind } from '@/features/publish/publish-error-utils'
 import { normalizePublishPrefill } from '@/features/publish/publish-prefill'
 import { Button } from '@/shared/ui/button'
 import {
@@ -42,6 +45,7 @@ const STATUS_CLASS_NAMES: Record<PublishQueueStatus, string> = {
   succeeded: 'text-success',
   failed: 'text-destructive',
   'warning-confirmation-required': 'text-warning',
+  blocked: 'text-destructive',
 }
 
 function PublishStatusIcon({ status }: { status: PublishQueueStatus }) {
@@ -58,7 +62,100 @@ function PublishStatusIcon({ status }: { status: PublishQueueStatus }) {
   if (status === 'warning-confirmation-required') {
     return <AlertTriangle className={className} aria-hidden="true" />
   }
+  if (status === 'blocked') {
+    return <Ban className={className} aria-hidden="true" />
+  }
   return <FileArchive className={className} aria-hidden="true" />
+}
+
+function PackageCheckRow({ check }: { check: PreflightCheck }) {
+  const { t } = useTranslation()
+  return (
+    <li className="space-y-0.5">
+      <div className="flex items-center gap-1.5">
+        {check.passed ? (
+          <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-success" aria-hidden="true" />
+        ) : (
+          <XCircle className="h-3.5 w-3.5 flex-shrink-0 text-destructive" aria-hidden="true" />
+        )}
+        <span className="text-xs text-foreground">{t(check.labelKey)}</span>
+      </div>
+      {check.failure ? (
+        <p className="pl-5 text-xs text-destructive">{t(check.failure.messageKey, check.failure.params)}</p>
+      ) : null}
+    </li>
+  )
+}
+
+function PackagePreflightSection({ preflight }: { preflight: PackagePreflightResult }) {
+  const { t } = useTranslation()
+  const { metadata, checks, blocked, failure } = preflight
+  const hasSkillInfo = Boolean(metadata.name || metadata.description || metadata.version)
+
+  if (failure && !hasSkillInfo) {
+    return (
+      <div className="mt-2 pl-6" role="alert">
+        <div className="flex items-start gap-1.5">
+          <XCircle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-destructive" aria-hidden="true" />
+          <p className="text-xs text-destructive">{t(failure.messageKey)}</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-2 space-y-3 pl-6">
+      {hasSkillInfo ? (
+        <div
+          className="rounded-lg border border-border/60 bg-background/60 p-3"
+          role="group"
+          aria-label={t('publish.preflight.skillInfoTitle')}
+        >
+          <p className="text-xs font-semibold text-foreground">{t('publish.preflight.skillInfoTitle')}</p>
+          {metadata.name ? (
+            <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+              <span className="text-xs text-muted-foreground">{t('publish.preflight.skillNameLabel')}</span>
+              <span className="text-sm font-medium text-foreground">{metadata.name}</span>
+            </div>
+          ) : null}
+          {metadata.description ? (
+            <div className="mt-1.5">
+              <span className="text-xs text-muted-foreground">{t('publish.preflight.skillDescriptionLabel')}</span>
+              <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-foreground">
+                {metadata.description}
+              </p>
+            </div>
+          ) : null}
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+            <span className="text-xs text-muted-foreground">{t('publish.preflight.skillVersionLabel')}</span>
+            {metadata.version ? (
+              <span className="text-xs font-medium text-foreground">{metadata.version}</span>
+            ) : (
+              <span className="text-xs text-muted-foreground">{t('publish.preflight.versionMissing')}</span>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {checks.length > 0 ? (
+        <div aria-label={t('publish.preflight.checksTitle')}>
+          <p className="text-xs font-semibold text-foreground">{t('publish.preflight.checksTitle')}</p>
+          <ul className="mt-1.5 space-y-1.5">
+            {checks.map((check) => <PackageCheckRow key={check.id} check={check} />)}
+          </ul>
+          {blocked ? (
+            <div className="mt-2 rounded-lg bg-secondary/50 p-2.5">
+              <p className="text-xs text-muted-foreground">{t('publish.preflight.exampleHint')}</p>
+              <pre className="mt-1 overflow-x-auto text-xs text-foreground">{t('publish.preflight.frontmatterExample')}</pre>
+            </div>
+          ) : null}
+          <p className={`mt-2 text-xs ${blocked ? 'text-destructive' : 'text-muted-foreground'}`}>
+            {blocked ? t('publish.preflight.blockedNote') : t('publish.preflight.passedNote')}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 export function PublishPage() {
@@ -89,15 +186,35 @@ export function PublishPage() {
     }
   }, [prefill.namespace, prefill.visibility])
 
+  const runPreflightForFiles = async (files: File[]) => {
+    for (const file of files) {
+      const itemId = getPublishFileId(file)
+      const result = await runPackagePreflight(file)
+      setQueueItems((items) => items.map((item) => {
+        if (item.id !== itemId) {
+          return item
+        }
+        const updated = { ...item, preflight: result }
+        return updated.status === 'pending' && result.blocked
+          ? { ...updated, status: 'blocked' as const }
+          : updated
+      }))
+    }
+  }
+
   const handleFilesSelect = (files: File[]) => {
     if (batchPublishingRef.current) return
-    setQueueItems((items) => addFilesToPublishQueue(items, files))
+    const addedIds = new Set(files.map((file) => getPublishFileId(file)))
+    setQueueItems((items) => addFilesToPublishQueue(items, files).map((item) => (
+      item.preflight || !addedIds.has(item.id) ? item : { ...item, preflight: { state: 'checking' as const } }
+    )))
     setBatchSummary(null)
+    void runPreflightForFiles(files)
   }
 
   const handleRemoveFile = (itemId: string) => {
     if (batchPublishingRef.current) return
-    setQueueItems((items) => removePendingPublishQueueItem(items, itemId))
+    setQueueItems((items) => removeQueuedPublishQueueItem(items, itemId))
   }
 
   const handleClearQueue = () => {
@@ -165,9 +282,31 @@ export function PublishPage() {
     }
   }
 
+  const getServerPreflightCopy = (kind: ServerPreflightFailureKind) => {
+    switch (kind) {
+      case 'skill-md-missing':
+        return { title: t('publish.preflight.skillMdErrorTitle'), description: t('publish.preflight.skillMdMissing') }
+      case 'skill-md-ambiguous':
+        return { title: t('publish.preflight.skillMdAmbiguousTitle'), description: t('publish.preflight.skillMdAmbiguous') }
+      case 'name-missing':
+        return { title: t('publish.preflight.nameErrorTitle'), description: t('publish.preflight.nameMissing') }
+      case 'name-invalid':
+        return { title: t('publish.preflight.nameErrorTitle'), description: t('publish.preflight.nameInvalidPattern') }
+      case 'description-missing':
+        return { title: t('publish.preflight.descriptionErrorTitle'), description: t('publish.preflight.descriptionMissing') }
+      case 'frontmatter-invalid':
+        return { title: t('publish.frontmatterFailedTitle'), description: t('publish.preflight.frontmatterInvalid') }
+    }
+  }
+
   const getErrorCopy = (item: PublishQueueItem) => {
     const error = item.error
     if (!error) return null
+
+    const serverPreflightKind = matchServerPreflightFailure(error.message)
+    if (serverPreflightKind) {
+      return getServerPreflightCopy(serverPreflightKind)
+    }
 
     switch (error.kind) {
       case 'timeout':
@@ -291,6 +430,16 @@ export function PublishPage() {
                             {t(`publish.status.${item.status}`)}
                           </p>
 
+                          {item.preflight?.state === 'checking' ? (
+                            <p className="mt-2 pl-6 text-xs text-muted-foreground">{t('publish.preflight.checking')}</p>
+                          ) : null}
+                          {item.preflight && item.preflight.state === 'ready' ? (
+                            <PackagePreflightSection preflight={item.preflight} />
+                          ) : null}
+                          {item.preflight && item.preflight.state === 'unreadable' ? (
+                            <p className="mt-2 pl-6 text-xs text-muted-foreground">{t('publish.preflight.unreadableNote')}</p>
+                          ) : null}
+
                           {item.result && skillLabel ? (
                             <div className="mt-2 pl-6 text-xs text-muted-foreground">
                               <p className="font-medium text-foreground">
@@ -312,7 +461,7 @@ export function PublishPage() {
                           ) : null}
                         </div>
 
-                        {item.status === 'pending' ? (
+                        {item.status === 'pending' || item.status === 'blocked' ? (
                           <Button
                             type="button"
                             variant="outline"

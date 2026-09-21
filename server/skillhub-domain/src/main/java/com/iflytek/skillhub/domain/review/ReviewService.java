@@ -193,6 +193,9 @@ public class ReviewService {
         if (skillVersion.getStatus() == SkillVersionStatus.SCANNING) {
             throw new DomainBadRequestException("review.approve.scan_in_progress", reviewTaskId);
         }
+        if (skillVersion.getStatus() == SkillVersionStatus.SCAN_FAILED) {
+            throw new DomainBadRequestException("review.approve.scan_failed", reviewTaskId);
+        }
 
         int updated = reviewTaskRepository.updateStatusWithVersion(
                 reviewTaskId, ReviewTaskStatus.APPROVED, reviewerId, comment, task.getVersion());

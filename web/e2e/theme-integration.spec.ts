@@ -1,11 +1,12 @@
 import { expect, test, type FrameLocator, type Page } from '@playwright/test'
 
+const APP_ORIGIN = process.env.PLAYWRIGHT_APP_ORIGIN ?? 'http://127.0.0.1:3000'
 const DARK_URL = '/?embed=true&dark=0'
 const LIGHT_URL = '/?embed=true&dark=1'
 const RETIRED_URL = '/?embed=true&theme=dark&color=%23ff0000&bg=%23000000&surface=%23111111'
 
 async function mountParentHarness(page: Page, childUrl: string): Promise<FrameLocator> {
-  const absoluteChildUrl = new URL(childUrl, 'http://127.0.0.1:3000').href
+  const absoluteChildUrl = new URL(childUrl, APP_ORIGIN).href
   await page.setContent(`<iframe title="技能中心子页面" src="${absoluteChildUrl}" style="width:1200px;height:900px"></iframe>`)
   const frame = page.frameLocator('iframe[title="技能中心子页面"]')
   await expect(frame.locator('#root')).toBeAttached()
@@ -92,7 +93,7 @@ test.describe('parent-owned URL theme integration', () => {
   })
 
   test('retains parent params across child navigation and syncs by iframe reload', async ({ page }) => {
-    const frame = await mountParentHarness(page, DARK_URL)
+    const frame = await mountParentHarness(page, `${DARK_URL}&showHeader=1`)
     const searchLink = frame.locator('a[href*="/search"]').first()
     await expect(searchLink).toBeVisible()
     await searchLink.click()
@@ -108,10 +109,10 @@ test.describe('parent-owned URL theme integration', () => {
       inlineThemeVariables: [],
     })
 
-    await page.locator('iframe[title="技能中心子页面"]').evaluate((iframe, src) => {
+    await page.locator('iframe[title="技能中心子页面"]').evaluate((iframe, { src, origin }) => {
       const childFrame = iframe as HTMLIFrameElement
-      childFrame.src = new URL(src, 'http://127.0.0.1:3000').href
-    }, LIGHT_URL)
+      childFrame.src = new URL(src, origin).href
+    }, { src: LIGHT_URL, origin: APP_ORIGIN })
 
     await expect.poll(() => readTheme(frame)).toMatchObject({
       mode: 'light',
@@ -128,7 +129,7 @@ test.describe('parent-owned URL theme integration', () => {
   })
 
   test('ignores retired theme anchors and stops propagating them on navigation', async ({ page }) => {
-    const frame = await mountParentHarness(page, RETIRED_URL)
+    const frame = await mountParentHarness(page, `${RETIRED_URL}&showHeader=1`)
 
     await expect.poll(() => readTheme(frame)).toMatchObject({
       mode: 'light',

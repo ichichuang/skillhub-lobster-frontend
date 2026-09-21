@@ -410,26 +410,21 @@ class ReviewServiceTest {
         }
 
         @Test
-        void shouldAllowApproveWhenScanFailed() {
+        void shouldRejectApproveWhenScanFailed() {
             ReviewTask task = createPendingReviewTask();
             Namespace ns = createTeamNamespace();
             SkillVersion sv = createSkillVersionWithStatus(SkillVersionStatus.SCAN_FAILED);
-            Skill skill = createSkill();
 
             when(reviewTaskRepository.findById(REVIEW_TASK_ID)).thenReturn(Optional.of(task));
             when(namespaceRepository.findById(NAMESPACE_ID)).thenReturn(Optional.of(ns));
             when(permissionChecker.canReview(any(), any(), any(), anyMap(), anySet())).thenReturn(true);
-            when(reviewTaskRepository.updateStatusWithVersion(any(), any(), any(), any(), any())).thenReturn(1);
             when(skillVersionRepository.findById(SKILL_VERSION_ID)).thenReturn(Optional.of(sv));
-            when(skillRepository.findById(SKILL_ID)).thenReturn(Optional.of(skill));
-            when(skillRepository.findByNamespaceIdAndSlug(NAMESPACE_ID, "my-skill")).thenReturn(List.of(skill));
-            when(reviewTaskRepository.findById(REVIEW_TASK_ID)).thenReturn(Optional.of(task));
 
-            ReviewTask result = reviewService.approveReview(REVIEW_TASK_ID, REVIEWER_ID, "ok",
-                    Map.of(NAMESPACE_ID, NamespaceRole.ADMIN), Set.of());
-
-            assertNotNull(result);
-            assertEquals(SkillVersionStatus.PUBLISHED, sv.getStatus());
+            DomainBadRequestException ex = assertThrows(DomainBadRequestException.class,
+                    () -> reviewService.approveReview(REVIEW_TASK_ID, REVIEWER_ID, "ok",
+                            Map.of(NAMESPACE_ID, NamespaceRole.ADMIN), Set.of()));
+            assertEquals("review.approve.scan_failed", ex.messageCode());
+            verify(reviewTaskRepository, never()).updateStatusWithVersion(any(), any(), any(), any(), any());
         }
 
         @Test
@@ -592,6 +587,27 @@ class ReviewServiceTest {
             assertEquals(SkillVersionStatus.REJECTED, sv.getStatus());
             verify(skillVersionRepository).save(sv);
             verify(eventPublisher, never()).publishEvent(any(SkillPublishedEvent.class));
+        }
+
+        @Test
+        void shouldAllowRejectWhenScanFailed() {
+            ReviewTask task = createPendingReviewTask();
+            Namespace ns = createTeamNamespace();
+            SkillVersion sv = createSkillVersionWithStatus(SkillVersionStatus.SCAN_FAILED);
+
+            when(reviewTaskRepository.findById(REVIEW_TASK_ID)).thenReturn(Optional.of(task));
+            when(namespaceRepository.findById(NAMESPACE_ID)).thenReturn(Optional.of(ns));
+            when(permissionChecker.canReview(any(), any(), any(), anyMap(), anySet())).thenReturn(true);
+            when(reviewTaskRepository.updateStatusWithVersion(any(), any(), any(), any(), any())).thenReturn(1);
+            when(skillVersionRepository.findById(SKILL_VERSION_ID)).thenReturn(Optional.of(sv));
+            when(skillRepository.findById(SKILL_ID)).thenReturn(Optional.of(createSkill()));
+
+            ReviewTask result = reviewService.rejectReview(
+                    REVIEW_TASK_ID, REVIEWER_ID, "scan failed, please fix and resubmit",
+                    Map.of(NAMESPACE_ID, NamespaceRole.ADMIN), Set.of());
+
+            assertEquals(ReviewTaskStatus.REJECTED, result.getStatus());
+            assertEquals(SkillVersionStatus.REJECTED, sv.getStatus());
         }
 
         @Test

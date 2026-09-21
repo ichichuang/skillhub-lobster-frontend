@@ -60,8 +60,15 @@ describe('validateRootSearch', () => {
     expect(validateRootSearch({ embed: 'false', dark: 'true' })).toEqual({})
   })
 
-  it('retains only the two parent-owned global keys', () => {
-    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark'])
+  it('accepts only the explicit numeric Header opt-in parsed by the router', () => {
+    expect(validateRootSearch({ embed: true, showHeader: 1 })).toEqual({ embed: true, showHeader: 1 })
+    for (const showHeader of [undefined, 0, true, 'true', '1', '', [1, 1]]) {
+      expect(validateRootSearch({ embed: true, showHeader })).toEqual({ embed: true })
+    }
+  })
+
+  it('retains the parent-owned global keys', () => {
+    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark', 'showHeader'])
   })
 })
 
@@ -98,7 +105,7 @@ describe('validateDashboardSkillsSearch', () => {
       filter: undefined,
       label: undefined,
     })
-    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark'])
+    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark', 'showHeader'])
   })
 })
 

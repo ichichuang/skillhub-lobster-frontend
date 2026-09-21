@@ -108,9 +108,14 @@ vi.mock('@/shared/lib/toast', () => ({
 }))
 
 import { PublishPage } from './publish'
+import { buildStoreZip, skillMdContent } from '@/features/publish/zip-test-builder'
 
-function makeFile(name: string, lastModified: number): File {
-  return new File(['zip'], name, { type: 'application/zip', lastModified })
+function makeFile(name: string, lastModified: number, options?: { withoutSkillMd?: boolean }): File {
+  const entries = options?.withoutSkillMd
+    ? [{ path: 'README.md', content: '# package without SKILL.md' }]
+    : [{ path: 'SKILL.md', content: skillMdContent(name.replace(/\.zip$/, ''), 'A valid test skill description', '1.0.0') }]
+  const bytes = buildStoreZip(entries)
+  return new File([bytes as BlobPart], name, { type: 'application/zip', lastModified })
 }
 
 function makeResult(file: File): PublishResult {
@@ -241,6 +246,92 @@ describe('PublishPage', () => {
 
     await screen.findByText(title)
     expect(screen.getByText(description)).toBeTruthy()
+  })
+
+  it('previews the parsed skill name, description, and version before publishing', async () => {
+    const description = 'A valid test skill description'
+    testState.selectedFiles = [makeFile('alpha.zip', 1)]
+    render(createElement(PublishPage))
+
+    fireEvent.click(screen.getByTestId('upload-zone'))
+
+    expect(await screen.findByText('alpha')).toBeTruthy()
+    expect(screen.getByText(description)).toBeTruthy()
+    expect(screen.getByText('1.0.0')).toBeTruthy()
+    expect(screen.getByLabelText('publish.preflight.skillInfoTitle')).toBeTruthy()
+    expect(screen.getByLabelText('publish.preflight.checksTitle')).toBeTruthy()
+    expect(testState.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  it('blocks a zip without a root SKILL.md before any publish request', async () => {
+    testState.selectedFiles = [makeFile('broken.zip', 1, { withoutSkillMd: true })]
+    render(createElement(PublishPage))
+
+    fireEvent.click(screen.getByTestId('upload-zone'))
+
+    expect(await screen.findByText('publish.preflight.skillMdMissing')).toBeTruthy()
+    expect(screen.getByText('publish.status.blocked')).toBeTruthy()
+    expect(screen.getByText('publish.preflight.frontmatterExample')).toBeTruthy()
+    expect((screen.getByRole('button', { name: 'publish.confirm' }) as HTMLButtonElement).disabled).toBe(true)
+    expect(testState.mutateAsync).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'publish.removeFile:broken.zip' }))
+    expect(screen.queryByText(/broken\.zip/)).toBeNull()
+  })
+
+  it('keeps a mixed batch usable and only publishes the valid files', async () => {
+    const valid = makeFile('valid.zip', 1)
+    testState.selectedFiles = [valid, makeFile('broken.zip', 2, { withoutSkillMd: true })]
+    testState.mutateAsync.mockResolvedValueOnce(makeResult(valid))
+    render(createElement(PublishPage))
+
+    fireEvent.click(screen.getByTestId('upload-zone'))
+    await screen.findByText('publish.status.blocked')
+
+    const publishButton = screen.getByRole('button', { name: 'publish.confirm' }) as HTMLButtonElement
+    expect(publishButton.disabled).toBe(false)
+    fireEvent.click(publishButton)
+
+    await screen.findByText('publish.batchSummary:1/0')
+    expect(testState.mutateAsync).toHaveBeenCalledTimes(1)
+    expect(testState.mutateAsync.mock.calls[0]?.[0].file.name).toBe('valid.zip')
+    expect(screen.getByText('publish.status.blocked')).toBeTruthy()
+    expect(screen.getAllByText('publish.status.succeeded')).toHaveLength(1)
+  })
+
+  it('renders the friendly copy when the server rejects with a duplicate preflight error', async () => {
+    const file = makeFile('stale.zip', 1)
+    testState.selectedFiles = [file]
+    testState.mutateAsync.mockRejectedValueOnce(
+      new ApiError('stale', 400, '技能包校验失败：Missing required file: SKILL.md at root'),
+    )
+    render(createElement(PublishPage))
+
+    fireEvent.click(screen.getByTestId('upload-zone'))
+    await screen.findByText('publish.preflight.passedNote')
+
+    fireEvent.click(screen.getByRole('button', { name: 'publish.confirm' }))
+
+    await screen.findByText('publish.preflight.skillMdErrorTitle')
+    expect(screen.getByText('publish.preflight.skillMdMissing')).toBeTruthy()
+    expect(screen.queryByText('技能包校验失败：Missing required file: SKILL.md at root')).toBeNull()
+  })
+
+  it('clears the queue for the next batch after a completed batch', async () => {
+    const files = [makeFile('done.zip', 1), makeFile('reject.zip', 2)]
+    testState.selectedFiles = files
+    testState.mutateAsync
+      .mockResolvedValueOnce(makeResult(files[0]))
+      .mockRejectedValueOnce(new Error('boom'))
+    render(createElement(PublishPage))
+
+    fireEvent.click(screen.getByTestId('upload-zone'))
+    fireEvent.click(screen.getByRole('button', { name: 'publish.confirm' }))
+    await screen.findByText('publish.batchSummary:1/1')
+
+    fireEvent.click(screen.getByRole('button', { name: 'publish.startAnotherBatch' }))
+    expect(screen.queryByText(/done\.zip/)).toBeNull()
+    expect(screen.queryByText('publish.batchSummary:1/1')).toBeNull()
   })
 
   it('exports a named component function', () => {

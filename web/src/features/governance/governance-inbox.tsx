@@ -35,10 +35,6 @@ export function GovernanceInbox({ items, isLoading }: GovernanceInboxProps) {
       navigate({ to: `/dashboard/reviews/${item.id}` })
       return
     }
-    if (item.type === 'PROMOTION') {
-      navigate({ to: '/dashboard/promotions' })
-      return
-    }
     if (item.type === 'REPORT') {
       navigate({ to: '/dashboard/reports' })
       return

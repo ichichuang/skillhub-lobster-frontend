@@ -1,5 +1,6 @@
 import type { PublishResult } from '@/api/types'
 import { ApiError } from '@/api/client'
+import type { PackagePreflight } from './package-preflight'
 import {
   extractPrecheckWarnings,
   isFrontmatterFailureMessage,
@@ -14,6 +15,7 @@ export type PublishQueueStatus =
   | 'succeeded'
   | 'failed'
   | 'warning-confirmation-required'
+  | 'blocked'
 
 export type PublishErrorKind =
   | 'timeout'
@@ -35,6 +37,7 @@ export interface PublishQueueItem {
   result?: PublishResult
   error?: PublishQueueError
   warnings?: string[]
+  preflight?: PackagePreflight
 }
 
 export interface PublishBatchRequest {
@@ -85,11 +88,13 @@ export function addFilesToPublishQueue(
   return [...items, ...additions]
 }
 
-export function removePendingPublishQueueItem(
+export function removeQueuedPublishQueueItem(
   items: PublishQueueItem[],
   itemId: string,
 ): PublishQueueItem[] {
-  return items.filter((item) => item.id !== itemId || item.status !== 'pending')
+  return items.filter((item) => {
+    return item.id !== itemId || (item.status !== 'pending' && item.status !== 'blocked')
+  })
 }
 
 export function classifyPublishError(error: unknown): PublishQueueError {

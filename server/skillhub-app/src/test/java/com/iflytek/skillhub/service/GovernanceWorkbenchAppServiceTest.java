@@ -76,7 +76,7 @@ class GovernanceWorkbenchAppServiceTest {
                 .thenReturn(new PageImpl<>(List.of(createPromotionRequest(2L, 101L, 12L, "owner"))));
         when(skillReportRepository.findByStatus(SkillReportStatus.PENDING, PageRequest.of(0, 100)))
                 .thenReturn(new PageImpl<>(List.of(createReport(3L, 101L, 11L, "reporter"))));
-        when(governanceNotificationService.countUnreadNotifications("admin")).thenReturn(4L);
+        when(governanceNotificationService.countUnreadNotifications("admin", "PROMOTION")).thenReturn(4L);
 
         GovernanceSummaryResponse response = service.getSummary("admin", Map.of(), Set.of("SKILL_ADMIN"));
 
@@ -90,7 +90,7 @@ class GovernanceWorkbenchAppServiceTest {
     void summary_limitsReviewsToManagedNamespacesForNamespaceAdmin() {
         when(reviewTaskRepository.findByNamespaceIdAndStatus(11L, ReviewTaskStatus.PENDING, PageRequest.of(0, 100)))
                 .thenReturn(new PageImpl<>(List.of(createReviewTask(1L, 11L, 101L, "owner"))));
-        when(governanceNotificationService.countUnreadNotifications("ns-admin")).thenReturn(2L);
+        when(governanceNotificationService.countUnreadNotifications("ns-admin", "PROMOTION")).thenReturn(2L);
 
         GovernanceSummaryResponse response = service.getSummary(
                 "ns-admin",
@@ -147,10 +147,60 @@ class GovernanceWorkbenchAppServiceTest {
                         "skill-a"
                 )));
 
-        PageResponse<?> response = service.listInbox("admin", Map.of(), Set.of("SKILL_ADMIN"), null, 0, 20);
+        PageResponse<?> response = service.listInbox("admin", Map.of(), Set.of("SKILL_ADMIN"), null, Set.of(), 0, 20);
 
         assertThat(response.total()).isEqualTo(3);
         assertThat(response.items()).hasSize(3);
+    }
+
+    @Test
+    void listInbox_excludesPromotionTasksWhenRequestedWhileKeepingTotalsAccurate() {
+        ReviewTask reviewTask = createReviewTask(1L, 11L, 101L, "owner");
+        SkillReport report = createReport(3L, 101L, 11L, "reporter");
+
+        when(reviewTaskRepository.findByStatus(ReviewTaskStatus.PENDING, PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(reviewTask)));
+        when(skillReportRepository.findByStatus(SkillReportStatus.PENDING, PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(report)));
+        when(governanceQueryRepository.getReviewInboxItems(List.of(reviewTask)))
+                .thenReturn(List.of(new GovernanceInboxItemResponse(
+                        "REVIEW",
+                        1L,
+                        "team-a/skill-a@1.0.0",
+                        "Pending review",
+                        "2026-03-16T02:00:00Z",
+                        "team-a",
+                        "skill-a"
+                )));
+        when(governanceQueryRepository.getReportInboxItems(List.of(report)))
+                .thenReturn(List.of(new GovernanceInboxItemResponse(
+                        "REPORT",
+                        3L,
+                        "team-a/skill-a",
+                        "Spam",
+                        "2026-03-16T02:00:00Z",
+                        "team-a",
+                        "skill-a"
+                )));
+
+        PageResponse<?> response = service.listInbox(
+                "admin", Map.of(), Set.of("SKILL_ADMIN"), null, Set.of("promotion"), 0, 20);
+
+        assertThat(response.total()).isEqualTo(2);
+        assertThat(response.items())
+                .extracting(item -> ((GovernanceInboxItemResponse) item).type())
+                .containsExactlyInAnyOrder("REVIEW", "REPORT");
+        org.mockito.Mockito.verifyNoInteractions(promotionRequestRepository);
+    }
+
+    @Test
+    void listInbox_promotionTypeRequestWithPromotionExcludedReturnsEmptyResult() {
+        PageResponse<?> response = service.listInbox(
+                "admin", Map.of(), Set.of("SKILL_ADMIN"), "PROMOTION", Set.of("PROMOTION"), 0, 20);
+
+        assertThat(response.total()).isZero();
+        assertThat(response.items()).isEmpty();
+        org.mockito.Mockito.verifyNoInteractions(promotionRequestRepository);
     }
 
     @Test
@@ -164,9 +214,6 @@ class GovernanceWorkbenchAppServiceTest {
                         "REVIEW_APPROVE",
                         "REVIEW_REJECT",
                         "REVIEW_WITHDRAW",
-                        "PROMOTION_SUBMIT",
-                        "PROMOTION_APPROVE",
-                        "PROMOTION_REJECT",
                         "REPORT_SKILL",
                         "RESOLVE_SKILL_REPORT",
                         "DISMISS_SKILL_REPORT",
@@ -238,7 +285,7 @@ class GovernanceWorkbenchAppServiceTest {
                         )
                 ));
 
-        PageResponse<?> response = service.listInbox("admin", Map.of(), Set.of("SKILL_ADMIN"), "REVIEW", 1, 1);
+        PageResponse<?> response = service.listInbox("admin", Map.of(), Set.of("SKILL_ADMIN"), "REVIEW", Set.of(), 1, 1);
 
         assertThat(response.total()).isEqualTo(2);
         assertThat(response.items()).hasSize(1);
@@ -255,9 +302,6 @@ class GovernanceWorkbenchAppServiceTest {
                         "REVIEW_APPROVE",
                         "REVIEW_REJECT",
                         "REVIEW_WITHDRAW",
-                        "PROMOTION_SUBMIT",
-                        "PROMOTION_APPROVE",
-                        "PROMOTION_REJECT",
                         "REPORT_SKILL",
                         "RESOLVE_SKILL_REPORT",
                         "DISMISS_SKILL_REPORT",

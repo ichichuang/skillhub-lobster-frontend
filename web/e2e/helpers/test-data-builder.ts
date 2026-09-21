@@ -528,7 +528,11 @@ export class E2eTestDataBuilder {
       } catch (error) {
         lastError = error
         const message = error instanceof Error ? error.message : ''
-        const isScanInProgress = message.includes('扫描') || message.toLowerCase().includes('scan is still in progress')
+        // Scan failures are terminal: retrying approval cannot succeed and
+        // would mask the real error for the full retry window.
+        const isScanFailed = message.includes('未通过') || message.toLowerCase().includes('scan failed')
+        const isScanInProgress = !isScanFailed
+          && (message.includes('扫描') || message.toLowerCase().includes('scan is still in progress'))
         if (!isScanInProgress) {
           throw error
         }

@@ -42,6 +42,22 @@ describe('getAppMainContentLayout', () => {
       contentClassName: '',
     })
   })
+
+  it('locks the admin skills inventory to a fixed-viewport layout whose content scrolls locally', () => {
+    const layout = getAppMainContentLayout('/admin/skills')
+
+    expect(layout.fixedViewport).toBe(true)
+    expect(layout.mainClassName).toContain('min-h-0')
+    expect(layout.mainClassName).toContain('overflow-hidden')
+    expect(layout.contentClassName).toContain('h-full')
+    expect(layout.contentClassName).toContain('flex-col')
+    expect(layout.contentClassName).toContain('max-w-[1200px]')
+  })
+
+  it('keeps other admin routes on the flowing default layout', () => {
+    expect(getAppMainContentLayout('/admin/labels').fixedViewport).toBeFalsy()
+    expect(getAppMainContentLayout('/admin/labels').mainClassName).toBe(DEFAULT_MAIN_CLASS_NAME)
+  })
 })
 
 describe('resolveAppMainContentPathname', () => {

@@ -41,6 +41,9 @@ import type {
   NotificationPreferenceItem,
   NotificationUnreadCount,
   SkillDeleteResult,
+  AdminSkillSummary,
+  AdminSkillDetailResponse,
+  SkillFile,
   AdminLabelInput,
   LabelDefinition,
   LabelItem,
@@ -1005,9 +1008,10 @@ export const governanceApi = {
     return fetchJson<GovernanceSummary>(`${WEB_API_PREFIX}/governance/summary`)
   },
 
-  async getInbox(params: { type?: string; page?: number; size?: number }) {
+  async getInbox(params: { type?: string; exclude?: string; page?: number; size?: number }) {
     const searchParams = new URLSearchParams()
     if (params.type) searchParams.set('type', params.type)
+    if (params.exclude) searchParams.set('exclude', params.exclude)
     searchParams.set('page', String(params.page ?? 0))
     searchParams.set('size', String(params.size ?? 20))
     return fetchJson<PagedResponse<GovernanceInboxItem>>(
@@ -1024,8 +1028,9 @@ export const governanceApi = {
     )
   },
 
-  async getNotifications(params: { page?: number; size?: number }): Promise<PagedResponse<GovernanceNotification>> {
+  async getNotifications(params: { excludeCategory?: string; page?: number; size?: number }): Promise<PagedResponse<GovernanceNotification>> {
     const searchParams = new URLSearchParams()
+    if (params.excludeCategory) searchParams.set('excludeCategory', params.excludeCategory)
     searchParams.set('page', String(params.page ?? 0))
     searchParams.set('size', String(params.size ?? 20))
     return fetchJson<PagedResponse<GovernanceNotification>>(`${WEB_API_PREFIX}/governance/notifications?${searchParams.toString()}`)
@@ -1223,6 +1228,27 @@ export const adminApi = {
     })
   },
 
+  async listSkills(params: { q?: string; status?: string; hidden?: boolean; label?: string; page?: number; size?: number } = {}) {
+    const searchParams = new URLSearchParams()
+    if (params.q) searchParams.set('q', params.q)
+    if (params.status) searchParams.set('status', params.status)
+    if (params.hidden !== undefined) searchParams.set('hidden', String(params.hidden))
+    if (params.label) searchParams.set('label', params.label)
+    searchParams.set('page', String(params.page ?? 0))
+    searchParams.set('size', String(params.size ?? 20))
+    return fetchJson<{ items: AdminSkillSummary[]; total: number; page: number; size: number }>(
+      `/api/v1/admin/skills?${searchParams.toString()}`,
+    )
+  },
+
+  async getSkillDetail(skillId: number) {
+    return fetchJson<AdminSkillDetailResponse>(`/api/v1/admin/skills/${skillId}`)
+  },
+
+  async listVersionFiles(skillId: number, versionId: number): Promise<SkillFile[]> {
+    return fetchJson<SkillFile[]>(`/api/v1/admin/skills/${skillId}/versions/${versionId}/files`)
+  },
+
   async getAuditLogs(params: {
     action?: string
     userId?: string
@@ -1262,6 +1288,13 @@ export const adminApi = {
   async unhideSkill(skillId: number): Promise<void> {
     await fetchJson<void>(`/api/v1/admin/skills/${skillId}/unhide`, {
       method: 'POST',
+      headers: getCsrfHeaders(),
+    })
+  },
+
+  async deleteSkill(skillId: number): Promise<void> {
+    await fetchJson<void>(`/api/v1/skills/id/${skillId}`, {
+      method: 'DELETE',
       headers: getCsrfHeaders(),
     })
   },

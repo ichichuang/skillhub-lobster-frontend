@@ -135,18 +135,18 @@ export function ReviewsPage() {
     }
     return (
       <div className="overflow-hidden rounded-xl border border-border/60">
-        <Table>
+        <Table className="table-fixed" wrapperClassName="overflow-x-hidden">
           <TableHeader>
             <TableRow className="bg-muted/35">
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colSkill')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colVersion')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colSubmitter')}</TableHead>
+              <TableHead className={`${status === 'PENDING' ? 'w-[46%]' : 'w-[36%]'} text-xs uppercase tracking-[0.18em] text-muted-foreground`}>{t('reviews.colSkill')}</TableHead>
+              <TableHead className={`${status === 'PENDING' ? 'w-[16%]' : 'w-[14%]'} text-xs uppercase tracking-[0.18em] text-muted-foreground`}>{t('reviews.colVersion')}</TableHead>
+              <TableHead className={`${status === 'PENDING' ? 'w-[16%]' : 'w-[14%]'} text-xs uppercase tracking-[0.18em] text-muted-foreground`}>{t('reviews.colSubmitter')}</TableHead>
               {status === 'PENDING' ? (
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colSubmitTime')}</TableHead>
+                <TableHead className="w-[22%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colSubmitTime')}</TableHead>
               ) : (
                 <>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colReviewer')}</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colReviewTime')}</TableHead>
+                  <TableHead className="w-[14%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colReviewer')}</TableHead>
+                  <TableHead className="w-[22%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('reviews.colReviewTime')}</TableHead>
                 </>
               )}
             </TableRow>
@@ -158,15 +158,27 @@ export function ReviewsPage() {
                 className="cursor-pointer transition-colors hover:bg-muted/30"
                 onClick={() => handleRowClick(review.id)}
               >
-                <TableCell className="font-medium">{review.namespace}/{review.skillSlug}</TableCell>
-                <TableCell>{review.version}</TableCell>
-                <TableCell>{review.submittedByName || review.submittedBy}</TableCell>
+                <TableCell>
+                  <div className="truncate font-medium" title={`${review.namespace}/${review.skillSlug}`}>
+                    {review.namespace}/{review.skillSlug}
+                  </div>
+                </TableCell>
+                <TableCell className="whitespace-nowrap font-mono text-xs">{review.version}</TableCell>
+                <TableCell>
+                  <div className="truncate" title={review.submittedByName || review.submittedBy}>
+                    {review.submittedByName || review.submittedBy}
+                  </div>
+                </TableCell>
                 {status === 'PENDING' ? (
-                  <TableCell>{formatDate(review.submittedAt)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">{formatDate(review.submittedAt)}</TableCell>
                 ) : (
                   <>
-                    <TableCell>{review.reviewedByName || review.reviewedBy || '-'}</TableCell>
-                    <TableCell>{review.reviewedAt ? formatDate(review.reviewedAt) : '-'}</TableCell>
+                    <TableCell>
+                      <div className="truncate" title={review.reviewedByName || review.reviewedBy || '-'}>
+                        {review.reviewedByName || review.reviewedBy || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">{review.reviewedAt ? formatDate(review.reviewedAt) : '-'}</TableCell>
                   </>
                 )}
               </TableRow>
@@ -181,11 +193,11 @@ export function ReviewsPage() {
   function renderSkillReviewContent() {
     return (
       <Card className="glass-strong overflow-hidden border-border/60 shadow-sm hover:shadow-sm">
-        <div className="h-1 bg-primary" />
-        <CardHeader className="pb-4">
+        <div className="h-1 bg-gradient-to-r from-primary/70 via-primary/30 to-transparent" />
+        <CardHeader className="border-b border-border/40 bg-muted/30">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-secondary-foreground">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 <FileCheck2 className="h-3.5 w-3.5" />
                 {t('reviews.typeSkill')}
               </div>

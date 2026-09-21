@@ -138,14 +138,14 @@ export function ProfileReviewTable() {
     if (!result || result === 'SKIPPED') return <span className="text-xs text-muted-foreground">-</span>
     if (result === 'PASS') {
       return (
-        <span className="inline-flex items-center rounded-full bg-success-surface px-2.5 py-1 text-xs font-semibold text-success">
+        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-success-surface px-2.5 py-1 text-xs font-semibold text-success">
           通过
         </span>
       )
     }
     if (result === 'FAIL') {
       return (
-        <span className="inline-flex items-center rounded-full bg-danger-surface px-2.5 py-1 text-xs font-semibold text-danger">
+        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-danger-surface px-2.5 py-1 text-xs font-semibold text-danger">
           未通过
         </span>
       )
@@ -155,7 +155,7 @@ export function ProfileReviewTable() {
 
   function renderPendingSummaryCard(count: number) {
     return (
-      <div className="rounded-xl border border-border/60 bg-background/80 p-4 shadow-sm">
+      <div className="rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -241,15 +241,15 @@ export function ProfileReviewTable() {
 
     return (
       <div className="overflow-hidden rounded-xl border border-border/60">
-        <Table>
+        <Table className="table-fixed" wrapperClassName="overflow-x-hidden">
           <TableHeader>
             <TableRow className="bg-muted/35">
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colUser')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colCurrentName')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colRequestedName')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colSubmittedAt')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colMachineResult')}</TableHead>
-              <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              <TableHead className="w-[20%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colUser')}</TableHead>
+              <TableHead className="w-[16%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colCurrentName')}</TableHead>
+              <TableHead className="w-[16%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colRequestedName')}</TableHead>
+              <TableHead className="w-[14%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colSubmittedAt')}</TableHead>
+              <TableHead className="w-[12%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('profileReview.colMachineResult')}</TableHead>
+              <TableHead className="w-[22%] text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 {isPending ? t('profileReview.colActions') : t('profileReview.colReviewInfo')}
               </TableHead>
             </TableRow>
@@ -259,20 +259,26 @@ export function ProfileReviewTable() {
               <TableRow key={item.id} className="transition-colors hover:bg-muted/20">
                 <TableCell className="align-top">
                   <div className="space-y-1">
-                    <p className="font-semibold text-foreground">{item.username || item.userId}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="truncate font-semibold text-foreground" title={item.username || item.userId}>
+                      {item.username || item.userId}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground" title={`${t('profileReview.userId')}: ${item.userId}`}>
                       {t('profileReview.userId')}: {item.userId}
                     </p>
                   </div>
                 </TableCell>
                 <TableCell className="align-top">
-                  <span className="text-sm text-muted-foreground">{item.currentDisplayName || '—'}</span>
+                  <span className="block truncate text-sm text-muted-foreground" title={item.currentDisplayName || undefined}>
+                    {item.currentDisplayName || '—'}
+                  </span>
                 </TableCell>
                 <TableCell className="align-top">
-                  <span className="font-semibold text-foreground">{item.requestedDisplayName || '—'}</span>
+                  <span className="block truncate font-semibold text-foreground" title={item.requestedDisplayName || undefined}>
+                    {item.requestedDisplayName || '—'}
+                  </span>
                 </TableCell>
-                <TableCell className="align-top text-sm text-muted-foreground">
-                  {formatDate(item.createdAt)}
+                <TableCell className="align-top text-xs text-muted-foreground">
+                  <span className="whitespace-nowrap">{formatDate(item.createdAt)}</span>
                 </TableCell>
                 <TableCell className="align-top">{renderMachineResult(item.machineResult)}</TableCell>
                 <TableCell className="align-top">
@@ -323,11 +329,11 @@ export function ProfileReviewTable() {
     <>
       <div className="space-y-6">
         <Card className="glass-strong overflow-hidden border-border/60 shadow-sm hover:shadow-sm">
-          <div className="h-1 bg-primary" />
-          <CardHeader className="pb-4">
+          <div className="h-1 bg-gradient-to-r from-primary/70 via-primary/30 to-transparent" />
+          <CardHeader className="border-b border-border/40 bg-muted/30">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-secondary/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-secondary-foreground">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   <ShieldAlert className="h-3.5 w-3.5" />
                   {t('reviews.typeProfile')}
                 </div>

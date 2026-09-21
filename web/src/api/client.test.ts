@@ -41,6 +41,7 @@ import {
   getAppBaseUrl,
   getDirectAuthRuntimeConfig,
   getSessionBootstrapRuntimeConfig,
+  adminApi,
   namespaceApi,
 } from './client'
 
@@ -169,6 +170,41 @@ describe('namespaceApi.delete', () => {
         headers: expect.any(Headers),
       }),
     )
+  })
+})
+
+describe('adminApi.deleteSkill', () => {
+  it('sends exactly one DELETE to the SUPER_ADMIN hard-delete endpoint keyed by skill id', async () => {
+    window.__SKILLHUB_RUNTIME_CONFIG__ = { apiBaseUrl: 'https://api.example.com' }
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      writable: true,
+      value: {
+        cookie: 'XSRF-TOKEN=test-token',
+      },
+    })
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        code: 0,
+        msg: 'ok',
+        data: { skillId: 5, namespace: 'global', slug: 'demo', deleted: true },
+        timestamp: '2026-09-20T00:00:00Z',
+        requestId: 'req-test',
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await adminApi.deleteSkill(5)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toBe('https://api.example.com/api/v1/skills/id/5')
+    expect(init.method).toBe('DELETE')
+    expect((init.headers as Headers).get('X-XSRF-TOKEN')).toBe('test-token')
+    // The owner-scoped self-service endpoint must never be used from admin surfaces.
+    expect(String(url)).not.toContain('/api/web/skills')
   })
 })
 

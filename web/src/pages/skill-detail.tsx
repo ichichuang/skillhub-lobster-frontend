@@ -32,7 +32,7 @@ import { useSubmitSkillReport } from '@/features/report/use-skill-reports'
 import { SecurityAuditSummary } from '@/features/security-audit/security-audit-summary'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { incrementSkillDownloadCount } from '@/shared/lib/skill-download-cache'
-import { getSkillLabelSearch, getSkillSquareSearch, normalizeSkillDetailReturnTo } from '@/shared/lib/skill-navigation'
+import { buildReturnToNavigation, getSkillLabelSearch, getSkillSquareSearch, normalizeSkillDetailReturnTo } from '@/shared/lib/skill-navigation'
 import { formatCompactCount } from '@/shared/lib/number-format'
 import { resolveDocumentationFilePath } from '@/shared/lib/skill-documentation'
 import { getHeadlineVersion, getOwnerPreviewVersion, getPublishedVersion } from '@/shared/lib/skill-lifecycle'
@@ -437,7 +437,7 @@ export function SkillDetailPage() {
   const handleBack = () => {
     const returnTo = normalizeSkillDetailReturnTo(search.returnTo)
     if (returnTo) {
-      navigate({ to: returnTo })
+      navigate(buildReturnToNavigation(returnTo))
       return
     }
     navigate({ to: '/search', search: getSkillSquareSearch() })
@@ -568,7 +568,7 @@ export function SkillDetailPage() {
       )
       setDeleteSkillInputOpen(false)
       navigateAfterOverlays(() => {
-        navigate({ to: resolveDeletedSkillReturnTo(search.returnTo) })
+        navigate(buildReturnToNavigation(resolveDeletedSkillReturnTo(search.returnTo)))
       })
       queryClient.removeQueries({ queryKey: ['skills', namespace, slug] })
       queryClient.invalidateQueries({ queryKey: ['skills', 'my'] })

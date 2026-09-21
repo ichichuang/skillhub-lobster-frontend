@@ -206,26 +206,32 @@ export function AuditLogPage() {
       ) : (
         <>
           <Card>
-            <Table>
+            <Table className="table-fixed" wrapperClassName="overflow-x-hidden">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('auditLog.colTime')}</TableHead>
-                  <TableHead>{t('auditLog.colAction')}</TableHead>
-                  <TableHead>{t('auditLog.colUserId')}</TableHead>
-                  <TableHead>{t('auditLog.colUsername')}</TableHead>
-                  <TableHead>{t('auditLog.colIp')}</TableHead>
-                  <TableHead>{t('auditLog.colDetail')}</TableHead>
+                  <TableHead className="w-[16%]">{t('auditLog.colTime')}</TableHead>
+                  <TableHead className="w-[14%]">{t('auditLog.colAction')}</TableHead>
+                  <TableHead className="w-[15%]">{t('auditLog.colUserId')}</TableHead>
+                  <TableHead className="w-[12%]">{t('auditLog.colUsername')}</TableHead>
+                  <TableHead className="w-[13%]">{t('auditLog.colIp')}</TableHead>
+                  <TableHead className="w-[30%]">{t('auditLog.colDetail')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.items.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell>{formatDate(log.timestamp)}</TableCell>
-                    <TableCell className="font-medium">{log.action}</TableCell>
-                    <TableCell>{log.userId || '-'}</TableCell>
-                    <TableCell>{log.username || '-'}</TableCell>
-                    <TableCell>{log.ipAddress || '-'}</TableCell>
-                    <TableCell className="max-w-md truncate">
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(log.timestamp)}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <div className="truncate" title={log.action}>{log.action}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="truncate font-mono text-xs" title={log.userId || undefined}>{log.userId || '-'}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="truncate" title={log.username || undefined}>{log.username || '-'}</div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap font-mono text-xs">{log.ipAddress || '-'}</TableCell>
+                    <TableCell className="truncate">
                       {log.details || `${log.resourceType || '-'}:${log.resourceId || '-'}`}
                     </TableCell>
                   </TableRow>

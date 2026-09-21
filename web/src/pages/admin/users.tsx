@@ -210,32 +210,36 @@ export function AdminUsersPage() {
       ) : (
         <>
           <Card>
-            <Table>
+            <Table className="table-fixed" wrapperClassName="overflow-x-hidden">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('adminUsers.colUsername')}</TableHead>
-                  <TableHead>{t('adminUsers.colUserId')}</TableHead>
-                  <TableHead>{t('adminUsers.colEmail')}</TableHead>
-                  <TableHead>{t('adminUsers.colStatus')}</TableHead>
-                  <TableHead>{t('adminUsers.colRole')}</TableHead>
-                  <TableHead>{t('adminUsers.colCreatedAt')}</TableHead>
-                  <TableHead>{t('adminUsers.colActions')}</TableHead>
+                  <TableHead className="w-[12%]">{t('adminUsers.colUsername')}</TableHead>
+                  <TableHead className="w-[17%]">{t('adminUsers.colUserId')}</TableHead>
+                  <TableHead className="w-[17%]">{t('adminUsers.colEmail')}</TableHead>
+                  <TableHead className="w-[9%]">{t('adminUsers.colStatus')}</TableHead>
+                  <TableHead className="w-[13%]">{t('adminUsers.colRole')}</TableHead>
+                  <TableHead className="w-[13%]">{t('adminUsers.colCreatedAt')}</TableHead>
+                  <TableHead className="w-[19%]">{t('adminUsers.colActions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.items.map((user) => (
                   <TableRow key={user.userId}>
-                    <TableCell className="font-medium">{user.username}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="truncate" title={user.username}>{user.username}</div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-muted-foreground min-w-0 max-w-[14rem] truncate" title={user.userId}>{user.userId}</span>
+                        <span className="font-mono text-xs text-muted-foreground min-w-0 flex-1 truncate" title={user.userId}>{user.userId}</span>
                         <CopyButton text={user.userId} ariaLabel={t('adminUsers.copyUserId', { username: user.username })} />
                       </div>
                     </TableCell>
-                    <TableCell>{user.email || '-'}</TableCell>
+                    <TableCell>
+                      <div className="truncate" title={user.email || undefined}>{user.email || '-'}</div>
+                    </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                        className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium border ${
                           user.status === 'ACTIVE'
                             ? 'border-success/30 bg-success-surface text-success'
                             : user.status === 'PENDING'
@@ -246,10 +250,12 @@ export function AdminUsersPage() {
                         {user.status === 'ACTIVE' ? t('adminUsers.statusActive') : user.status === 'PENDING' ? t('adminUsers.statusPending') : t('adminUsers.statusDisabled')}
                       </span>
                     </TableCell>
-                    <TableCell>{user.platformRoles.join(', ')}</TableCell>
-                    <TableCell>{formatDate(user.createdAt)}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="truncate font-mono text-xs" title={user.platformRoles.join(', ')}>{user.platformRoles.join(', ')}</div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"
                           size="sm"

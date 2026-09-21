@@ -6,6 +6,12 @@ export async function setEnglishLocale(page: Page) {
   })
 }
 
+export async function setChineseLocale(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('i18nextLng', 'zh')
+  })
+}
+
 export async function setUniqueClientIp(page: Page, seed: string) {
   const suffix = Date.now() + Math.floor(Math.random() * 1000)
   const thirdOctet = seed.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 250

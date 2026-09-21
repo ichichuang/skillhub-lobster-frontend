@@ -205,29 +205,31 @@ export function TokenList() {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-card">
-          <Table>
+          <Table className="table-fixed" wrapperClassName="overflow-x-hidden">
             <TableHeader>
               <TableRow>
-                <TableHead className={TOKEN_TABLE_HEAD_CLASS_NAME}>{t('token.name')}</TableHead>
-                <TableHead className={TOKEN_TABLE_HEAD_CLASS_NAME}>{t('token.prefix')}</TableHead>
-                <TableHead className={TOKEN_TABLE_HEAD_CLASS_NAME}>{t('token.createdAt')}</TableHead>
-                <TableHead className={TOKEN_TABLE_HEAD_CLASS_NAME}>{t('token.lastUsed')}</TableHead>
-                <TableHead className={TOKEN_TABLE_HEAD_CLASS_NAME}>{t('token.expiresAt')}</TableHead>
-                <TableHead className={TOKEN_TABLE_ACTIONS_HEAD_CLASS_NAME}>{t('token.actions')}</TableHead>
+                <TableHead className={`${TOKEN_TABLE_HEAD_CLASS_NAME} w-[16%]`}>{t('token.name')}</TableHead>
+                <TableHead className={`${TOKEN_TABLE_HEAD_CLASS_NAME} w-[12%]`}>{t('token.prefix')}</TableHead>
+                <TableHead className={`${TOKEN_TABLE_HEAD_CLASS_NAME} w-[15%]`}>{t('token.createdAt')}</TableHead>
+                <TableHead className={`${TOKEN_TABLE_HEAD_CLASS_NAME} w-[15%]`}>{t('token.lastUsed')}</TableHead>
+                <TableHead className={`${TOKEN_TABLE_HEAD_CLASS_NAME} w-[15%]`}>{t('token.expiresAt')}</TableHead>
+                <TableHead className={`${TOKEN_TABLE_ACTIONS_HEAD_CLASS_NAME} w-[27%]`}>{t('token.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tokens.map((token) => (
                 <TableRow key={token.id}>
-                  <TableCell className="font-medium max-w-48 break-all">{token.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="truncate" title={token.name}>{token.name}</div>
+                  </TableCell>
                   <TableCell>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">
+                    <code className="whitespace-nowrap text-sm bg-muted px-2 py-1 rounded">
                       {token.tokenPrefix}...
                     </code>
                   </TableCell>
-                  <TableCell>{formatDate(token.createdAt)}</TableCell>
-                  <TableCell>{formatDate(token.lastUsedAt)}</TableCell>
-                  <TableCell>{formatDate(token.expiresAt, t('token.neverExpires'))}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(token.createdAt)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(token.lastUsedAt)}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDate(token.expiresAt, t('token.neverExpires'))}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex justify-center gap-2">
                       <Button

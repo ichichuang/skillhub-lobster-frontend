@@ -13,10 +13,10 @@ export function useGovernanceSummary() {
   })
 }
 
-export function useGovernanceInbox(type?: string, page = 0, size = GOVERNANCE_PAGE_SIZE) {
+export function useGovernanceInbox(type?: string, page = 0, size = GOVERNANCE_PAGE_SIZE, exclude?: string) {
   return useQuery({
-    queryKey: ['governance', 'inbox', type ?? 'ALL', page, size],
-    queryFn: () => governanceApi.getInbox({ type, page, size }),
+    queryKey: ['governance', 'inbox', type ?? 'ALL', exclude ?? 'NONE', page, size],
+    queryFn: () => governanceApi.getInbox({ type, exclude, page, size }),
   })
 }
 
@@ -27,10 +27,10 @@ export function useGovernanceActivity(page = 0, size = GOVERNANCE_PAGE_SIZE) {
   })
 }
 
-export function useGovernanceNotifications(page = 0, size = GOVERNANCE_PAGE_SIZE) {
+export function useGovernanceNotifications(page = 0, size = GOVERNANCE_PAGE_SIZE, excludeCategory?: string) {
   return useQuery({
-    queryKey: ['governance', 'notifications', page, size],
-    queryFn: () => governanceApi.getNotifications({ page, size }),
+    queryKey: ['governance', 'notifications', excludeCategory ?? 'NONE', page, size],
+    queryFn: () => governanceApi.getNotifications({ excludeCategory, page, size }),
   })
 }
 

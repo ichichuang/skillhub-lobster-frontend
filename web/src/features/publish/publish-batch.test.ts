@@ -5,9 +5,10 @@ import {
   addFilesToPublishQueue,
   classifyPublishError,
   createPublishQueueItem,
-  removePendingPublishQueueItem,
+  removeQueuedPublishQueueItem,
   runPublishBatch,
   type PublishBatchWarningDecision,
+  type PublishQueueItem,
 } from './publish-batch'
 
 function makeFile(name: string, size = 8, lastModified = 1): File {
@@ -46,7 +47,21 @@ describe('publish queue operations', () => {
     const first = createPublishQueueItem(makeFile('alpha.zip'))
     const second = createPublishQueueItem(makeFile('beta.zip'))
 
-    expect(removePendingPublishQueueItem([first, second], first.id)).toEqual([second])
+    expect(removeQueuedPublishQueueItem([first, second], first.id)).toEqual([second])
+  })
+
+  it('removes a locally blocked file but keeps non-pending results', () => {
+    const blocked: PublishQueueItem = {
+      ...createPublishQueueItem(makeFile('broken.zip')),
+      status: 'blocked',
+    }
+    const publishing: PublishQueueItem = {
+      ...createPublishQueueItem(makeFile('active.zip')),
+      status: 'publishing',
+    }
+
+    expect(removeQueuedPublishQueueItem([blocked, publishing], blocked.id)).toEqual([publishing])
+    expect(removeQueuedPublishQueueItem([blocked, publishing], publishing.id)).toEqual([blocked, publishing])
   })
 
   it('does not remove a non-pending queue item', () => {
@@ -55,7 +70,7 @@ describe('publish queue operations', () => {
       status: 'publishing' as const,
     }
 
-    expect(removePendingPublishQueueItem([item], item.id)).toEqual([item])
+    expect(removeQueuedPublishQueueItem([item], item.id)).toEqual([item])
   })
 })
 
@@ -176,6 +191,28 @@ describe('runPublishBatch', () => {
       { file: 'two.zip', confirmWarnings: false },
     ])
     expect(result.map((item) => item.status)).toEqual(['succeeded', 'succeeded'])
+  })
+
+  it('skips locally blocked files and still publishes the valid queued files', async () => {
+    const valid = createPublishQueueItem(makeFile('good.zip', 8, 1))
+    const blocked: PublishQueueItem = {
+      ...createPublishQueueItem(makeFile('broken.zip', 8, 2)),
+      status: 'blocked',
+    }
+    const publish = vi.fn(async ({ file }: { file: File }) => makeResult(file))
+
+    const result = await runPublishBatch({
+      items: [valid, blocked],
+      namespace: 'team-ai',
+      visibility: 'PUBLIC',
+      publish,
+      onItemsChange: vi.fn(),
+      requestWarningDecision: vi.fn(),
+    })
+
+    expect(publish).toHaveBeenCalledTimes(1)
+    expect(publish.mock.calls[0]?.[0].file.name).toBe('good.zip')
+    expect(result.map((item) => item.status)).toEqual(['succeeded', 'blocked'])
   })
 
   it('marks a cancelled warning file failed and continues remaining files', async () => {

@@ -284,34 +284,36 @@ export function AdminLabelsPage() {
         </Card>
       ) : (
         <Card>
-          <Table>
+          <Table className="table-fixed" wrapperClassName="overflow-x-hidden">
             <TableHeader>
               <TableRow>
-                <TableHead>{t('adminLabels.colLabel')}</TableHead>
-                <TableHead>{t('adminLabels.colType')}</TableHead>
-                <TableHead>{t('adminLabels.colVisibility')}</TableHead>
-                <TableHead>{t('adminLabels.colSortOrder')}</TableHead>
-                <TableHead>{t('adminLabels.colTranslations')}</TableHead>
-                <TableHead>{t('adminLabels.colCreatedAt')}</TableHead>
-                <TableHead>{t('adminLabels.colActions')}</TableHead>
+                <TableHead className="w-[18%]">{t('adminLabels.colLabel')}</TableHead>
+                <TableHead className="w-[10%]">{t('adminLabels.colType')}</TableHead>
+                <TableHead className="w-[10%]">{t('adminLabels.colVisibility')}</TableHead>
+                <TableHead className="w-[8%]">{t('adminLabels.colSortOrder')}</TableHead>
+                <TableHead className="w-[8%]">{t('adminLabels.colTranslations')}</TableHead>
+                <TableHead className="w-[14%]">{t('adminLabels.colCreatedAt')}</TableHead>
+                <TableHead className="w-[32%]">{t('adminLabels.colActions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedDefinitions.map((definition: LabelDefinition, index: number) => (
                 <TableRow key={definition.slug}>
                   <TableCell>
-                    <div className="font-medium">{definition.slug}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="truncate font-medium" title={definition.slug}>{definition.slug}</div>
+                    <div className="truncate text-xs text-muted-foreground" title={definition.translations[0]?.displayName ?? definition.slug}>
                       {definition.translations[0]?.displayName ?? definition.slug}
                     </div>
                   </TableCell>
-                  <TableCell>{definition.type}</TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-nowrap font-mono text-xs">{definition.type}</TableCell>
+                  <TableCell className="whitespace-nowrap">
                     {definition.visibleInFilter ? t('adminLabels.visibilityVisible') : t('adminLabels.visibilityHidden')}
                   </TableCell>
-                  <TableCell>{definition.sortOrder}</TableCell>
-                  <TableCell>{definition.translations.length}</TableCell>
-                  <TableCell>{definition.createdAt ? formatLocalDateTime(definition.createdAt, i18n.language) : '-'}</TableCell>
+                  <TableCell className="whitespace-nowrap">{definition.sortOrder}</TableCell>
+                  <TableCell className="whitespace-nowrap">{definition.translations.length}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                    {definition.createdAt ? formatLocalDateTime(definition.createdAt, i18n.language) : '-'}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
                       <Button type="button" size="sm" variant="outline" onClick={() => handleMove(index, -1)} disabled={index === 0 || updateSortOrderMutation.isPending}>

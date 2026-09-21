@@ -1,13 +1,16 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+
+const routeState = vi.hoisted(() => ({ isEmbedded: false, showHeader: false }))
+const layoutState = vi.hoisted(() => ({ fixedViewport: false }))
 
 // Verify that the router can consume Layout and that its rendered shell stays intact.
 
 vi.mock('@tanstack/react-router', () => ({
   Outlet: () => createElement('div', { 'data-testid': 'route-outlet' }),
   Link: ({ children }: { children: unknown }) => children,
-  useRouterState: () => ({ pathname: '/', resolvedPathname: '/' }),
+  useRouterState: () => ({ pathname: '/', resolvedPathname: '/', ...routeState }),
 }))
 
 vi.mock('react-i18next', async () => {
@@ -45,6 +48,7 @@ vi.mock('./layout-main-content', () => ({
   getAppMainContentLayout: () => ({
     mainClassName: 'main-class',
     contentClassName: 'content-class',
+    fixedViewport: layoutState.fixedViewport,
   }),
 }))
 
@@ -56,6 +60,29 @@ import {
 } from './layout'
 
 describe('Layout', () => {
+  beforeEach(() => {
+    routeState.isEmbedded = false
+    routeState.showHeader = false
+    layoutState.fixedViewport = false
+  })
+
+  it.each([
+    [true, false, false],
+    [true, true, true],
+    [false, false, true],
+    [false, true, true],
+  ])('resolves Header visibility for embed=%s and showHeader=%s', (isEmbedded, showHeader, visible) => {
+    Object.assign(routeState, { isEmbedded, showHeader })
+    const html = renderToStaticMarkup(createElement(Layout))
+    expect(html.includes('<header')).toBe(visible)
+    expect(html).toContain('<main class="main-class">')
+    expect(html).toContain('data-testid="route-outlet"')
+    if (!visible) {
+      expect(html).not.toContain('header-class')
+      expect(html).toContain('</div></div><main')
+    }
+  })
+
   it('exports a named Layout component function', () => {
     expect(typeof Layout).toBe('function')
     expect(Layout.name).toBe('Layout')
@@ -77,5 +104,21 @@ describe('Layout', () => {
     expect(html).toContain('<main')
     expect(html).toContain('data-testid="route-outlet"')
     expect(html).not.toContain('<footer')
+  })
+
+  it('locks the app shell to the exact viewport height on fixed-viewport routes', () => {
+    layoutState.fixedViewport = true
+    const html = renderToStaticMarkup(createElement(Layout))
+
+    expect(html).toContain('min-h-screen')
+    expect(html).toContain(' h-screen overflow-hidden')
+    expect(html).toContain('<main class="main-class">')
+  })
+
+  it('keeps the flowing shell on regular routes without viewport locking', () => {
+    const html = renderToStaticMarkup(createElement(Layout))
+
+    expect(html).toContain('class="relative flex min-h-screen flex-col bg-background"')
+    expect(html).not.toContain('overflow-hidden')
   })
 })

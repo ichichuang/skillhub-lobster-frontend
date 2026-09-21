@@ -148,6 +148,11 @@ const AdminLabelsPage = createRoleProtectedRouteComponent(
   'AdminLabelsPage',
   ['SUPER_ADMIN'],
 )
+const AdminSkillsPage = createRoleProtectedRouteComponent(
+  () => import('@/pages/admin/skills'),
+  'AdminSkillsPage',
+  ['SUPER_ADMIN'],
+)
 
 function DefaultNotFound() {
   return (
@@ -159,14 +164,16 @@ function DefaultNotFound() {
 
 export interface RootSearch extends ParentUrlTheme {
   readonly embed?: true
+  readonly showHeader?: 1
 }
 
-export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark'] as const
+export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark', 'showHeader'] as const
 
 export function validateRootSearch(search: Record<string, unknown>): RootSearch {
   return {
     ...(isEmbeddedMode(search) ? { embed: true as const } : {}),
     ...parseParentThemeRecord(search),
+    ...(search.showHeader === 1 ? { showHeader: 1 as const } : {}),
   }
 }
 
@@ -477,6 +484,13 @@ const adminLabelsRoute = createRoute({
   component: AdminLabelsPage,
 })
 
+const adminSkillsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'admin/skills',
+  beforeLoad: requireAuth,
+  component: AdminSkillsPage,
+})
+
 const routeTree = rootRoute.addChildren([
   landingRoute,
   skillsRoute,
@@ -513,6 +527,7 @@ const routeTree = rootRoute.addChildren([
   adminUsersRoute,
   adminAuditLogRoute,
   adminLabelsRoute,
+  adminSkillsRoute,
 ])
 
 export const router = createRouter({

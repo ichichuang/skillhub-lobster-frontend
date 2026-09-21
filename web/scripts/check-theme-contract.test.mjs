@@ -28,7 +28,7 @@ function createFixedThemeFixture() {
       'applyThemeMode(resolveParentThemeMode(parentTheme))',
     ].join('\n')],
     ['src/app/router.tsx', [
-      "export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark'] as const",
+      "export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark', 'showHeader'] as const",
       'retainSearchParams<RootSearch>([...ROOT_RETAINED_SEARCH_KEYS])',
     ].join('\n')],
     ['index.html', [
@@ -120,12 +120,12 @@ describe('fixed dual-theme contract gate', () => {
     const result = await runGate((files) => {
       files.set(
         'src/app/router.tsx',
-        files.get('src/app/router.tsx').replace("['embed', 'dark']", "['embed', 'dark', 'theme']"),
+        files.get('src/app/router.tsx').replace("['embed', 'dark', 'showHeader']", "['embed', 'dark', 'showHeader', 'theme']"),
       )
     })
 
     expect(result.status).not.toBe(0)
-    expect(result.output).toContain('router global retention must be exactly: embed, dark')
+    expect(result.output).toContain('router global retention must be exactly: embed, dark, showHeader')
   })
 
   it('rejects semantic palette writes in prepaint', async () => {

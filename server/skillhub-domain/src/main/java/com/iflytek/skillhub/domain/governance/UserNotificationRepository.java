@@ -13,5 +13,7 @@ public interface UserNotificationRepository {
     Optional<UserNotification> findById(Long id);
     List<UserNotification> findByUserIdOrderByCreatedAtDesc(String userId);
     Page<UserNotification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
+    Page<UserNotification> findByUserIdAndCategoryNotIgnoreCaseOrderByCreatedAtDesc(String userId, String category, Pageable pageable);
     long countByUserIdAndStatus(String userId, UserNotificationStatus status);
+    long countByUserIdAndStatusAndCategoryNotIgnoreCase(String userId, UserNotificationStatus status, String category);
 }

@@ -3060,6 +3060,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listSkills_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/skills/{skillId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSkillDetail_2"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/skills/{skillId}/versions/{versionId}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listVersionFiles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/skill-reports": {
         parameters: {
             query?: never;
@@ -4898,6 +4946,72 @@ export interface components {
             page?: number;
             /** Format: int32 */
             size?: number;
+        };
+        AdminSkillSummaryResponse: {
+            /** Format: int64 */
+            id?: number;
+            namespace?: string;
+            slug?: string;
+            displayName?: string;
+            labels?: components["schemas"]["SkillLabelDto"][];
+            ownerId?: string;
+            ownerDisplayName?: string;
+            visibility?: string;
+            status?: string;
+            hidden?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            headlineVersion?: components["schemas"]["SkillLifecycleVersionResponse"];
+            publishedVersion?: components["schemas"]["SkillLifecycleVersionResponse"];
+            ownerPreviewVersion?: components["schemas"]["SkillLifecycleVersionResponse"];
+            resolutionMode?: string;
+        };
+        ApiResponsePageResponseAdminSkillSummaryResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["PageResponseAdminSkillSummaryResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
+        };
+        PageResponseAdminSkillSummaryResponse: {
+            items?: components["schemas"]["AdminSkillSummaryResponse"][];
+            /** Format: int64 */
+            total?: number;
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+        };
+        AdminSkillDetailResponse: {
+            skill?: components["schemas"]["AdminSkillSummaryResponse"];
+            summary?: string;
+            versions?: components["schemas"]["AdminSkillVersionSummary"][];
+        };
+        AdminSkillVersionSummary: {
+            /** Format: int64 */
+            id?: number;
+            version?: string;
+            status?: string;
+            changelog?: string;
+            /** Format: int32 */
+            fileCount?: number;
+            /** Format: int64 */
+            totalSize?: number;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        ApiResponseAdminSkillDetailResponse: {
+            /** Format: int32 */
+            code?: number;
+            msg?: string;
+            data?: components["schemas"]["AdminSkillDetailResponse"];
+            /** Format: date-time */
+            timestamp?: string;
+            requestId?: string;
         };
         AdminSkillReportSummaryResponse: {
             /** Format: int64 */
@@ -10142,6 +10256,7 @@ export interface operations {
     notifications: {
         parameters: {
             query?: {
+                excludeCategory?: string;
                 page?: number;
                 size?: number;
             };
@@ -10165,6 +10280,7 @@ export interface operations {
     notifications_1: {
         parameters: {
             query?: {
+                excludeCategory?: string;
                 page?: number;
                 size?: number;
             };
@@ -10189,6 +10305,7 @@ export interface operations {
         parameters: {
             query?: {
                 type?: string;
+                exclude?: string;
                 page?: number;
                 size?: number;
             };
@@ -10213,6 +10330,7 @@ export interface operations {
         parameters: {
             query?: {
                 type?: string;
+                exclude?: string;
                 page?: number;
                 size?: number;
             };
@@ -10588,6 +10706,78 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponsePageResponseAdminUserSummaryResponse"];
+                };
+            };
+        };
+    };
+    listSkills_1: {
+        parameters: {
+            query?: {
+                q?: string;
+                status?: string;
+                hidden?: boolean;
+                label?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageResponseAdminSkillSummaryResponse"];
+                };
+            };
+        };
+    };
+    getSkillDetail_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skillId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminSkillDetailResponse"];
+                };
+            };
+        };
+    };
+    listVersionFiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                skillId: number;
+                versionId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListSkillFileResponse"];
                 };
             };
         };

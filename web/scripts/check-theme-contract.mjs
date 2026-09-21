@@ -82,8 +82,8 @@ function parseRetainedSearchKeys(routerSource) {
 function collectRouterViolations(routerSource) {
   const violations = []
   const retainedKeys = parseRetainedSearchKeys(routerSource)
-  if (!retainedKeys || retainedKeys.join(',') !== 'embed,dark') {
-    violations.push('router global retention must be exactly: embed, dark')
+  if (!retainedKeys || retainedKeys.join(',') !== 'embed,dark,showHeader') {
+    violations.push('router global retention must be exactly: embed, dark, showHeader')
   }
   if (!/retainSearchParams[\s\S]{0,240}ROOT_RETAINED_SEARCH_KEYS/.test(routerSource)) {
     violations.push('router must apply ROOT_RETAINED_SEARCH_KEYS through retainSearchParams')

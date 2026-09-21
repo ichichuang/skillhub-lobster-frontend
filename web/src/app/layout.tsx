@@ -25,11 +25,12 @@ export const APP_SHELL_GLOW_STYLE = {
  */
 export function Layout() {
   const { t, i18n } = useTranslation()
-  const { pathname, resolvedPathname, isEmbedded } = useRouterState({
+  const { pathname, resolvedPathname, isEmbedded, showHeader } = useRouterState({
     select: (s) => ({
       pathname: s.location.pathname,
       resolvedPathname: s.resolvedLocation?.pathname,
       isEmbedded: s.matches[0]?.search.embed === true,
+      showHeader: s.matches[0]?.search.showHeader === 1,
     }),
   })
   const { user, isLoading } = useAuth()
@@ -37,6 +38,9 @@ export function Layout() {
   const previousPathnameRef = useRef(pathname)
   const contentLayoutPathname = resolveAppMainContentPathname(pathname, resolvedPathname)
   const mainContentLayout = getAppMainContentLayout(contentLayoutPathname)
+  const shellClassName = mainContentLayout.fixedViewport
+    ? `${APP_SHELL_CLASS_NAME} h-screen overflow-hidden`
+    : APP_SHELL_CLASS_NAME
 
   useEffect(() => {
     syncDocumentLanguage(i18n.resolvedLanguage ?? i18n.language)
@@ -85,7 +89,7 @@ export function Layout() {
   }
 
   return (
-    <div className={APP_SHELL_CLASS_NAME}>
+    <div className={shellClassName}>
       {/* Clip only the decorative layer so in-tree Select/Dropdown are not cropped. */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-x-clip" aria-hidden>
         <div
@@ -95,52 +99,54 @@ export function Layout() {
       </div>
 
       {/* Header */}
-      <header
-        className={`${getAppHeaderClassName(isHeaderElevated)} !px-4 sm:!px-6 md:!px-8`}
-      >
-        <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-2 sm:gap-6">
-          <Link to="/" className="text-xl font-bold tracking-[0.02em] text-foreground">
-            技能中心
-          </Link>
+      {(!isEmbedded || showHeader) && (
+        <header
+          className={`${getAppHeaderClassName(isHeaderElevated)} !px-4 sm:!px-6 md:!px-8`}
+        >
+          <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-2 sm:gap-6">
+            <Link to="/" className="text-xl font-bold tracking-[0.02em] text-foreground">
+              技能中心
+            </Link>
 
-          <nav className="hidden items-center gap-8 text-[15px] font-normal text-foreground-secondary md:flex">
-            {navItems.map((item) => {
-              if (item.auth && !user) return null
-              if (item.hideWhenEmbedded && isEmbedded) return null
-              const active = isActive(item.to, item.exact)
+            <nav className="hidden items-center gap-8 text-[15px] font-normal text-foreground-secondary md:flex">
+              {navItems.map((item) => {
+                if (item.auth && !user) return null
+                if (item.hideWhenEmbedded && isEmbedded) return null
+                const active = isActive(item.to, item.exact)
 
-              return (
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={
+                      active
+                        ? APP_ACTIVE_NAV_CLASS_NAME
+                        : 'hover:opacity-80 transition-opacity duration-150'
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="flex items-center gap-4 text-[15px] font-normal text-foreground-secondary sm:gap-6">
+              {user && !isEmbedded && <NotificationBell />}
+              {isLoading ? null : user ? (
+                !isEmbedded && <UserMenu user={user} />
+              ) : (
                 <Link
-                  key={item.to}
-                  to={item.to}
-                  className={
-                    active
-                      ? APP_ACTIVE_NAV_CLASS_NAME
-                      : 'hover:opacity-80 transition-opacity duration-150'
-                  }
+                  to="/login"
+                  search={{ returnTo: '' }}
+                  className="hover:opacity-80 transition-opacity"
                 >
-                  {item.label}
+                  {t('nav.login')}
                 </Link>
-              )
-            })}
-          </nav>
-
-          <div className="flex items-center gap-4 text-[15px] font-normal text-foreground-secondary sm:gap-6">
-            {user && !isEmbedded && <NotificationBell />}
-            {isLoading ? null : user ? (
-              !isEmbedded && <UserMenu user={user} />
-            ) : (
-              <Link
-                to="/login"
-                search={{ returnTo: '' }}
-                className="hover:opacity-80 transition-opacity"
-              >
-                {t('nav.login')}
-              </Link>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main content */}
       <main className={mainContentLayout.mainClassName}>

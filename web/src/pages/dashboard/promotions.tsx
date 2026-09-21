@@ -186,14 +186,14 @@ function PromotionHistoryTable({
 
   return (
     <div className="overflow-hidden rounded-xl border border-border/60">
-      <Table aria-label={t('promotions.historyTableLabel')}>
+      <Table aria-label={t('promotions.historyTableLabel')} className="table-fixed" wrapperClassName="overflow-x-hidden">
         <TableHeader>
           <TableRow className="bg-muted/35">
-            <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colSkill')}</TableHead>
-            <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colVersion')}</TableHead>
-            <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colSubmitter')}</TableHead>
-            <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colReviewer')}</TableHead>
-            <TableHead aria-sort={sortDirection === 'DESC' ? 'descending' : 'ascending'} className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+            <TableHead className="w-[28%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colSkill')}</TableHead>
+            <TableHead className="w-[11%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colVersion')}</TableHead>
+            <TableHead className="w-[12%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colSubmitter')}</TableHead>
+            <TableHead className="w-[12%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colReviewer')}</TableHead>
+            <TableHead aria-sort={sortDirection === 'DESC' ? 'descending' : 'ascending'} className="w-[14%] text-xs uppercase tracking-[0.18em] text-muted-foreground">
               <Button
                 type="button"
                 variant="ghost"
@@ -206,7 +206,7 @@ function PromotionHistoryTable({
                 <SorterGlyph direction={sortDirection} />
               </Button>
             </TableHead>
-            <TableHead className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colReviewComment')}</TableHead>
+            <TableHead className="w-[23%] text-xs uppercase tracking-[0.18em] text-muted-foreground">{t('promotions.colReviewComment')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -216,15 +216,19 @@ function PromotionHistoryTable({
               <TableRow key={item.id}>
                 <TableCell>
                   <div className="min-w-0">
-                    <div className="break-words font-medium text-foreground">{item.sourceSkillDisplayName}</div>
-                    <div className="break-words text-xs text-muted-foreground [overflow-wrap:anywhere]">{sourceCoordinate(item)}</div>
+                    <div className="truncate font-medium text-foreground" title={item.sourceSkillDisplayName}>{item.sourceSkillDisplayName}</div>
+                    <div className="truncate text-xs text-muted-foreground" title={sourceCoordinate(item)}>{sourceCoordinate(item)}</div>
                   </div>
                 </TableCell>
-                <TableCell>{t('promotions.versionTag', { version: item.sourceVersion })}</TableCell>
-                <TableCell>{formatUserName(item.submittedByName, item.submittedBy, t('promotions.emptyValue'))}</TableCell>
-                <TableCell>{formatUserName(item.reviewedByName, item.reviewedBy, t('promotions.emptyValue'))}</TableCell>
-                <TableCell>{item.reviewedAt ? formatLocalDateTime(item.reviewedAt, i18n.language) : t('promotions.emptyValue')}</TableCell>
-                <TableCell className="max-w-[18rem]">
+                <TableCell className="whitespace-nowrap font-mono text-xs">{t('promotions.versionTag', { version: item.sourceVersion })}</TableCell>
+                <TableCell>
+                  <div className="truncate">{formatUserName(item.submittedByName, item.submittedBy, t('promotions.emptyValue'))}</div>
+                </TableCell>
+                <TableCell>
+                  <div className="truncate">{formatUserName(item.reviewedByName, item.reviewedBy, t('promotions.emptyValue'))}</div>
+                </TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{item.reviewedAt ? formatLocalDateTime(item.reviewedAt, i18n.language) : t('promotions.emptyValue')}</TableCell>
+                <TableCell>
                   {item.reviewComment ? (
                     <>
                       <p id={`${reviewCommentId}-visible`} aria-describedby={reviewCommentId} className="line-clamp-2 break-words text-sm text-muted-foreground [overflow-wrap:anywhere]">
