@@ -3,6 +3,7 @@ package com.iflytek.skillhub.controller.admin;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -113,5 +114,16 @@ class AdminSkillControllerTest {
                 .content("{\"reason\":\"policy\"}"))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    void listSkills_withSuperAdminRole_returnsInventoryPage() throws Exception {
+        PlatformPrincipal principal = new PlatformPrincipal("admin", "admin", "a@example.com", "", "github", Set.of("SUPER_ADMIN"));
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN")));
+
+        mockMvc.perform(get("/api/v1/admin/skills").with(authentication(auth)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(0))
+            .andExpect(jsonPath("$.data.total").value(0));
     }
 }
