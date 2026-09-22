@@ -60,6 +60,7 @@ public class GovernanceController extends BaseApiController {
             @RequestAttribute("userId") String userId,
             @RequestAttribute(value = "userNsRoles", required = false) Map<Long, NamespaceRole> userNsRoles,
             @RequestParam(required = false) String type,
+            @RequestParam(required = false) String exclude,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ok(
@@ -69,6 +70,7 @@ public class GovernanceController extends BaseApiController {
                         userNsRoles != null ? userNsRoles : Map.of(),
                         roles(userId),
                         type,
+                        parseCommaSeparatedValues(exclude),
                         page,
                         size
                 )
@@ -86,9 +88,15 @@ public class GovernanceController extends BaseApiController {
     @GetMapping("/notifications")
     public ApiResponse<PageResponse<GovernanceNotificationResponse>> notifications(
             @RequestAttribute("userId") String userId,
+            @RequestParam(required = false) String excludeCategory,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        org.springframework.data.domain.Page<UserNotification> notifications = governanceNotificationService.listNotifications(userId, page, size);
+        org.springframework.data.domain.Page<UserNotification> notifications = governanceNotificationService.listNotifications(
+                userId,
+                page,
+                size,
+                excludeCategory != null && !excludeCategory.isBlank() ? excludeCategory.trim() : null
+        );
         return ok(
                 "response.success.read",
                 PageResponse.from(notifications.map(this::toNotificationResponse))
@@ -104,6 +112,16 @@ public class GovernanceController extends BaseApiController {
 
     private Set<String> roles(String userId) {
         return rbacService.getUserRoleCodes(userId);
+    }
+
+    private Set<String> parseCommaSeparatedValues(String value) {
+        if (value == null || value.isBlank()) {
+            return Set.of();
+        }
+        return java.util.Arrays.stream(value.split(","))
+                .filter(item -> !item.isBlank())
+                .map(String::trim)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }
 
     private GovernanceNotificationResponse toNotificationResponse(UserNotification notification) {

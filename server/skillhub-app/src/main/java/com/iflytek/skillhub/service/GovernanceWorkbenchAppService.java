@@ -35,14 +35,16 @@ import org.springframework.stereotype.Service;
 public class GovernanceWorkbenchAppService {
 
     private static final int SUMMARY_PAGE_SIZE = 100;
+    /**
+     * The Lobster Factory governance workbench does not expose the promotion
+     * workflow, so promotion activity is excluded from the audit-derived feed.
+     * The promotion domain, APIs, and its own audit entries remain untouched.
+     */
     private static final Set<String> ACTIVITY_ACTIONS = Set.of(
             "REVIEW_SUBMIT",
             "REVIEW_APPROVE",
             "REVIEW_REJECT",
             "REVIEW_WITHDRAW",
-            "PROMOTION_SUBMIT",
-            "PROMOTION_APPROVE",
-            "PROMOTION_REJECT",
             "REPORT_SKILL",
             "RESOLVE_SKILL_REPORT",
             "DISMISS_SKILL_REPORT",
@@ -51,6 +53,7 @@ public class GovernanceWorkbenchAppService {
             "UNHIDE_SKILL",
             "UNARCHIVE_SKILL"
     );
+    private static final String PROMOTION_NOTIFICATION_CATEGORY = "PROMOTION";
 
     private final ReviewTaskRepository reviewTaskRepository;
     private final PromotionRequestRepository promotionRequestRepository;
@@ -88,21 +91,33 @@ public class GovernanceWorkbenchAppService {
                 hasPlatformGovernanceRole(platformRoles)
                         ? skillReportRepository.findByStatus(SkillReportStatus.PENDING, PageRequest.of(0, SUMMARY_PAGE_SIZE)).getTotalElements()
                         : 0,
-                governanceNotificationService.countUnreadNotifications(userId)
+                governanceNotificationService.countUnreadNotifications(userId, PROMOTION_NOTIFICATION_CATEGORY)
         );
     }
 
     /**
      * Builds the governance inbox by combining pending reviews, promotions, and
      * reports that the caller is allowed to see.
+     *
+     * @param excludedTypes task types to remove server-side (for example
+     *                      PROMOTION on surfaces that do not expose the
+     *                      promotion workflow); counts and pages stay accurate
+     *                      because exclusion happens before aggregation
      */
     public PageResponse<GovernanceInboxItemResponse> listInbox(String userId,
                                                                Map<Long, NamespaceRole> namespaceRoles,
                                                                Set<String> platformRoles,
                                                                String type,
+                                                               Set<String> excludedTypes,
                                                                int page,
                                                                int size) {
         int fetchSize = Math.max((page + 1) * size, size);
+        Set<String> normalizedExclusions = excludedTypes == null
+                ? Set.of()
+                : excludedTypes.stream()
+                        .filter(value -> value != null && !value.isBlank())
+                        .map(value -> value.trim().toUpperCase(java.util.Locale.ROOT))
+                        .collect(java.util.stream.Collectors.toUnmodifiableSet());
         List<GovernanceInboxItemResponse> items = new ArrayList<>();
         long total = 0;
         boolean includeAll = type == null || type.isBlank();
@@ -111,7 +126,9 @@ public class GovernanceWorkbenchAppService {
             total += reviews.getTotalElements();
             items.addAll(governanceQueryRepository.getReviewInboxItems(reviews.getContent()));
         }
-        if (hasPlatformGovernanceRole(platformRoles) && (includeAll || "PROMOTION".equalsIgnoreCase(type))) {
+        if (hasPlatformGovernanceRole(platformRoles)
+                && !normalizedExclusions.contains("PROMOTION")
+                && (includeAll || "PROMOTION".equalsIgnoreCase(type))) {
             Page<PromotionRequest> promotions = promotionRequestRepository.findByStatus(
                     ReviewTaskStatus.PENDING,
                     PageRequest.of(0, fetchSize)

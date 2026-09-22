@@ -97,6 +97,56 @@ class GovernanceNotificationServiceTest {
     }
 
     @Test
+    void listNotificationsPage_withExcludedCategory_delegatesToCategoryNotQuery() {
+        UserNotification review = new UserNotification("user-1", "REVIEW", "REVIEW_TASK", 99L, "A", "{}", Instant.parse("2026-03-18T00:00:00Z"));
+        when(userNotificationRepository.findByUserIdAndCategoryNotIgnoreCaseOrderByCreatedAtDesc(
+                "user-1", "PROMOTION", PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(review), PageRequest.of(0, 10), 12));
+
+        var result = service.listNotifications("user-1", 0, 10, "PROMOTION");
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getCategory()).isEqualTo("REVIEW");
+        assertThat(result.getTotalElements()).isEqualTo(12);
+        assertThat(result.getNumber()).isZero();
+        assertThat(result.getSize()).isEqualTo(10);
+    }
+
+    @Test
+    void listNotificationsPage_withBlankExcludedCategory_delegatesToUnfilteredQuery() {
+        UserNotification review = new UserNotification("user-1", "REVIEW", "REVIEW_TASK", 99L, "A", "{}", Instant.parse("2026-03-18T00:00:00Z"));
+        when(userNotificationRepository.findByUserIdOrderByCreatedAtDesc("user-1", PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(review), PageRequest.of(0, 10), 1));
+
+        var blankResult = service.listNotifications("user-1", 0, 10, " ");
+        var nullResult = service.listNotifications("user-1", 0, 10, null);
+
+        assertThat(blankResult.getTotalElements()).isEqualTo(1);
+        assertThat(nullResult.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void countUnread_withExcludedCategory_usesCategoryNotCount() {
+        when(userNotificationRepository.countByUserIdAndStatusAndCategoryNotIgnoreCase(
+                "user-1", UserNotificationStatus.UNREAD, "PROMOTION")).thenReturn(7L);
+
+        long result = service.countUnreadNotifications("user-1", "PROMOTION");
+
+        assertThat(result).isEqualTo(7L);
+    }
+
+    @Test
+    void countUnread_withBlankExcludedCategory_countsAllUnread() {
+        when(userNotificationRepository.countByUserIdAndStatus("user-1", UserNotificationStatus.UNREAD)).thenReturn(9L);
+
+        long blankResult = service.countUnreadNotifications("user-1", " ");
+        long nullResult = service.countUnreadNotifications("user-1", null);
+
+        assertThat(blankResult).isEqualTo(9L);
+        assertThat(nullResult).isEqualTo(9L);
+    }
+
+    @Test
     void markRead_setsReadTimestampFromClock() {
         UserNotification notification = new UserNotification(
                 "user-1",

@@ -56,9 +56,38 @@ public class GovernanceNotificationService {
         );
     }
 
+    /**
+     * Same paged listing but with one notification category (for example the
+     * promotion category on surfaces that do not expose promotions) removed
+     * server-side so totals and pages stay accurate.
+     */
+    @Transactional(readOnly = true)
+    public Page<UserNotification> listNotifications(String userId, int page, int size, String excludedCategory) {
+        if (excludedCategory == null || excludedCategory.isBlank()) {
+            return listNotifications(userId, page, size);
+        }
+        return userNotificationRepository.findByUserIdAndCategoryNotIgnoreCaseOrderByCreatedAtDesc(
+                userId,
+                excludedCategory.trim(),
+                PageRequest.of(page, size)
+        );
+    }
+
     @Transactional(readOnly = true)
     public long countUnreadNotifications(String userId) {
         return userNotificationRepository.countByUserIdAndStatus(userId, UserNotificationStatus.UNREAD);
+    }
+
+    @Transactional(readOnly = true)
+    public long countUnreadNotifications(String userId, String excludedCategory) {
+        if (excludedCategory == null || excludedCategory.isBlank()) {
+            return countUnreadNotifications(userId);
+        }
+        return userNotificationRepository.countByUserIdAndStatusAndCategoryNotIgnoreCase(
+                userId,
+                UserNotificationStatus.UNREAD,
+                excludedCategory.trim()
+        );
     }
 
     @Transactional

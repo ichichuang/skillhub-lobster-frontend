@@ -76,7 +76,7 @@ class GovernanceControllerTest {
     @Test
     void inbox_returnsUnifiedItems() throws Exception {
         when(rbacService.getUserRoleCodes("admin")).thenReturn(Set.of("SKILL_ADMIN"));
-        when(governanceWorkbenchAppService.listInbox("admin", Map.of(), Set.of("SKILL_ADMIN"), null, 0, 20))
+        when(governanceWorkbenchAppService.listInbox("admin", Map.of(), Set.of("SKILL_ADMIN"), null, Set.of(), 0, 20))
                 .thenReturn(new PageResponse<>(
                         List.of(new GovernanceInboxItemResponse(
                                 "REVIEW",
@@ -95,6 +95,20 @@ class GovernanceControllerTest {
         mockMvc.perform(get("/api/v1/governance/inbox").with(auth("admin", Set.of("SKILL_ADMIN"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.items[0].type").value("REVIEW"));
+    }
+
+    @Test
+    void inbox_forwardsExcludeParameterToWorkbench() throws Exception {
+        when(rbacService.getUserRoleCodes("admin")).thenReturn(Set.of("SKILL_ADMIN"));
+        when(governanceWorkbenchAppService.listInbox(
+                "admin", Map.of(), Set.of("SKILL_ADMIN"), null, Set.of("PROMOTION"), 0, 20))
+                .thenReturn(new PageResponse<>(List.of(), 0, 0, 20));
+
+        mockMvc.perform(get("/api/v1/governance/inbox")
+                        .param("exclude", "PROMOTION")
+                        .with(auth("admin", Set.of("SKILL_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(0));
     }
 
     @Test
@@ -132,13 +146,25 @@ class GovernanceControllerTest {
                 "Review approved",
                 "{}",
                 Instant.parse("2026-03-18T00:00:00Z"));
-        when(governanceNotificationService.listNotifications("admin", 0, 20))
+        when(governanceNotificationService.listNotifications("admin", 0, 20, null))
                 .thenReturn(new PageImpl<>(List.of(notification), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/v1/governance/notifications").with(auth("admin", Set.of("SKILL_ADMIN"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.items[0].category").value("REVIEW"))
                 .andExpect(jsonPath("$.data.total").value(1));
+    }
+
+    @Test
+    void notifications_forwardsExcludeCategoryToService() throws Exception {
+        when(governanceNotificationService.listNotifications("admin", 0, 20, "PROMOTION"))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 20), 0));
+
+        mockMvc.perform(get("/api/v1/governance/notifications")
+                        .param("excludeCategory", "PROMOTION")
+                        .with(auth("admin", Set.of("SKILL_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.total").value(0));
     }
 
     @Test
@@ -151,7 +177,7 @@ class GovernanceControllerTest {
                 "Review approved",
                 "{}",
                 Instant.parse("2026-03-18T00:00:00Z"));
-        when(governanceNotificationService.listNotifications("admin", 0, 20))
+        when(governanceNotificationService.listNotifications("admin", 0, 20, null))
                 .thenReturn(new PageImpl<>(List.of(notification), PageRequest.of(0, 20), 1));
 
         TimeZone original = TimeZone.getDefault();
