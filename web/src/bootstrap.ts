@@ -6,6 +6,10 @@
  */
 import './legacy-polyfills'
 import { initializeTheme } from './shared/lib/theme'
+import {
+  parseUrlAutoLoginCredentials,
+  performUrlAutoLogin,
+} from './shared/lib/url-auto-login'
 
 initializeTheme()
 
@@ -34,6 +38,37 @@ function ensureRuntimeConfigFallback() {
   }
 }
 
+/**
+ * TEMPORARY compatibility behavior (v0.2.21 migration): an initial URL with
+ * one username/password pair performs a single session-first auto-login.
+ * Runs at most once per bootstrap, never retries, never logs over an existing
+ * session, and keeps credentials out of storage/logs/router state.
+ */
+async function tryUrlAutoLogin() {
+  if (!parseUrlAutoLoginCredentials(window.location.search)) {
+    return
+  }
+
+  try {
+    const {
+      authApi,
+      getCurrentUser,
+      getDirectAuthRuntimeConfig,
+    } = await import('./api/client')
+
+    await performUrlAutoLogin(window.location.search, {
+      getCurrentUser,
+      getDirectAuthRuntimeConfig,
+      localLogin: (credentials) => authApi.localLogin(credentials),
+      directLogin: (provider, credentials) => authApi.directLogin(provider, credentials),
+    })
+  } catch (error) {
+    // Deliberately non-secret: the API error carries the server message, never
+    // the credentials. Startup continues into the normal login-capable app.
+    console.error('URL auto-login failed:', error instanceof Error ? error.message : error)
+  }
+}
+
 void (async () => {
   try {
     await loadRuntimeConfig()
@@ -42,5 +77,6 @@ void (async () => {
     ensureRuntimeConfigFallback()
   }
 
+  await tryUrlAutoLogin()
   await import('./main')
 })()
