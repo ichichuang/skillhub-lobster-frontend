@@ -1,3 +1,5 @@
+import { parseParentUrlTheme, resolveParentThemeMode } from './url-theme'
+
 export type Theme = 'light' | 'dark'
 
 export const THEME_STORAGE_KEY = 'skillhub-theme'
@@ -30,9 +32,30 @@ export function applyTheme(theme: Theme, root: HTMLElement = document.documentEl
 }
 
 export function initializeTheme(root: HTMLElement = document.documentElement): Theme {
-  const theme = readStoredTheme() ?? DEFAULT_THEME
+  const theme = resolveEffectiveTheme()
   applyTheme(theme, root)
   return theme
+}
+
+/**
+ * Effective rendered theme: a valid parent-host URL override (`dark=0`/`dark=1`,
+ * see url-theme.ts) wins for the current URL; otherwise the official persisted
+ * preference (or default) applies. The URL override is ephemeral — it is never
+ * written to THEME_STORAGE_KEY, so removing the parameter restores the user's
+ * own ThemeToggle preference.
+ */
+export function resolveEffectiveTheme(): Theme {
+  if (typeof window !== 'undefined') {
+    try {
+      const urlTheme = resolveParentThemeMode(parseParentUrlTheme(window.location.search))
+      if (urlTheme) {
+        return urlTheme
+      }
+    } catch {
+      // A malformed URL must never break theme initialization.
+    }
+  }
+  return readStoredTheme() ?? DEFAULT_THEME
 }
 
 export function saveTheme(theme: Theme, storage: ThemeStorage | undefined = getBrowserStorage()) {

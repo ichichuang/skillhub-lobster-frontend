@@ -1,19 +1,25 @@
 import { useCallback, useState } from 'react'
 import {
   applyTheme,
-  DEFAULT_THEME,
-  readStoredTheme,
+  resolveEffectiveTheme,
   saveTheme,
   type Theme,
 } from '@/shared/lib/theme'
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(() => readStoredTheme() ?? DEFAULT_THEME)
+  // Reflect the effective rendered theme: a parent-host URL override wins for
+  // the current URL, otherwise the persisted ThemeToggle preference applies.
+  const [theme, setThemeState] = useState<Theme>(() => resolveEffectiveTheme())
 
   const setTheme = useCallback((nextTheme: Theme) => {
-    applyTheme(nextTheme)
+    // The user's persisted preference updates through the official toggle
+    // semantics, but a still-present parent-host URL override remains
+    // authoritative for the rendered DOM: re-resolve the effective theme
+    // (URL precedence) instead of applying the raw toggle target.
     saveTheme(nextTheme)
-    setThemeState(nextTheme)
+    const effective = resolveEffectiveTheme()
+    applyTheme(effective)
+    setThemeState(effective)
   }, [])
 
   const toggleTheme = useCallback(() => {
