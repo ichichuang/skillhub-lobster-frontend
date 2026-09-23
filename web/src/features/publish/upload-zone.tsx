@@ -4,7 +4,13 @@ import { useDropzone } from 'react-dropzone'
 import { cn } from '@/shared/lib/utils'
 
 interface UploadZoneProps {
-  onFileSelect: (file: File) => void
+  /** Called with every ZIP picked or dropped; files queue independently on the publish page. */
+  onFilesSelect?: (files: File[]) => void
+  /**
+   * Single-file contract kept for the Suite bundle importer, which still
+   * consumes one ZIP at a time and must stay untouched by the batch flow.
+   */
+  onFileSelect?: (file: File) => void
   /** Optional: called with the raw files of a picked folder (webkitdirectory). */
   onFolderSelect?: (files: File[]) => void
   disabled?: boolean
@@ -15,11 +21,11 @@ export function supportsDirectorySelection(input: HTMLInputElement | null): bool
 }
 
 /**
- * Provides the publish page dropzone for uploading one zip package at a time.
+ * Provides the publish page dropzone for adding zip packages to a local queue.
  * The component is intentionally stateless so packaging validation can remain in
  * the publish flow that knows the surrounding form and backend constraints.
  */
-export function UploadZone({ onFileSelect, onFolderSelect, disabled }: UploadZoneProps) {
+export function UploadZone({ onFilesSelect, onFileSelect, onFolderSelect, disabled }: UploadZoneProps) {
   const { t } = useTranslation()
   const folderInputRef = useRef<HTMLInputElement>(null)
   const [folderSelectionSupported, setFolderSelectionSupported] = useState(false)
@@ -38,11 +44,14 @@ export function UploadZone({ onFileSelect, onFolderSelect, disabled }: UploadZon
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        onFileSelect(acceptedFiles[0])
+      if (acceptedFiles.length === 0) {
+        return
       }
+      onFilesSelect?.(acceptedFiles)
+      // Single-file consumers only ever receive the first picked ZIP.
+      onFileSelect?.(acceptedFiles[0]!)
     },
-    [onFileSelect]
+    [onFilesSelect, onFileSelect]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -50,7 +59,7 @@ export function UploadZone({ onFileSelect, onFolderSelect, disabled }: UploadZon
     accept: {
       'application/zip': ['.zip'],
     },
-    maxFiles: 1,
+    multiple: true,
     disabled,
   })
 
@@ -73,7 +82,7 @@ export function UploadZone({ onFileSelect, onFolderSelect, disabled }: UploadZon
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} disabled={disabled} />
         <div className="flex flex-col items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-secondary/60 flex items-center justify-center">
             <svg

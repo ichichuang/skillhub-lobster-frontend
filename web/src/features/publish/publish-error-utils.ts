@@ -21,6 +21,69 @@ const FRONTMATTER_FAILURE_MARKERS = [
   '技能包校验失败：Invalid SKILL.md frontmatter',
 ]
 
+const SERVER_SKILL_MD_MISSING_MARKERS = [
+  'Missing required file: SKILL.md at root',
+  'SKILL.md not found',
+  '未找到 SKILL.md',
+]
+
+const SERVER_SKILL_MD_AMBIGUOUS_MARKERS = [
+  'SKILL.md found in multiple directories',
+]
+
+const SERVER_NAME_MISSING_MARKERS = [
+  'Missing required field: name',
+  '缺少必填字段：name',
+]
+
+const SERVER_DESCRIPTION_MISSING_MARKERS = [
+  'Missing required field: description',
+  '缺少必填字段：description',
+]
+
+const SERVER_FRONTMATTER_INVALID_MARKERS = [
+  'Missing frontmatter start marker',
+  'Missing frontmatter content after start marker',
+  'Missing frontmatter end marker',
+  'Frontmatter must be a YAML object',
+  'Invalid YAML in frontmatter',
+  '缺少 frontmatter 起始标记',
+  'frontmatter 起始标记后缺少内容',
+  '缺少 frontmatter 结束标记',
+  'frontmatter 必须是 YAML 对象',
+  'frontmatter YAML 非法',
+]
+
+const SERVER_NAME_INVALID_MARKERS = [
+  'Slug cannot be blank',
+  'Slug length must be between',
+  'Slug must contain only lowercase',
+  'Slug cannot contain consecutive hyphens',
+  'is reserved and cannot be used',
+  'slug 不能为空',
+  'slug 长度必须在',
+  'slug 只能包含小写字母',
+  'slug 不能包含连续连字符',
+  '是保留字',
+]
+
+export type ServerPreflightFailureKind =
+  | 'skill-md-missing'
+  | 'skill-md-ambiguous'
+  | 'name-missing'
+  | 'name-invalid'
+  | 'description-missing'
+  | 'frontmatter-invalid'
+
+const SERVER_PREFLIGHT_KIND_MARKERS: Array<[ServerPreflightFailureKind, string[]]> = [
+  ['description-missing', SERVER_DESCRIPTION_MISSING_MARKERS],
+  ['name-missing', SERVER_NAME_MISSING_MARKERS],
+  ['skill-md-missing', SERVER_SKILL_MD_MISSING_MARKERS],
+  ['skill-md-ambiguous', SERVER_SKILL_MD_AMBIGUOUS_MARKERS],
+  ['name-invalid', SERVER_NAME_INVALID_MARKERS],
+  ['frontmatter-invalid', SERVER_FRONTMATTER_INVALID_MARKERS],
+]
+
 function includesAnyMarker(message: string | undefined, markers: string[]): boolean {
   if (!message) {
     return false
@@ -43,6 +106,23 @@ export function isPrecheckConfirmationMessage(message?: string): boolean {
 
 export function isFrontmatterFailureMessage(message?: string): boolean {
   return includesAnyMarker(message, FRONTMATTER_FAILURE_MARKERS)
+}
+
+/**
+ * Maps a server error back to the matching local preflight failure so a stale
+ * package gets the same friendly repair guidance as the client-side check.
+ * Returns null for unknown errors so their diagnostic message stays visible.
+ */
+export function matchServerPreflightFailure(message?: string): ServerPreflightFailureKind | null {
+  if (!message) {
+    return null
+  }
+  for (const [kind, markers] of SERVER_PREFLIGHT_KIND_MARKERS) {
+    if (includesAnyMarker(message, markers)) {
+      return kind
+    }
+  }
+  return null
 }
 
 export function extractPrecheckWarnings(message?: string): string[] {
