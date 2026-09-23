@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createElement, type ReactNode } from 'react'
 
 // Layout is a component-only file with no exported pure functions or constants.
-// We verify that the named export exists for the router to consume.
+// We verify the named export and the shell-visibility / language-surface contract.
 
 vi.mock('@tanstack/react-router', () => ({
   Outlet: () => null,
@@ -19,20 +19,17 @@ vi.mock('react-i18next', async () => {
     ...actual,
     useTranslation: () => ({
       t: (key: string) => key,
-      i18n: { language: 'en' },
+      i18n: { language: 'zh' },
     }),
   }
 })
 
 vi.mock('@/features/auth/use-auth', () => ({
-  useAuth: () => ({
-    user: null,
-    isLoading: false,
-  }),
+  useAuth: () => layoutAuthState,
 }))
 
 vi.mock('@/shared/components/theme-toggle', () => ({
-  ThemeToggle: () => null,
+  ThemeToggle: () => createElement('div', { 'data-testid': 'theme-toggle' }),
 }))
 
 vi.mock('@/shared/components/brand-mark', () => ({
@@ -40,15 +37,15 @@ vi.mock('@/shared/components/brand-mark', () => ({
 }))
 
 vi.mock('@/features/notification/notification-bell', () => ({
-  NotificationBell: () => null,
-}))
-
-vi.mock('@/shared/components/language-switcher', () => ({
-  LanguageSwitcher: () => null,
+  NotificationBell: () => createElement('div', { 'data-testid': 'notification-bell' }),
 }))
 
 vi.mock('@/shared/components/user-menu', () => ({
-  UserMenu: () => null,
+  UserMenu: () => createElement('div', { 'data-testid': 'user-menu' }),
+}))
+
+vi.mock('@/shared/components/language-switcher', () => ({
+  LanguageSwitcher: () => createElement('div', { 'data-testid': 'language-switcher' }),
 }))
 
 vi.mock('./layout-header-style', () => ({
@@ -63,14 +60,13 @@ vi.mock('./layout-main-content', () => ({
   }),
 }))
 
-import { Layout } from './layout'
+vi.mock('@/pages/dashboard', () => ({
+  DashboardSidebar: () => null,
+  SIDEBAR_GROUPS: [],
+}))
 
-describe('Layout', () => {
-  it('exports a named Layout component function', () => {
-    expect(typeof Layout).toBe('function')
-    expect(Layout.name).toBe('Layout')
-  })
-})
+import { Layout } from './layout'
+import { renderToStaticMarkup } from 'react-dom/server'
 
 const layoutRouterState: {
   location: { pathname: string }
@@ -82,22 +78,32 @@ const layoutRouterState: {
   matches: [{ search: {} }],
 }
 
-vi.mock('@/pages/dashboard', () => ({
-  DashboardSidebar: () => null,
-  SIDEBAR_GROUPS: [],
-}))
-
-import { renderToStaticMarkup } from 'react-dom/server'
+const layoutAuthState: {
+  user: { platformRoles: string[] } | null
+  isLoading: boolean
+} = {
+  user: null,
+  isLoading: false,
+}
 
 function renderLayout(): string {
   return renderToStaticMarkup(createElement(Layout as (props?: Record<string, never>) => ReactNode))
 }
+
+describe('Layout', () => {
+  it('exports a named Layout component function', () => {
+    expect(typeof Layout).toBe('function')
+    expect(Layout.name).toBe('Layout')
+  })
+})
 
 describe('Layout shell visibility', () => {
   beforeEach(() => {
     layoutRouterState.location.pathname = '/'
     layoutRouterState.resolvedLocation.pathname = '/'
     layoutRouterState.matches = [{ search: {} }]
+    layoutAuthState.user = null
+    layoutAuthState.isLoading = false
   })
 
   it('standalone renders the official Header and Footer', () => {
@@ -130,5 +136,31 @@ describe('Layout shell visibility', () => {
     expect(html).not.toContain('<header')
     expect(html).not.toContain('<footer')
     expect(html).toContain('<main')
+  })
+})
+
+describe('Layout language surface (Chinese-only policy)', () => {
+  beforeEach(() => {
+    layoutRouterState.location.pathname = '/'
+    layoutRouterState.resolvedLocation.pathname = '/'
+    layoutRouterState.matches = [{ search: {} }]
+    layoutAuthState.user = { platformRoles: ['SUPER_ADMIN'] }
+    layoutAuthState.isLoading = false
+  })
+
+  it('standalone Header renders ThemeToggle, NotificationBell, and UserMenu but no LanguageSwitcher', () => {
+    const html = renderLayout()
+    expect(html).toContain('data-testid="theme-toggle"')
+    expect(html).toContain('data-testid="notification-bell"')
+    expect(html).toContain('data-testid="user-menu"')
+    expect(html).not.toContain('data-testid="language-switcher"')
+  })
+
+  it('embedded showHeader=1 Header still has no LanguageSwitcher', () => {
+    layoutRouterState.matches = [{ search: { embed: true, showHeader: 1 } }]
+    const html = renderLayout()
+    expect(html).toContain('<header')
+    expect(html).toContain('data-testid="theme-toggle"')
+    expect(html).not.toContain('data-testid="language-switcher"')
   })
 })

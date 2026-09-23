@@ -1,17 +1,21 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import LanguageDetector from 'i18next-browser-languagedetector'
 import en from './locales/en.json'
 import ru from './locales/ru.json'
 import zh from './locales/zh.json'
 
 /**
- * Initializes i18next for the browser app. Language preference is restored from
- * localStorage first so the UI stays stable across reloads before falling back
- * to the browser locale.
+ * Initializes i18next with the Chinese-only product policy.
+ *
+ * The product language is fixed to the canonical upstream `zh`: it never
+ * depends on navigator.language, localStorage selections, or route parameters,
+ * so browser locales cannot switch the UI to English or Russian. English and
+ * Russian bundles stay registered for upstream parity and future maintenance,
+ * but only `zh` is a supported/resolvable language. The browser language
+ * detector is intentionally removed from the active plugin chain — there is
+ * nothing for it to detect under this policy.
  */
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
@@ -19,13 +23,11 @@ i18n
       ru: { translation: ru },
       zh: { translation: zh },
     },
-    fallbackLng: 'en',
+    lng: 'zh',
+    fallbackLng: 'zh',
+    supportedLngs: ['zh'],
     interpolation: {
       escapeValue: false,
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
     },
   })
 

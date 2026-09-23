@@ -173,16 +173,16 @@ test.describe('Admin Skills (route fixtures)', () => {
     await setEnglishLocale(page)
     state = await installApiFixtures(page)
     await page.goto('/admin/skills')
-    await expect(page.getByRole('columnheader', { name: 'Skill' })).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: '技能' })).toBeVisible()
   })
 
   test('renders the six-column inventory with both rows', async ({ page }) => {
     const headers = await page.getByRole('columnheader').allTextContents()
-    expect(headers).toEqual(['Skill', 'Publisher', 'Category', 'State', 'Updated', 'Actions'])
+    expect(headers).toEqual(['技能', '发布者', '分类', '状态', '更新时间', '操作'])
 
     await expect(page.getByTestId('admin-skills-identity-301')).toBeVisible()
     await expect(page.getByTestId('admin-skills-identity-302')).toBeVisible()
-    await expect(page.getByText('Disabled')).toBeVisible()
+    await expect(page.getByText('已禁用')).toBeVisible()
   })
 
   test('detail modal opens from the skill identity and lazily loads files only on the Files tab', async ({ page }) => {
@@ -195,7 +195,7 @@ test.describe('Admin Skills (route fixtures)', () => {
     // No files request before the Files tab is opened.
     expect(state.filesRequests).toBe(0)
 
-    await modal.getByRole('tab', { name: 'Files' }).click()
+    await modal.getByRole('tab', { name: '文件' }).click()
     await expect(modal.getByText('SKILL.md')).toBeVisible()
     expect(state.filesRequests).toBe(1)
     expect(state.detailRequests).toBe(1)
@@ -206,14 +206,14 @@ test.describe('Admin Skills (route fixtures)', () => {
   })
 
   test('disable maps onto hide and requires confirmation', async ({ page }) => {
-    await page.getByRole('button', { name: 'Disable' }).first().click()
+    await page.getByRole('button', { name: '禁用' }).first().click()
 
     await expect(page.getByTestId('admin-skills-confirm')).toBeVisible()
     expect(state.hideRequests).toBe(0)
 
     await page.getByTestId('admin-skills-confirm').click()
-    await expect(page.getByText('Disabled')).toHaveCount(1)
-    await expect(page.getByText('Disabled').first()).toBeVisible()
+    await expect(page.getByText('已禁用')).toHaveCount(1)
+    await expect(page.getByText('已禁用').first()).toBeVisible()
     expect(state.hideRequests).toBe(1)
     expect(state.deleteRequests).toBe(0)
   })

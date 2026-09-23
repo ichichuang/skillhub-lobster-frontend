@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 // The i18n config module performs side-effect-only initialization.
-// We mock i18next to verify that init is called with expected config.
+// We mock i18next to verify that init is called with the Chinese-only policy.
 
 const initMock = vi.fn().mockReturnThis()
 const useMock = vi.fn().mockReturnThis()
@@ -36,15 +36,31 @@ vi.mock('./locales/ru.json', () => ({
 // Import triggers the side-effect initialization
 await import('./config')
 
-describe('i18n config', () => {
-  it('chains the language detector and react-i18next plugins', () => {
-    expect(useMock).toHaveBeenCalledTimes(2)
+describe('i18n config (Chinese-only product policy)', () => {
+  it('does not chain the browser language detector', () => {
+    // The product language is policy-fixed; navigator/localStorage detection
+    // must never influence resolution.
+    expect(useMock).toHaveBeenCalledTimes(1)
   })
 
-  it('calls init with the english fallback language', () => {
-    expect(initMock).toHaveBeenCalledTimes(1)
+  it('pins the fixed product language to the canonical upstream zh', () => {
     const initOptions = initMock.mock.calls[0][0]
-    expect(initOptions.fallbackLng).toBe('en')
+    expect(initOptions.lng).toBe('zh')
+  })
+
+  it('falls back to Chinese, never English or Russian', () => {
+    const initOptions = initMock.mock.calls[0][0]
+    expect(initOptions.fallbackLng).toBe('zh')
+  })
+
+  it('supports only Chinese', () => {
+    const initOptions = initMock.mock.calls[0][0]
+    expect(initOptions.supportedLngs).toEqual(['zh'])
+  })
+
+  it('configures no browser-language detection', () => {
+    const initOptions = initMock.mock.calls[0][0]
+    expect(initOptions.detection).toBeUndefined()
   })
 
   it('disables HTML escaping for React interpolation', () => {
@@ -52,13 +68,7 @@ describe('i18n config', () => {
     expect(initOptions.interpolation.escapeValue).toBe(false)
   })
 
-  it('configures localStorage-first detection order', () => {
-    const initOptions = initMock.mock.calls[0][0]
-    expect(initOptions.detection.order).toEqual(['localStorage', 'navigator'])
-    expect(initOptions.detection.caches).toEqual(['localStorage'])
-  })
-
-  it('registers english, russian and chinese resource bundles', () => {
+  it('registers english, russian and chinese resource bundles for upstream parity', () => {
     const initOptions = initMock.mock.calls[0][0]
     expect(initOptions.resources).toHaveProperty('en')
     expect(initOptions.resources).toHaveProperty('ru')

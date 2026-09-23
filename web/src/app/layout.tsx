@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/use-auth'
 import { BrandMark } from '@/shared/components/brand-mark'
-import { LanguageSwitcher } from '@/shared/components/language-switcher'
+// LanguageSwitcher intentionally omitted: the product is Chinese-only, so the
+// Header must not present a locale picker that cannot actually switch.
 import { ThemeToggle } from '@/shared/components/theme-toggle'
 import { UserMenu } from '@/shared/components/user-menu'
 import { NotificationBell } from '@/features/notification/notification-bell'
@@ -161,7 +162,6 @@ export function Layout() {
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <ThemeToggle />
-          <LanguageSwitcher />
           {user && <NotificationBell />}
           {isLoading ? null : user ? (
             <UserMenu user={user} />
