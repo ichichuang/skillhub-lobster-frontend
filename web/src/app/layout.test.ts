@@ -106,10 +106,10 @@ describe('Layout shell visibility', () => {
     layoutAuthState.isLoading = false
   })
 
-  it('standalone renders the official Header and Footer', () => {
+  it('standalone renders the official Header (no global Footer in the downstream product)', () => {
     const html = renderLayout()
     expect(html).toContain('<header')
-    expect(html).toContain('<footer')
+    expect(html).not.toContain('<footer')
   })
 
   it('embedded hides the Header, its contents, and the Footer', () => {
@@ -136,6 +136,38 @@ describe('Layout shell visibility', () => {
     expect(html).not.toContain('<header')
     expect(html).not.toContain('<footer')
     expect(html).toContain('<main')
+  })
+
+  it('standalone renders no global upstream Footer at all', () => {
+    const html = renderLayout()
+    expect(html).not.toContain('<footer')
+    // Upstream footer link surfaces (GitHub/npm/CLI/docs/privacy/legal) are gone.
+    expect(html).not.toContain('footer.docs')
+    expect(html).not.toContain('footer.marketplace')
+    expect(html).not.toContain('footer.copyright')
+    expect(html).not.toContain('footer.privacy')
+  })
+
+  it('standalone Header brands the product as 技能中心, never upstream SkillHub', () => {
+    const html = renderLayout()
+    expect(html).toContain('技能中心')
+    expect(html).not.toContain('>SkillHub<')
+  })
+
+  it('keeps the official navigation items in the Header', () => {
+    layoutAuthState.user = { platformRoles: ['SUPER_ADMIN'] }
+    const html = renderLayout()
+    for (const key of ['nav.landing', 'nav.publish', 'nav.marketplace', 'nav.suites', 'nav.dashboard']) {
+      expect(html).toContain(key)
+    }
+  })
+
+  it('showHeader=1 restores the Header branded 技能中心', () => {
+    layoutRouterState.matches = [{ search: { embed: true, showHeader: 1 } }]
+    const html = renderLayout()
+    expect(html).toContain('<header')
+    expect(html).toContain('技能中心')
+    expect(html).not.toContain('<footer')
   })
 })
 

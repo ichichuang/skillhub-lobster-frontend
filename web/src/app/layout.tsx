@@ -3,7 +3,6 @@ import { Outlet, Link, useRouterState } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { Menu, X } from 'lucide-react'
 import { useAuth } from '@/features/auth/use-auth'
-import { BrandMark } from '@/shared/components/brand-mark'
 // LanguageSwitcher intentionally omitted: the product is Chinese-only, so the
 // Header must not present a locale picker that cannot actually switch.
 import { ThemeToggle } from '@/shared/components/theme-toggle'
@@ -16,13 +15,13 @@ import { canViewGovernanceCenter } from '@/shared/lib/governance-access'
 import { getAppHeaderClassName } from './layout-header-style'
 import { getAppMainContentLayout, resolveAppMainContentPathname } from './layout-main-content'
 
-const FOOTER_LINK_CLASS_NAME = 'group relative inline-flex py-0.5 transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-secondary after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-foreground/60 after:transition-transform after:duration-200 hover:after:scale-x-100 motion-reduce:after:transition-none'
 
 /**
  * Application shell shared by all routed pages.
  *
- * It owns the global header, footer, language switcher, auth-aware navigation, and suspense
- * fallback used while lazy route modules are loading.
+ * It owns the global header (branded 技能中心), auth-aware navigation, and suspense
+ * fallback used while lazy route modules are loading. The upstream global product
+ * Footer is intentionally not rendered, and the product is Chinese-only.
  */
 export function Layout() {
   const { t, i18n } = useTranslation()
@@ -124,7 +123,7 @@ export function Layout() {
       {showGlobalHeader && (
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
         <Link to="/" className="text-xl font-semibold tracking-tight flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
-          SkillHub
+          技能中心
         </Link>
 
         {/* Desktop nav — lg+ only */}
@@ -227,63 +226,8 @@ export function Layout() {
         </Suspense>
       </main>
 
-      {/* Footer — host-owned while embedded */}
-      {!isEmbedded && (
-      <footer className="relative z-10 mt-auto border-t bg-secondary/70" style={{ borderColor: 'hsl(var(--border))' }}>
-        <div className="mx-auto max-w-6xl px-6 py-12 md:px-12 md:py-16">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
-            <div className="col-span-2 md:col-span-1">
-              <div className="mb-4 flex items-center gap-2.5">
-                <BrandMark className="h-8 w-8 rounded-lg bg-background ring-1 ring-border/70" />
-                <span className="font-semibold text-foreground">SkillHub</span>
-              </div>
-              <p className="text-sm text-muted-foreground">{t('layout.footerDescription')}</p>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-sm font-semibold text-foreground">{t('footer.product')}</h4>
-              <ul className="space-y-2.5 text-sm text-muted-foreground">
-                <li><Link to="/search" search={{ q: '', sort: 'relevance', page: 0, starredOnly: false }} className={FOOTER_LINK_CLASS_NAME}>{t('footer.marketplace')}</Link></li>
-                <li><Link to="/dashboard/publish" className={FOOTER_LINK_CLASS_NAME}>{t('footer.publish')}</Link></li>
-                <li><Link to="/dashboard" className={FOOTER_LINK_CLASS_NAME}>{t('nav.dashboard')}</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-sm font-semibold text-foreground">{t('footer.developers')}</h4>
-              <ul className="space-y-2.5 text-sm text-muted-foreground">
-                <li><a href="https://github.com/iflytek/skillhub/tree/main/docs/skillhub" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>{t('footer.docs')}</a></li>
-                <li><a href="https://www.npmjs.com/package/@astron-team/skillhub" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>CLI</a></li>
-                <li><a href="https://github.com/iflytek/skillhub" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>GitHub</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-sm font-semibold text-foreground">{t('footer.project')}</h4>
-              <ul className="space-y-2.5 text-sm text-muted-foreground">
-                <li><a href="https://github.com/iflytek/skillhub/blob/main/LICENSE" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>License</a></li>
-                <li><a href="https://github.com/iflytek/skillhub/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>Contributing</a></li>
-                <li><a href="https://github.com/iflytek/skillhub/releases" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>Changelog</a></li>
-                <li><a href="https://github.com/iflytek/skillhub/blob/main/CODE_OF_CONDUCT.md" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>{t('footer.codeOfConduct')}</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="mb-4 text-sm font-semibold text-foreground">{t('footer.resources')}</h4>
-              <ul className="space-y-2.5 text-sm text-muted-foreground">
-                <li><a href="https://github.com/iflytek/skillhub/discussions" target="_blank" rel="noreferrer" className={FOOTER_LINK_CLASS_NAME}>{t('footer.community')}</a></li>
-                <li><Link to="/privacy" className={FOOTER_LINK_CLASS_NAME}>{t('footer.privacy')}</Link></li>
-                <li><Link to="/terms" className={FOOTER_LINK_CLASS_NAME}>{t('footer.terms')}</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-10 border-t border-border/70 pt-7 text-xs text-muted-foreground">
-            <span>{t('footer.copyright')}</span>
-          </div>
-        </div>
-      </footer>
-      )}
+      {/* The upstream global product Footer (GitHub/npm/CLI/copyright surfaces) is
+           intentionally not rendered in the downstream product. */}
     </div>
   )
 }

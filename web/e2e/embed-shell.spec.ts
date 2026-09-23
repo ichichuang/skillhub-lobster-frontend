@@ -83,14 +83,15 @@ test.describe('Embed shell (route fixtures, isolated Vite)', () => {
 
   test('duplicate embed values never activate embedded mode (standalone shell stays)', async ({ page }) => {
     await page.goto('/skills?embed=true&embed=true')
-    // Ambiguous input is treated as standalone: official Header/Footer stay.
+    // Ambiguous input is treated as standalone: the official Header stays.
+    // (The global Footer is removed product-wide by the branding layer.)
     await expect(page.locator('header')).toHaveCount(1)
-    await expect(page.locator('footer')).toHaveCount(1)
+    await expect(page.locator('footer')).toHaveCount(0)
   })
 
-  test('standalone routes keep the official Header and Footer', async () => {
+  test('standalone routes keep the official Header without a global Footer', async () => {
     await page.goto('/skills')
     await expect(page.locator('header')).toHaveCount(1)
-    await expect(page.locator('footer')).toHaveCount(1)
+    await expect(page.locator('footer')).toHaveCount(0)
   })
 })
