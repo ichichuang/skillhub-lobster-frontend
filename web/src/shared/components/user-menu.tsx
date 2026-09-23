@@ -177,6 +177,11 @@ export function UserMenu({ user, triggerClassName }: UserMenuProps) {
                 {t('user.menu.namespacesAdmin')}
               </Link>
             ) : null}
+            {isSuperAdmin ? (
+              <Link to="/admin/skills" className={menuItemClassName} onClick={closeMenu}>
+                {t('user.menu.skillsAdmin')}
+              </Link>
+            ) : null}
             {isAuditor ? (
               <Link to="/admin/audit-log" className={menuItemClassName} onClick={closeMenu}>
                 {t('user.menu.auditLog')}

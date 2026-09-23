@@ -710,3 +710,44 @@ export interface NotificationPreferenceItem {
 export interface NotificationUnreadCount {
   count: number
 }
+
+/**
+ * Manual AdminSkill read-model types matching the validated v0.2.21 admin
+ * backend DTOs (AdminSkillSummaryResponse / AdminSkillDetailResponse /
+ * AdminSkillVersionSummary). Kept isolated from the generated schema until
+ * the consolidated OpenAPI regeneration task reconciles them.
+ */
+export interface AdminSkillSummary {
+  id: number
+  namespace: string
+  slug: string
+  displayName: string
+  labels: LabelItem[]
+  ownerId: string
+  ownerDisplayName: string
+  visibility: string
+  status: string
+  hidden: boolean
+  createdAt: string
+  updatedAt: string
+  headlineVersion: SkillLifecycleVersion | null
+  publishedVersion: SkillLifecycleVersion | null
+  ownerPreviewVersion: SkillLifecycleVersion | null
+  resolutionMode: string
+}
+
+export interface AdminSkillVersionSummary {
+  id: number
+  version: string
+  status: string
+  changelog: string
+  fileCount: number
+  totalSize: number
+  publishedAt: string
+}
+
+export interface AdminSkillDetailResponse {
+  skill: AdminSkillSummary
+  summary: string
+  versions: AdminSkillVersionSummary[]
+}

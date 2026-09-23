@@ -36,6 +36,9 @@ import type {
   ManagedNamespace,
   AdminNamespace,
   AdminNamespaceList,
+  AdminSkillSummary,
+  AdminSkillDetailResponse,
+  SkillFile,
   Namespace,
   CreateNamespaceRequest,
   NamespaceMember,
@@ -1519,6 +1522,41 @@ export const adminApi = {
       method: 'POST',
       headers: getCsrfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ reason }),
+    })
+  },
+
+  async listSkills(params: {
+    q?: string
+    status?: string
+    hidden?: boolean
+    label?: string
+    page?: number
+    size?: number
+  }): Promise<{ items: AdminSkillSummary[]; total: number; page: number; size: number }> {
+    const searchParams = new URLSearchParams()
+    if (params.q) searchParams.set('q', params.q)
+    if (params.status) searchParams.set('status', params.status)
+    if (params.hidden !== undefined) searchParams.set('hidden', String(params.hidden))
+    if (params.label) searchParams.set('label', params.label)
+    searchParams.set('page', String(params.page ?? 0))
+    searchParams.set('size', String(params.size ?? 20))
+    return fetchJson<{ items: AdminSkillSummary[]; total: number; page: number; size: number }>(
+      `/api/v1/admin/skills?${searchParams.toString()}`,
+    )
+  },
+
+  async getSkillDetail(skillId: number): Promise<AdminSkillDetailResponse> {
+    return fetchJson<AdminSkillDetailResponse>(`/api/v1/admin/skills/${skillId}`)
+  },
+
+  async listVersionFiles(skillId: number, versionId: number): Promise<SkillFile[]> {
+    return fetchJson<SkillFile[]>(`/api/v1/admin/skills/${skillId}/versions/${versionId}/files`)
+  },
+
+  async deleteSkillById(skillId: number): Promise<void> {
+    await fetchJson<void>(`/api/v1/skills/id/${skillId}`, {
+      method: 'DELETE',
+      headers: getCsrfHeaders(),
     })
   },
 
