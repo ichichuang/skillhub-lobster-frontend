@@ -25,12 +25,19 @@ const FOOTER_LINK_CLASS_NAME = 'group relative inline-flex py-0.5 transition-col
  */
 export function Layout() {
   const { t, i18n } = useTranslation()
-  const { pathname, resolvedPathname } = useRouterState({
+  const { pathname, resolvedPathname, isEmbedded, showEmbeddedHeader } = useRouterState({
     select: (s) => ({
       pathname: s.location.pathname,
       resolvedPathname: s.resolvedLocation?.pathname,
+      isEmbedded: s.matches[0]?.search.embed === true,
+      showEmbeddedHeader: s.matches[0]?.search.showHeader === 1,
     }),
   })
+  // Embedded shell contract: the host owns the global chrome, so Header (with
+  // its nav, NotificationBell, and UserMenu) and Footer stay hidden unless
+  // showHeader=1 explicitly opts the Header back in. `showHeader` controls the
+  // Header only — the Footer remains host-owned while embedded.
+  const showGlobalHeader = !isEmbedded || showEmbeddedHeader
   const { user, isLoading } = useAuth()
   const [isHeaderElevated, setIsHeaderElevated] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -112,7 +119,8 @@ export function Layout() {
         />
       </div>
 
-      {/* Header */}
+      {/* Header — hidden while embedded unless showHeader=1 opts back in */}
+      {showGlobalHeader && (
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
         <Link to="/" className="text-xl font-semibold tracking-tight flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
           SkillHub
@@ -167,9 +175,10 @@ export function Layout() {
           )}
         </div>
       </header>
+      )}
 
-      {/* Mobile nav dropdown */}
-      {mobileMenuOpen ? (
+      {/* Mobile nav dropdown — part of the global header chrome */}
+      {showGlobalHeader && mobileMenuOpen ? (
         <div className="lg:hidden sticky top-[52px] z-40 border-b border-border bg-background/95 backdrop-blur-xl">
           <nav className="flex flex-col px-4 py-3 gap-1">
             {navItems.map((item) => {
@@ -218,7 +227,8 @@ export function Layout() {
         </Suspense>
       </main>
 
-      {/* Footer */}
+      {/* Footer — host-owned while embedded */}
+      {!isEmbedded && (
       <footer className="relative z-10 mt-auto border-t bg-secondary/70" style={{ borderColor: 'hsl(var(--border))' }}>
         <div className="mx-auto max-w-6xl px-6 py-12 md:px-12 md:py-16">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
@@ -273,6 +283,7 @@ export function Layout() {
           </div>
         </div>
       </footer>
+      )}
     </div>
   )
 }

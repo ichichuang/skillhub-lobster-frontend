@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType } from 'react'
-import { createRouter, createRoute, createRootRoute, redirect } from '@tanstack/react-router'
+import { createRouter, createRoute, createRootRoute, redirect, retainSearchParams } from '@tanstack/react-router'
 import { Layout } from './layout'
 import { getCurrentUser } from '@/api/client'
 import { RoleGuard } from '@/shared/components/role-guard'
@@ -7,6 +7,7 @@ import { RouteError } from '@/shared/components/route-error'
 import { createRequireAuth } from '@/shared/lib/auth-route'
 import { clearDynamicImportReloadGuard, recoverFromDynamicImportError } from '@/shared/lib/dynamic-import-recovery'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
+import { GLOBALLY_RETAINED_SEARCH_KEYS, isEmbeddedMode } from '@/shared/lib/embed-mode'
 
 /**
  * Central route registry for the SkillHub web app.
@@ -226,7 +227,43 @@ function DefaultNotFound() {
   )
 }
 
+/**
+ * Search parameters owned by the host integration. They are validated at the
+ * root route and carried across internal navigation so embedded views keep
+ * their context (see shared/lib/embed-mode.ts). `dark` is retained verbatim in
+ * this task; URL-driven theme behavior is intentionally NOT implemented here.
+ */
+export interface RootSearch {
+  embed?: true
+  dark?: string | number | boolean
+  showHeader?: 1
+}
+
+export const ROOT_RETAINED_SEARCH_KEYS = GLOBALLY_RETAINED_SEARCH_KEYS
+
+function isSinglePrimitiveValue(value: unknown): value is string | number | boolean {
+  return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
+}
+
+/**
+ * Root-level search validation. Only the integration keys are produced here;
+ * every route-specific parameter keeps being validated by its own route, and
+ * ambiguous values (duplicates, arrays, wrong types) are dropped instead of
+ * being passed through.
+ */
+export function validateRootSearch(search: Record<string, unknown>): RootSearch {
+  return {
+    ...(isEmbeddedMode(search) ? { embed: true as const } : {}),
+    ...(isSinglePrimitiveValue(search.dark) ? { dark: search.dark } : {}),
+    ...(search.showHeader === 1 ? { showHeader: 1 as const } : {}),
+  }
+}
+
 const rootRoute = createRootRoute({
+  validateSearch: validateRootSearch,
+  search: {
+    middlewares: [retainSearchParams([...ROOT_RETAINED_SEARCH_KEYS])],
+  },
   component: Layout,
   notFoundComponent: DefaultNotFound,
   errorComponent: RouteError,
