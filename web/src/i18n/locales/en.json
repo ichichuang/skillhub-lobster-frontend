@@ -1792,6 +1792,10 @@
     "close": "Close"
   },
   "review": {
+    "staleTaskTitle": "This review is no longer available",
+    "staleTaskDescription": "This review task no longer exists or is no longer reviewable; it may have been withdrawn or replaced. Refresh or go back to the list for the latest state.",
+    "refresh": "Refresh",
+    "approveDisabledScanFailed": "Security scanning failed for this version, so approval cannot proceed. Reject it and ask the submitter to fix and republish.",
     "detail": "Review Detail",
     "id": "Review ID",
     "backToList": "Back to List",

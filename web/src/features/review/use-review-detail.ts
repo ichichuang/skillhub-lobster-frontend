@@ -29,13 +29,16 @@ async function rejectReview(taskId: number, comment: string): Promise<void> {
 }
 
 /**
- * Exposes the review detail query keyed by task id.
+ * Exposes the review detail query keyed by task id. Errors are owned by the
+ * review detail page (stale/not-found panel), so the global error toast is
+ * skipped for this query.
  */
 export function useReviewDetail(taskId: number) {
   return useQuery({
     queryKey: ['reviews', taskId],
     queryFn: () => getReviewDetail(taskId),
     enabled: !!taskId,
+    meta: { skipGlobalErrorHandler: true },
   })
 }
 
@@ -44,6 +47,7 @@ export function useReviewSkillDetail(taskId: number, enabled = true) {
     queryKey: ['reviews', taskId, 'skill-detail'],
     queryFn: () => getReviewSkillDetail(taskId),
     enabled: enabled && !!taskId,
+    meta: { skipGlobalErrorHandler: true },
   })
 }
 
@@ -52,6 +56,7 @@ export function useReviewAttempts(taskId: number) {
     queryKey: ['reviews', taskId, 'attempts'],
     queryFn: () => reviewApi.listAttempts(taskId),
     enabled: !!taskId,
+    meta: { skipGlobalErrorHandler: true },
   })
 }
 

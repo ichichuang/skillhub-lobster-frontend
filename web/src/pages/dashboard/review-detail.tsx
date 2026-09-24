@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, Folder } from 'lucide-react'
 import { useAuth } from '@/features/auth/use-auth'
@@ -17,7 +18,7 @@ import { Label } from '@/shared/ui/label'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { toast } from '@/shared/lib/toast'
 import { cn } from '@/shared/lib/utils'
-import { resolveReviewActionErrorDescription } from '@/features/review/review-error'
+import { isReviewScanFailedError, isReviewTaskMissingError, resolveReviewActionErrorDescription } from '@/features/review/review-error'
 import { ReviewSkillDetailSection } from '@/features/review/review-skill-detail-section'
 import { ReviewAttemptTimeline } from '@/features/review/review-attempt-timeline'
 import { SecurityAuditSection } from '@/features/security-audit/security-audit-section'
@@ -52,10 +53,11 @@ function ReviewDetailScreen({
   namespaceSlug?: string
 }) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
 
-  const { data: review, isLoading } = useReviewDetail(taskId)
+  const { data: review, isLoading, error: reviewError, refetch: refetchReview } = useReviewDetail(taskId)
   const {
     data: reviewAttempts,
     isLoading: isLoadingReviewAttempts,
@@ -73,12 +75,32 @@ function ReviewDetailScreen({
     review?.version,
     isSuiteReview,
   )
+
+  // A pending task can disappear while this page is open (author withdraws, or
+  // republishes which auto-withdraws the old submission); converge back to the
+  // fresh review state so the page flips to the stale-review panel instead of
+  // looping on raw errors.
+  const handleStaleTask = () => {
+    toast.error(t('review.staleTaskTitle'), t('review.staleTaskDescription'))
+    queryClient.invalidateQueries({ queryKey: ['reviews'] })
+  }
+
   const approveMutation = useApproveReview({
     onSuccess: () => {
       toast.success(t('review.approveSuccess'))
       navigate({ to: backTo })
     },
     onError: (error) => {
+      if (isReviewTaskMissingError(error)) {
+        handleStaleTask()
+        return
+      }
+      if (isReviewScanFailedError(error)) {
+        // The locally cached version state was stale; the server refused
+        // approval because security scanning failed for this version.
+        toast.error(t('review.approveFailed'), t('review.approveDisabledScanFailed'))
+        return
+      }
       toast.error(t('review.approveFailed'), resolveReviewActionErrorDescription(error))
     },
   })
@@ -88,6 +110,10 @@ function ReviewDetailScreen({
       navigate({ to: backTo })
     },
     onError: (error) => {
+      if (isReviewTaskMissingError(error)) {
+        handleStaleTask()
+        return
+      }
       toast.error(t('review.rejectFailed'), resolveReviewActionErrorDescription(error))
     },
   })
@@ -170,6 +196,28 @@ function ReviewDetailScreen({
     return null
   }
 
+  // TanStack Query keeps the last successful payload when a refetch fails, so
+  // a missing-task error must win over stale cached data: the task was removed
+  // (withdraw/republish) after this page loaded.
+  if (isReviewTaskMissingError(reviewError)) {
+    return (
+      <div className="space-y-6 max-w-3xl animate-fade-up">
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-bold font-heading mb-2">{t('review.staleTaskTitle')}</h2>
+          <p className="text-muted-foreground">{t('review.staleTaskDescription')}</p>
+        </div>
+        <div className="flex justify-center gap-3">
+          <Button variant="outline" onClick={() => void refetchReview()}>
+            {t('review.refresh')}
+          </Button>
+          <Button onClick={() => navigate({ to: backTo })}>
+            {t('review.backToList')}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   if (!review) {
     return (
       <div className="text-center py-20 animate-fade-up">
@@ -199,7 +247,13 @@ function ReviewDetailScreen({
   const activeReviewVersion = reviewSkillDetail?.versions?.find(
     (version) => version.version === reviewSkillDetail.activeVersion
   )
-  const isApprovalBlockedByScanning = activeReviewVersion?.status === 'SCANNING'
+  const activeReviewVersionStatus = activeReviewVersion?.status
+  // The backend rejects approval while the review-bound skill version is
+  // scanning or has failed scanning; mirror that contract here so the action is
+  // never presented as available when it cannot succeed. This is Skill-only:
+  // suite subjects have no scan state here, so suite approval is unaffected.
+  const isApprovalBlockedByScanState =
+    activeReviewVersionStatus === 'SCANNING' || activeReviewVersionStatus === 'SCAN_FAILED'
 
   return (
     <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 animate-fade-up">
@@ -309,12 +363,12 @@ function ReviewDetailScreen({
           <div className="flex gap-3">
             <Button
               onClick={() => {
-                if (isApprovalBlockedByScanning) {
+                if (isApprovalBlockedByScanState) {
                   return
                 }
                 setApproveDialog(true)
               }}
-              disabled={approveMutation.isPending || rejectMutation.isPending || isApprovalBlockedByScanning}
+              disabled={approveMutation.isPending || rejectMutation.isPending || isApprovalBlockedByScanState}
             >
               {t('review.approve')}
             </Button>
@@ -352,8 +406,11 @@ function ReviewDetailScreen({
             )}
           </div>
 
-          {isApprovalBlockedByScanning && (
+          {activeReviewVersionStatus === 'SCANNING' && (
             <p className="text-sm text-muted-foreground">{t('review.approveDisabledScanning')}</p>
+          )}
+          {activeReviewVersionStatus === 'SCAN_FAILED' && (
+            <p className="text-sm text-muted-foreground">{t('review.approveDisabledScanFailed')}</p>
           )}
 
           {showRejectForm && !comment.trim() && (

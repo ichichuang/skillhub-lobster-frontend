@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 // The use-review-detail module exports thin useQuery / useMutation wrappers
 // (useReviewDetail, useReviewSkillDetail, useApproveReview, useRejectReview).
@@ -7,6 +7,27 @@ import { describe, expect, it } from 'vitest'
 //
 // Verifying that each public hook is exported and is a callable function serves as
 // a smoke check that the module and its dependency graph resolve correctly.
+
+const useQueryOptionsCapture: Array<Record<string, unknown>> = []
+
+vi.mock('@tanstack/react-query', () => ({
+  useQuery: (options: Record<string, unknown>) => {
+    useQueryOptionsCapture.push(options)
+    return { data: undefined, isLoading: false, error: null }
+  },
+  useMutation: (options: Record<string, unknown>) => options,
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}))
+
+vi.mock('@/api/client', () => ({
+  reviewApi: {
+    get: vi.fn(),
+    getSkillDetail: vi.fn(),
+    listAttempts: vi.fn(),
+    approve: vi.fn(),
+    reject: vi.fn(),
+  },
+}))
 
 describe('use-review-detail exports', () => {
   it('exports useReviewDetail', async () => {
@@ -37,5 +58,21 @@ describe('use-review-detail exports', () => {
     const mod = await import('./use-review-detail')
     expect(mod.useRejectReview).toBeDefined()
     expect(typeof mod.useRejectReview).toBe('function')
+  })
+
+  it('owns review task errors in the page: detail, skill-detail, and attempts queries skip the global error toast', async () => {
+    useQueryOptionsCapture.length = 0
+    const mod = await import('./use-review-detail')
+
+    mod.useReviewDetail(13)
+    mod.useReviewSkillDetail(13, true)
+    mod.useReviewAttempts(13)
+
+    expect(useQueryOptionsCapture).toHaveLength(3)
+    for (const options of useQueryOptionsCapture) {
+      expect(options.meta).toMatchObject({ skipGlobalErrorHandler: true })
+    }
+    // The skill-detail query stays gated by its enabled argument.
+    expect(useQueryOptionsCapture[1]?.enabled).toBe(true)
   })
 })

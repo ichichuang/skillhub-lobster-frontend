@@ -1791,6 +1791,10 @@
     "close": "关闭"
   },
   "review": {
+    "staleTaskTitle": "审核任务已失效",
+    "staleTaskDescription": "该审核任务已失效或不存在，可能已被撤回或替换。请刷新或返回列表查看最新状态。",
+    "refresh": "刷新",
+    "approveDisabledScanFailed": "该版本安全扫描未通过，暂不能通过审核。可拒绝并要求提交者修复后重新发布。",
     "detail": "审核详情",
     "id": "审核 ID",
     "backToList": "返回列表",
