@@ -3,11 +3,14 @@ package com.iflytek.skillhub.controller.portal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iflytek.skillhub.dto.ApiResponseFactory;
 import com.iflytek.skillhub.dto.NotificationResponse;
 import com.iflytek.skillhub.dto.PageResponse;
+import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.notification.domain.Notification;
 import com.iflytek.skillhub.notification.domain.NotificationCategory;
 import com.iflytek.skillhub.notification.service.NotificationService;
@@ -16,6 +19,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -24,6 +28,9 @@ import org.springframework.context.support.StaticMessageSource;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
@@ -55,17 +62,17 @@ class NotificationControllerTest {
                 "REVIEW",
                 99L
         );
-        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW), org.mockito.ArgumentMatchers.any(Pageable.class)))
+        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(java.util.List.of(notification)));
 
-        PageResponse<NotificationResponse> page = controller.list("user-1", "REVIEW", 0, 20).data();
+        PageResponse<NotificationResponse> page = controller.list("user-1", "REVIEW", null, 0, 20).data();
 
         assertThat(page.items()).singleElement().satisfies(item -> {
             assertThat(item.targetType()).isEqualTo("REVIEW");
             assertThat(item.targetId()).isEqualTo(99L);
             assertThat(item.targetRoute()).isEqualTo("/dashboard/reviews/99");
         });
-        verify(notificationService).list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW), org.mockito.ArgumentMatchers.any(Pageable.class));
+        verify(notificationService).list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class));
     }
 
     @Test
@@ -78,10 +85,10 @@ class NotificationControllerTest {
                 "PROFILE_REVIEW",
                 77L
         );
-        when(notificationService.list(org.mockito.ArgumentMatchers.eq("admin-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW), org.mockito.ArgumentMatchers.any(Pageable.class)))
+        when(notificationService.list(org.mockito.ArgumentMatchers.eq("admin-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(java.util.List.of(notification)));
 
-        PageResponse<NotificationResponse> page = controller.list("admin-1", "REVIEW", 0, 20).data();
+        PageResponse<NotificationResponse> page = controller.list("admin-1", "REVIEW", null, 0, 20).data();
 
         assertThat(page.items()).singleElement().satisfies(item -> {
             assertThat(item.targetType()).isEqualTo("PROFILE_REVIEW");
@@ -100,10 +107,10 @@ class NotificationControllerTest {
                 "SKILL",
                 101L
         );
-        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class)))
+        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(java.util.List.of(notification)));
 
-        PageResponse<NotificationResponse> page = controller.list("user-1", null, 0, 20).data();
+        PageResponse<NotificationResponse> page = controller.list("user-1", null, null, 0, 20).data();
 
         assertThat(page.items()).singleElement().satisfies(item -> {
             assertThat(item.targetType()).isEqualTo("SKILL");
@@ -129,10 +136,10 @@ class NotificationControllerTest {
                 "PROMOTION",
                 33L
         );
-        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION), org.mockito.ArgumentMatchers.any(Pageable.class)))
+        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(java.util.List.of(notification)));
 
-        PageResponse<NotificationResponse> page = controller.list("user-1", "PROMOTION", 0, 20).data();
+        PageResponse<NotificationResponse> page = controller.list("user-1", "PROMOTION", null, 0, 20).data();
 
         assertThat(page.items()).singleElement().satisfies(item -> {
             assertThat(item.targetType()).isEqualTo("PROMOTION");
@@ -151,16 +158,165 @@ class NotificationControllerTest {
                 "REPORT",
                 44L
         );
-        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REPORT), org.mockito.ArgumentMatchers.any(Pageable.class)))
+        when(notificationService.list(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.eq(NotificationCategory.REPORT), org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.any(Pageable.class)))
                 .thenReturn(new PageImpl<>(java.util.List.of(notification)));
 
-        PageResponse<NotificationResponse> page = controller.list("user-1", "REPORT", 0, 20).data();
+        PageResponse<NotificationResponse> page = controller.list("user-1", "REPORT", null, 0, 20).data();
 
         assertThat(page.items()).singleElement().satisfies(item -> {
             assertThat(item.targetType()).isEqualTo("REPORT");
             assertThat(item.targetId()).isEqualTo(44L);
             assertThat(item.targetRoute()).isEqualTo("/dashboard/reports");
         });
+    }
+
+    @Nested
+    class ExcludeCategoryContract {
+
+        @Test
+        void list_withoutExcludeCategory_forwardsNullExclusionAndKeepsCategoryFilter() {
+            when(notificationService.list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(java.util.List.of()));
+
+            controller.list("user-1", "REVIEW", null, 0, 20);
+
+            verify(notificationService).list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.any(Pageable.class));
+        }
+
+        @Test
+        void list_withExcludeCategory_forwardsParsedExclusion() {
+            when(notificationService.list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION),
+                    org.mockito.ArgumentMatchers.any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(java.util.List.of()));
+
+            controller.list("user-1", null, "PROMOTION", 0, 20);
+
+            verify(notificationService).list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION),
+                    org.mockito.ArgumentMatchers.any(Pageable.class));
+        }
+
+        @Test
+        void list_withCategoryAndExcludeCategory_forwardsBoth() {
+            when(notificationService.list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION),
+                    org.mockito.ArgumentMatchers.any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(java.util.List.of()));
+
+            controller.list("user-1", "REVIEW", "PROMOTION", 0, 20);
+
+            verify(notificationService).list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.REVIEW),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION),
+                    org.mockito.ArgumentMatchers.any(Pageable.class));
+        }
+
+        @Test
+        void list_withMalformedExcludeCategory_rejectsLikeCategoryParameter() {
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                            () -> controller.list("user-1", null, "NOT_A_CATEGORY", 0, 20))
+                    .isInstanceOf(DomainBadRequestException.class);
+        }
+
+        @Test
+        void unreadCount_withoutExcludeCategory_forwardsNullExclusion() {
+            when(notificationService.getUnreadCount(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.isNull()))
+                    .thenReturn(3L);
+
+            controller.unreadCount("user-1", null);
+
+            verify(notificationService).getUnreadCount(org.mockito.ArgumentMatchers.eq("user-1"), org.mockito.ArgumentMatchers.isNull());
+        }
+
+        @Test
+        void unreadCount_withExcludeCategory_forwardsParsedExclusion() {
+            when(notificationService.getUnreadCount(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION)))
+                    .thenReturn(2L);
+
+            var result = controller.unreadCount("user-1", "PROMOTION");
+
+            assertThat(result.data()).containsEntry("count", 2L);
+            verify(notificationService).getUnreadCount(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION));
+        }
+
+        @Test
+        void unreadCount_withMalformedExcludeCategory_rejectsLikeCategoryParameter() {
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                            () -> controller.unreadCount("user-1", "NOT_A_CATEGORY"))
+                    .isInstanceOf(DomainBadRequestException.class);
+        }
+    }
+
+    @Nested
+    class DualSurfaceMapping {
+
+        @Test
+        void excludeCategory_isAvailableOnBothWebAndV1Surfaces() {
+            RequestMapping mapping = NotificationController.class.getAnnotation(RequestMapping.class);
+
+            assertThat(mapping).isNotNull();
+            assertThat(mapping.value()).containsExactlyInAnyOrder("/api/v1/notifications", "/api/web/notifications");
+        }
+
+        @Test
+        void excludeCategory_bindsThroughWebSurface() throws Exception {
+            MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+            when(notificationService.list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION),
+                    org.mockito.ArgumentMatchers.any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(java.util.List.of()));
+
+            mockMvc.perform(get("/api/web/notifications")
+                            .requestAttr("userId", "user-1")
+                            .param("excludeCategory", "PROMOTION"))
+                    .andExpect(status().isOk());
+
+            verify(notificationService).list(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.isNull(),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION),
+                    org.mockito.ArgumentMatchers.any(Pageable.class));
+        }
+
+        @Test
+        void excludeCategory_bindsThroughV1Surface() throws Exception {
+            MockMvc mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+            when(notificationService.getUnreadCount(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION)))
+                    .thenReturn(5L);
+
+            mockMvc.perform(get("/api/v1/notifications/unread-count")
+                            .requestAttr("userId", "user-1")
+                            .param("excludeCategory", "PROMOTION"))
+                    .andExpect(status().isOk());
+
+            verify(notificationService).getUnreadCount(
+                    org.mockito.ArgumentMatchers.eq("user-1"),
+                    org.mockito.ArgumentMatchers.eq(NotificationCategory.PROMOTION));
+        }
     }
 
     private Notification notification(Long id,

@@ -142,4 +142,88 @@ class NotificationServiceTest {
         service.list("user-1", NotificationCategory.REVIEW, PageRequest.of(0, 20));
         verify(notificationRepository).findByRecipientIdAndCategory(eq("user-1"), eq(NotificationCategory.REVIEW), any());
     }
+
+    @Test
+    void list_withoutExclusion_shouldUseExistingRepositoryPath() {
+        Notification n = new Notification("user-1", NotificationCategory.REVIEW,
+                "review.approved", "title", null, "skill", 1L, Instant.now(clock));
+        Page<Notification> page = new PageImpl<>(List.of(n));
+        when(notificationRepository.findByRecipientId(eq("user-1"), any())).thenReturn(page);
+
+        Page<Notification> result = service.list("user-1", null, null, PageRequest.of(0, 20));
+
+        assertEquals(1, result.getTotalElements());
+        verify(notificationRepository).findByRecipientId(eq("user-1"), any());
+        verifyNoMoreInteractions(notificationRepository);
+    }
+
+    @Test
+    void list_withExclusionOnly_shouldUseExcludedRepositoryPath() {
+        Page<Notification> page = new PageImpl<>(List.of());
+        when(notificationRepository.findByRecipientIdAndCategoryNot(
+                eq("user-1"), eq(NotificationCategory.PROMOTION), any()))
+                .thenReturn(page);
+
+        service.list("user-1", null, NotificationCategory.PROMOTION, PageRequest.of(0, 20));
+
+        verify(notificationRepository).findByRecipientIdAndCategoryNot(
+                eq("user-1"), eq(NotificationCategory.PROMOTION), any());
+        verifyNoMoreInteractions(notificationRepository);
+    }
+
+    @Test
+    void list_withCategoryAndDifferentExclusion_shouldFilterBothInRepository() {
+        Page<Notification> page = new PageImpl<>(List.of());
+        when(notificationRepository.findByRecipientIdAndCategoryAndCategoryNot(
+                eq("user-1"), eq(NotificationCategory.REVIEW), eq(NotificationCategory.PROMOTION), any()))
+                .thenReturn(page);
+
+        service.list("user-1", NotificationCategory.REVIEW, NotificationCategory.PROMOTION, PageRequest.of(0, 20));
+
+        verify(notificationRepository).findByRecipientIdAndCategoryAndCategoryNot(
+                eq("user-1"), eq(NotificationCategory.REVIEW), eq(NotificationCategory.PROMOTION), any());
+        verifyNoMoreInteractions(notificationRepository);
+    }
+
+    @Test
+    void list_withCategoryEqualToExclusion_shouldDelegateCombinedQueryAndReturnEmpty() {
+        when(notificationRepository.findByRecipientIdAndCategoryAndCategoryNot(
+                eq("user-1"), eq(NotificationCategory.PROMOTION), eq(NotificationCategory.PROMOTION), any()))
+                .thenReturn(Page.empty());
+
+        Page<Notification> result = service.list(
+                "user-1", NotificationCategory.PROMOTION, NotificationCategory.PROMOTION, PageRequest.of(0, 20));
+
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.getTotalElements());
+        verify(notificationRepository).findByRecipientIdAndCategoryAndCategoryNot(
+                eq("user-1"), eq(NotificationCategory.PROMOTION), eq(NotificationCategory.PROMOTION), any());
+        verifyNoMoreInteractions(notificationRepository);
+    }
+
+    @Test
+    void getUnreadCount_withExclusion_shouldUseExcludedCountQuery() {
+        when(notificationRepository.countByRecipientIdAndStatusAndCategoryNot(
+                "user-1", NotificationStatus.UNREAD, NotificationCategory.PROMOTION))
+                .thenReturn(4L);
+
+        long count = service.getUnreadCount("user-1", NotificationCategory.PROMOTION);
+
+        assertEquals(4L, count);
+        verify(notificationRepository).countByRecipientIdAndStatusAndCategoryNot(
+                "user-1", NotificationStatus.UNREAD, NotificationCategory.PROMOTION);
+        verifyNoMoreInteractions(notificationRepository);
+    }
+
+    @Test
+    void getUnreadCount_withoutExclusion_shouldUseExistingCountQuery() {
+        when(notificationRepository.countByRecipientIdAndStatus("user-1", NotificationStatus.UNREAD))
+                .thenReturn(6L);
+
+        long count = service.getUnreadCount("user-1", null);
+
+        assertEquals(6L, count);
+        verify(notificationRepository).countByRecipientIdAndStatus("user-1", NotificationStatus.UNREAD);
+        verifyNoMoreInteractions(notificationRepository);
+    }
 }

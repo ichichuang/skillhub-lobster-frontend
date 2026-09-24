@@ -16,7 +16,13 @@ public interface NotificationJpaRepository extends JpaRepository<Notification, L
 
     Page<Notification> findByRecipientIdAndCategoryOrderByCreatedAtDesc(String recipientId, NotificationCategory category, Pageable pageable);
 
+    Page<Notification> findByRecipientIdAndCategoryNotOrderByCreatedAtDesc(String recipientId, NotificationCategory excludedCategory, Pageable pageable);
+
+    Page<Notification> findByRecipientIdAndCategoryAndCategoryNotOrderByCreatedAtDesc(String recipientId, NotificationCategory category, NotificationCategory excludedCategory, Pageable pageable);
+
     long countByRecipientIdAndStatus(String recipientId, NotificationStatus status);
+
+    long countByRecipientIdAndStatusAndCategoryNot(String recipientId, NotificationStatus status, NotificationCategory excludedCategory);
 
     @Override
     default Page<Notification> findByRecipientId(String recipientId, Pageable pageable) {
@@ -26,6 +32,16 @@ public interface NotificationJpaRepository extends JpaRepository<Notification, L
     @Override
     default Page<Notification> findByRecipientIdAndCategory(String recipientId, NotificationCategory category, Pageable pageable) {
         return findByRecipientIdAndCategoryOrderByCreatedAtDesc(recipientId, category, pageable);
+    }
+
+    @Override
+    default Page<Notification> findByRecipientIdAndCategoryNot(String recipientId, NotificationCategory excludedCategory, Pageable pageable) {
+        return findByRecipientIdAndCategoryNotOrderByCreatedAtDesc(recipientId, excludedCategory, pageable);
+    }
+
+    @Override
+    default Page<Notification> findByRecipientIdAndCategoryAndCategoryNot(String recipientId, NotificationCategory category, NotificationCategory excludedCategory, Pageable pageable) {
+        return findByRecipientIdAndCategoryAndCategoryNotOrderByCreatedAtDesc(recipientId, category, excludedCategory, pageable);
     }
 
     @Modifying

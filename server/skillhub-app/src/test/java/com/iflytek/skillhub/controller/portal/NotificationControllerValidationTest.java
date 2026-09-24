@@ -22,14 +22,15 @@ class NotificationControllerValidationTest {
                 "list",
                 String.class,
                 String.class,
+                String.class,
                 int.class,
                 int.class
         );
         Parameter[] parameters = method.getParameters();
 
-        assertThat(parameters[2].getAnnotation(Min.class)).isNotNull();
         assertThat(parameters[3].getAnnotation(Min.class)).isNotNull();
-        assertThat(parameters[3].getAnnotation(Max.class)).isNotNull();
-        assertThat(parameters[3].getAnnotation(Max.class).value()).isEqualTo(100);
+        assertThat(parameters[4].getAnnotation(Min.class)).isNotNull();
+        assertThat(parameters[4].getAnnotation(Max.class)).isNotNull();
+        assertThat(parameters[4].getAnnotation(Max.class).value()).isEqualTo(100);
     }
 }

@@ -41,14 +41,44 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public Page<Notification> list(String recipientId, NotificationCategory category, Pageable pageable) {
+        return list(recipientId, category, null, pageable);
+    }
+
+    /**
+     * Optional read-side exclusion: {@code excludedCategory} filters the category out at the
+     * repository level before pagination/counting. Callers that omit it keep official behavior.
+     */
+    @Transactional(readOnly = true)
+    public Page<Notification> list(String recipientId, NotificationCategory category,
+                                   NotificationCategory excludedCategory, Pageable pageable) {
+        if (category != null && excludedCategory != null) {
+            return notificationRepository.findByRecipientIdAndCategoryAndCategoryNot(
+                    recipientId, category, excludedCategory, pageable);
+        }
         if (category != null) {
             return notificationRepository.findByRecipientIdAndCategory(recipientId, category, pageable);
+        }
+        if (excludedCategory != null) {
+            return notificationRepository.findByRecipientIdAndCategoryNot(recipientId, excludedCategory, pageable);
         }
         return notificationRepository.findByRecipientId(recipientId, pageable);
     }
 
     @Transactional(readOnly = true)
     public long getUnreadCount(String recipientId) {
+        return getUnreadCount(recipientId, null);
+    }
+
+    /**
+     * Optional read-side exclusion for the unread badge: the excluded category is filtered
+     * inside the count query itself, never by post-hoc subtraction.
+     */
+    @Transactional(readOnly = true)
+    public long getUnreadCount(String recipientId, NotificationCategory excludedCategory) {
+        if (excludedCategory != null) {
+            return notificationRepository.countByRecipientIdAndStatusAndCategoryNot(
+                    recipientId, NotificationStatus.UNREAD, excludedCategory);
+        }
         return notificationRepository.countByRecipientIdAndStatus(recipientId, NotificationStatus.UNREAD);
     }
 

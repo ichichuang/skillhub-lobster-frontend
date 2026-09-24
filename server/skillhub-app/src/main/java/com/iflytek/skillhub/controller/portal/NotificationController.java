@@ -38,18 +38,21 @@ public class NotificationController extends BaseApiController {
     public ApiResponse<PageResponse<NotificationResponse>> list(
             @RequestAttribute("userId") String userId,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String excludeCategory,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         NotificationCategory cat = parseCategory(category);
+        NotificationCategory excludedCat = parseCategory(excludeCategory);
         Page<Notification> result = notificationService.list(
-                userId, cat, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+                userId, cat, excludedCat, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
         Page<NotificationResponse> mapped = result.map(this::toResponse);
         return ok("response.success.read", PageResponse.from(mapped));
     }
 
     @GetMapping("/unread-count")
-    public ApiResponse<Map<String, Long>> unreadCount(@RequestAttribute("userId") String userId) {
-        long count = notificationService.getUnreadCount(userId);
+    public ApiResponse<Map<String, Long>> unreadCount(@RequestAttribute("userId") String userId,
+                                                      @RequestParam(required = false) String excludeCategory) {
+        long count = notificationService.getUnreadCount(userId, parseCategory(excludeCategory));
         return ok("response.success.read", Map.of("count", count));
     }
 
