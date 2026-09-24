@@ -47,4 +47,22 @@ describe('resolveNotificationDisplay', () => {
     expect(display.title).toBe('Backend supplied title')
     expect(display.description).toBe('')
   })
+
+  it.each(['PROMOTION_SUBMITTED', 'PROMOTION_APPROVED', 'PROMOTION_REJECTED'] as const)(
+    'does not synthesize Lobster promotion product labels for %s',
+    (eventType) => {
+      const display = resolveNotificationDisplay({
+        category: 'PROMOTION',
+        eventType,
+        title: 'Backend supplied title',
+        bodyJson: JSON.stringify({ skillName: 'Calendar', version: '1.0.0' }),
+        status: 'UNREAD',
+        createdAt: '2026-03-20T00:00:00Z',
+        id: 3,
+      }, 'zh-CN')
+
+      expect(display.title).not.toContain('推广')
+      expect(display.description).not.toContain('推广')
+    },
+  )
 })

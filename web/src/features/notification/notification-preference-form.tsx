@@ -3,13 +3,15 @@ import type { NotificationPreferenceItem } from '@/api/types'
 import { useNotificationPreferences, useUpdateNotificationPreferences } from './use-notification-preferences'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 
-const CATEGORIES = ['PUBLISH', 'REVIEW', 'PROMOTION', 'REPORT'] as const
+// Lobster product rule: Promotion (提升) has no visible preference control. The hidden
+// stored PROMOTION preference is preserved transparently — the save payload always
+// round-trips the server-returned values for every category, including hidden ones.
+const CATEGORIES = ['PUBLISH', 'REVIEW', 'REPORT'] as const
 type Category = (typeof CATEGORIES)[number]
 
 const CATEGORY_KEYS: Record<Category, { label: string; desc: string }> = {
   PUBLISH: { label: 'notification.preferences.publish', desc: 'notification.preferences.publishDesc' },
   REVIEW: { label: 'notification.preferences.review', desc: 'notification.preferences.reviewDesc' },
-  PROMOTION: { label: 'notification.preferences.promotion', desc: 'notification.preferences.promotionDesc' },
   REPORT: { label: 'notification.preferences.report', desc: 'notification.preferences.reportDesc' },
 }
 

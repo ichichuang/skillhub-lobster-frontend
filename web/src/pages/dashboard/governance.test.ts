@@ -6,8 +6,10 @@ const mocks = vi.hoisted(() => ({
   hasRole: vi.fn(),
   summary: vi.fn(),
   inbox: vi.fn(),
+  inboxArgs: [] as unknown[][],
   activity: vi.fn(),
   notifications: vi.fn(),
+  notificationArgs: [] as unknown[][],
   rebuildSearchIndex: vi.fn(),
   markRead: vi.fn(),
   totalPages: vi.fn(),
@@ -94,8 +96,14 @@ vi.mock('@/features/governance/governance-pagination', () => ({
 vi.mock('@/features/governance/use-governance', () => ({
   GOVERNANCE_PAGE_SIZE: 20,
   useGovernanceActivity: () => mocks.activity(),
-  useGovernanceInbox: () => mocks.inbox(),
-  useGovernanceNotifications: () => mocks.notifications(),
+  useGovernanceInbox: (...args: unknown[]) => {
+    mocks.inboxArgs.push(args)
+    return mocks.inbox()
+  },
+  useGovernanceNotifications: (...args: unknown[]) => {
+    mocks.notificationArgs.push(args)
+    return mocks.notifications()
+  },
   useRebuildSearchIndex: () => mocks.rebuildSearchIndex(),
   useGovernanceSummary: () => mocks.summary(),
   useMarkGovernanceNotificationRead: () => mocks.markRead(),
@@ -115,6 +123,8 @@ describe('GovernancePage', () => {
       },
       isLoading: false,
     })
+    mocks.inboxArgs.length = 0
+    mocks.notificationArgs.length = 0
     mocks.inbox.mockReturnValue({
       data: {
         items: [{ id: 'inbox-1' }, { id: 'inbox-2' }],
@@ -161,8 +171,6 @@ describe('GovernancePage', () => {
     expect(html).toContain('governance.subtitle')
     expect(html).toContain('governance.pendingReviews')
     expect(html).toContain('11')
-    expect(html).toContain('governance.pendingPromotions')
-    expect(html).toContain('22')
     expect(html).toContain('governance.pendingReports')
     expect(html).toContain('33')
     expect(html).toContain('governance.unreadNotifications')
@@ -173,6 +181,23 @@ describe('GovernancePage', () => {
     expect(html).toContain('governance-inbox:2')
     expect(html).toContain('governance-notifications:1')
     expect(html).toContain('governance-activity:3')
+  })
+
+  it('excludes promotion from every governance surface it renders or requests', () => {
+    const html = renderToStaticMarkup(createElement(GovernancePage))
+
+    expect(html).not.toContain('governance.pendingPromotions')
+    expect(html).not.toContain('governance.tabPromotion')
+    expect(html.match(/PROMOTION|promotion/g)).toBeNull()
+
+    expect(mocks.inboxArgs.length).toBeGreaterThan(0)
+    for (const args of mocks.inboxArgs) {
+      expect(args[3]).toBe('PROMOTION')
+    }
+    expect(mocks.notificationArgs.length).toBeGreaterThan(0)
+    for (const args of mocks.notificationArgs) {
+      expect(args[2]).toBe('PROMOTION')
+    }
   })
 
   it('shows pagination only when a section has more than one page', () => {

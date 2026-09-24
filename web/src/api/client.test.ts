@@ -41,7 +41,9 @@ import {
   getAppBaseUrl,
   getDirectAuthRuntimeConfig,
   getSessionBootstrapRuntimeConfig,
+  governanceApi,
   namespaceApi,
+  notificationApi,
 } from './client'
 
 beforeEach(() => {
@@ -244,5 +246,124 @@ describe('getSessionBootstrapRuntimeConfig', () => {
     }
     const config = getSessionBootstrapRuntimeConfig()
     expect(config.enabled).toBe(false)
+  })
+})
+
+describe('governanceApi exclusion parameters', () => {
+  function stubGovernanceFetch() {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        code: 0,
+        msg: 'ok',
+        data: { items: [], total: 0, page: 0, size: 10 },
+        timestamp: '2026-09-24T00:00:00Z',
+        requestId: 'req-governance',
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('sends exactly one exclude=PROMOTION parameter on inbox requests', async () => {
+    const fetchMock = stubGovernanceFetch()
+
+    await governanceApi.getInbox({ type: 'REVIEW', exclude: 'PROMOTION', page: 0, size: 10 })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.pathname).toBe('/api/web/governance/inbox')
+    expect(url.searchParams.getAll('exclude')).toEqual(['PROMOTION'])
+    expect(url.searchParams.get('type')).toBe('REVIEW')
+    expect(url.searchParams.get('page')).toBe('0')
+    expect(url.searchParams.get('size')).toBe('10')
+  })
+
+  it('omits the exclude parameter when no exclusion is requested', async () => {
+    const fetchMock = stubGovernanceFetch()
+
+    await governanceApi.getInbox({ page: 1, size: 10 })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.searchParams.has('exclude')).toBe(false)
+    expect(url.searchParams.has('type')).toBe(false)
+  })
+
+  it('sends exactly one excludeCategory=PROMOTION parameter on governance notification requests', async () => {
+    const fetchMock = stubGovernanceFetch()
+
+    await governanceApi.getNotifications({ excludeCategory: 'PROMOTION', page: 2, size: 10 })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.pathname).toBe('/api/web/governance/notifications')
+    expect(url.searchParams.getAll('excludeCategory')).toEqual(['PROMOTION'])
+    expect(url.searchParams.get('page')).toBe('2')
+    expect(url.searchParams.get('size')).toBe('10')
+  })
+
+  it('omits the excludeCategory parameter when no exclusion is requested', async () => {
+    const fetchMock = stubGovernanceFetch()
+
+    await governanceApi.getNotifications({ page: 0, size: 10 })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.searchParams.has('excludeCategory')).toBe(false)
+  })
+})
+
+describe('notificationApi Lobster exclusion wiring', () => {
+  function stubNotificationFetch(data: unknown) {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        code: 0,
+        msg: 'ok',
+        data,
+        timestamp: '2026-09-24T00:00:00Z',
+        requestId: 'req-notification',
+      }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('sends exactly one excludeCategory=PROMOTION parameter on list requests', async () => {
+    const fetchMock = stubNotificationFetch({ items: [], total: 0, page: 0, size: 20 })
+
+    await notificationApi.list({ page: 0, size: 5, excludeCategory: 'PROMOTION' })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.pathname).toBe('/api/web/notifications')
+    expect(url.searchParams.getAll('excludeCategory')).toEqual(['PROMOTION'])
+    expect(url.searchParams.get('page')).toBe('0')
+    expect(url.searchParams.get('size')).toBe('5')
+  })
+
+  it('sends exactly one excludeCategory=PROMOTION parameter on unread-count requests', async () => {
+    const fetchMock = stubNotificationFetch({ count: 4 })
+
+    await notificationApi.getUnreadCount({ excludeCategory: 'PROMOTION' })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.pathname).toBe('/api/web/notifications/unread-count')
+    expect(url.searchParams.getAll('excludeCategory')).toEqual(['PROMOTION'])
+  })
+
+  it('combines the exact category filter with the exclusion without duplicating it', async () => {
+    const fetchMock = stubNotificationFetch({ items: [], total: 0, page: 0, size: 20 })
+
+    await notificationApi.list({ page: 1, size: 20, category: 'REVIEW', excludeCategory: 'PROMOTION' })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.searchParams.getAll('excludeCategory')).toEqual(['PROMOTION'])
+    expect(url.searchParams.getAll('category')).toEqual(['REVIEW'])
+  })
+
+  it('omits the exclusion parameter when no exclusion is requested', async () => {
+    const fetchMock = stubNotificationFetch({ items: [], total: 0, page: 0, size: 20 })
+
+    await notificationApi.list({ page: 0, size: 20 })
+
+    const url = new URL(fetchMock.mock.calls[0]?.[0] as string, 'https://api.example.com')
+    expect(url.searchParams.has('excludeCategory')).toBe(false)
   })
 })

@@ -49,21 +49,9 @@ export function resolveNotificationDisplay(item: NotificationItem, language: str
         title: zh ? '技能审核驳回' : 'Review rejected',
         description: skillName ? (zh ? `${skillName}${versionSuffix} 审核未通过。` : `${skillName}${versionSuffix} was rejected.`) : '',
       }
-    case 'PROMOTION_SUBMITTED':
-      return {
-        title: zh ? '技能推广提交' : 'Promotion submitted',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 已提交推广。` : `${skillName}${versionSuffix} was submitted for promotion.`) : '',
-      }
-    case 'PROMOTION_APPROVED':
-      return {
-        title: zh ? '技能推广通过' : 'Promotion approved',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 推广已通过。` : `${skillName}${versionSuffix} promotion was approved.`) : '',
-      }
-    case 'PROMOTION_REJECTED':
-      return {
-        title: zh ? '技能推广驳回' : 'Promotion rejected',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 推广未通过。` : `${skillName}${versionSuffix} promotion was rejected.`) : '',
-      }
+    // Promotion (提升) event types intentionally have no Lobster display mapping:
+    // promotion is not an active notification surface, and stale cached promotion
+    // rows are dropped before rendering (see notification-page.ts).
     case 'REPORT_SUBMITTED':
       return {
         title: zh ? '技能举报提交' : 'Report submitted',

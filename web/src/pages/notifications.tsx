@@ -16,16 +16,17 @@ import { formatRelativeTime } from '@/shared/lib/format-relative-time'
 
 const PAGE_SIZE = 20
 
-type Category = 'ALL' | 'PUBLISH' | 'REVIEW' | 'PROMOTION' | 'REPORT'
+// Lobster product rule: no Promotion (提升) category tab. The ALL tab and every
+// selectable filter still request the server-excluded list (excludeCategory=PROMOTION).
+type Category = 'ALL' | 'PUBLISH' | 'REVIEW' | 'REPORT'
 
-const CATEGORIES: Category[] = ['ALL', 'PUBLISH', 'REVIEW', 'PROMOTION', 'REPORT']
+const CATEGORIES: Category[] = ['ALL', 'PUBLISH', 'REVIEW', 'REPORT']
 
 function getCategoryKey(cat: Category): string {
   switch (cat) {
     case 'ALL': return 'notification.all'
     case 'PUBLISH': return 'notification.publish'
     case 'REVIEW': return 'notification.review'
-    case 'PROMOTION': return 'notification.promotion'
     case 'REPORT': return 'notification.report'
   }
 }

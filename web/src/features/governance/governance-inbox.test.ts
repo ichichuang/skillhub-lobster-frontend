@@ -93,25 +93,36 @@ describe('governance-inbox module', () => {
     expect(navigateMock).toHaveBeenCalledWith({ to: '/dashboard/reviews/42' })
   })
 
-  it('routes promotion, report, and namespace items to the expected destinations', () => {
+  it('routes report and namespace items to the expected destinations', () => {
     renderToStaticMarkup(
       createElement(GovernanceInbox, {
         isLoading: false,
         items: [
-          createItem({ type: 'PROMOTION', id: 7, title: 'Promotion ready' }),
           createItem({ type: 'REPORT', id: 8, title: 'Report ready' }),
           createItem({ type: 'OTHER', id: 9, title: 'Space item', namespace: 'team-b', skillSlug: 'skill-x' }),
         ],
       })
     )
 
-    expect(buttonProps).toHaveLength(3)
+    expect(buttonProps).toHaveLength(2)
     buttonProps[0].onClick?.()
     buttonProps[1].onClick?.()
-    buttonProps[2].onClick?.()
 
-    expect(navigateMock).toHaveBeenNthCalledWith(1, { to: '/dashboard/promotions' })
-    expect(navigateMock).toHaveBeenNthCalledWith(2, { to: '/dashboard/reports' })
-    expect(navigateMock).toHaveBeenNthCalledWith(3, { to: '/space/team-b/skill-x' })
+    expect(navigateMock).toHaveBeenNthCalledWith(1, { to: '/dashboard/reports' })
+    expect(navigateMock).toHaveBeenNthCalledWith(2, { to: '/space/team-b/skill-x' })
+  })
+
+  it('never routes promotion items to the promotions screen on the governance surface', () => {
+    renderToStaticMarkup(
+      createElement(GovernanceInbox, {
+        isLoading: false,
+        items: [createItem({ type: 'PROMOTION', id: 7, title: 'Promotion ready' })],
+      })
+    )
+
+    expect(buttonProps).toHaveLength(1)
+    buttonProps[0].onClick?.()
+
+    expect(navigateMock).not.toHaveBeenCalledWith({ to: '/dashboard/promotions' })
   })
 })

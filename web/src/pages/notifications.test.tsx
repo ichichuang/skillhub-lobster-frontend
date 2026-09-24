@@ -126,4 +126,25 @@ describe('NotificationsPage', () => {
 
     expect(html).toContain('notification.empty')
   })
+
+  it('offers no Promotion category tab', () => {
+    const html = renderToStaticMarkup(<NotificationsPage />)
+
+    expect(html).not.toContain('notification.promotion')
+  })
+
+  it('keeps all non-Promotion category tabs', () => {
+    const html = renderToStaticMarkup(<NotificationsPage />)
+
+    expect(html).toContain('notification.all')
+    expect(html).toContain('notification.publish')
+    expect(html).toContain('notification.review')
+    expect(html).toContain('notification.report')
+  })
+
+  it('requests the notification list through the user-scoped hook parameters', () => {
+    renderToStaticMarkup(<NotificationsPage />)
+
+    expect(useNotificationListMock).toHaveBeenCalledWith('user-1', 0, 20, undefined)
+  })
 })

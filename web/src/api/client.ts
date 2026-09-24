@@ -1136,9 +1136,10 @@ export const governanceApi = {
     return fetchJson<GovernanceSummary>(`${WEB_API_PREFIX}/governance/summary`)
   },
 
-  async getInbox(params: { type?: string; page?: number; size?: number }) {
+  async getInbox(params: { type?: string; exclude?: string; page?: number; size?: number }) {
     const searchParams = new URLSearchParams()
     if (params.type) searchParams.set('type', params.type)
+    if (params.exclude) searchParams.set('exclude', params.exclude)
     searchParams.set('page', String(params.page ?? 0))
     searchParams.set('size', String(params.size ?? 20))
     return fetchJson<PagedResponse<GovernanceInboxItem>>(
@@ -1155,8 +1156,9 @@ export const governanceApi = {
     )
   },
 
-  async getNotifications(params: { page?: number; size?: number }): Promise<PagedResponse<GovernanceNotification>> {
+  async getNotifications(params: { excludeCategory?: string; page?: number; size?: number }): Promise<PagedResponse<GovernanceNotification>> {
     const searchParams = new URLSearchParams()
+    if (params.excludeCategory) searchParams.set('excludeCategory', params.excludeCategory)
     searchParams.set('page', String(params.page ?? 0))
     searchParams.set('size', String(params.size ?? 20))
     return fetchJson<PagedResponse<GovernanceNotification>>(`${WEB_API_PREFIX}/governance/notifications?${searchParams.toString()}`)
@@ -1610,18 +1612,24 @@ export const adminApi = {
 }
 
 export const notificationApi = {
-  async list(params: { page?: number; size?: number; category?: string }) {
+  async list(params: { page?: number; size?: number; category?: string; excludeCategory?: string }) {
     const searchParams = new URLSearchParams()
     if (params.page !== undefined) searchParams.set('page', String(params.page))
     if (params.size !== undefined) searchParams.set('size', String(params.size))
     if (params.category) searchParams.set('category', params.category)
+    if (params.excludeCategory) searchParams.set('excludeCategory', params.excludeCategory)
     return fetchJson<{ items: NotificationItem[]; total: number; page: number; size: number }>(
       `${WEB_API_PREFIX}/notifications?${searchParams.toString()}`,
     )
   },
 
-  async getUnreadCount() {
-    return fetchJson<NotificationUnreadCount>(`${WEB_API_PREFIX}/notifications/unread-count`)
+  async getUnreadCount(params: { excludeCategory?: string } = {}) {
+    const searchParams = new URLSearchParams()
+    if (params.excludeCategory) searchParams.set('excludeCategory', params.excludeCategory)
+    const query = searchParams.toString()
+    return fetchJson<NotificationUnreadCount>(
+      `${WEB_API_PREFIX}/notifications/unread-count${query ? `?${query}` : ''}`,
+    )
   },
 
   async markRead(id: number) {

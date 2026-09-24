@@ -4,6 +4,15 @@ import type { NotificationItem, PagedResponse } from '@/api/types'
 import { decrementUnreadCount, resetUnreadCount } from './notification-unread-cache'
 import { getNotificationQueryKeyScope } from './notification-session'
 
+/**
+ * Lobster product rule: Promotion (提升) is never exposed in active notification UI.
+ * Every global notification list/count request excludes it server-side (contract from
+ * commit 132d8740) so pagination, totals, and the unread badge stay server-correct.
+ */
+export const NOTIFICATION_EXCLUDED_CATEGORY = 'PROMOTION'
+
+const EXCLUSION_QUERY_KEY_PARTS = ['excludeCategory', NOTIFICATION_EXCLUDED_CATEGORY] as const
+
 export const NOTIFICATION_QUERY_KEYS = {
   list: (userId?: string | null, page?: number, size?: number, category?: string) => [
     ...getNotificationQueryKeyScope(userId),
@@ -11,8 +20,13 @@ export const NOTIFICATION_QUERY_KEYS = {
     page,
     size,
     ...(category ? [category] : []),
+    ...EXCLUSION_QUERY_KEY_PARTS,
   ] as const,
-  unreadCount: (userId?: string | null) => [...getNotificationQueryKeyScope(userId), 'unread-count'] as const,
+  unreadCount: (userId?: string | null) => [
+    ...getNotificationQueryKeyScope(userId),
+    'unread-count',
+    ...EXCLUSION_QUERY_KEY_PARTS,
+  ] as const,
 }
 
 const NOTIFICATION_POLL_INTERVAL_MS = 10_000
@@ -79,7 +93,7 @@ export function getNotificationListQueryOptions(
 ) {
   return {
     queryKey: NOTIFICATION_QUERY_KEYS.list(userId, page, size, category),
-    queryFn: () => notificationApi.list({ page, size, category }),
+    queryFn: () => notificationApi.list({ page, size, category, excludeCategory: NOTIFICATION_EXCLUDED_CATEGORY }),
     enabled: !!userId,
     staleTime: 0,
     refetchInterval: NOTIFICATION_POLL_INTERVAL_MS,
@@ -90,7 +104,7 @@ export function getNotificationListQueryOptions(
 export function getUnreadCountQueryOptions(userId?: string | null) {
   return {
     queryKey: NOTIFICATION_QUERY_KEYS.unreadCount(userId),
-    queryFn: () => notificationApi.getUnreadCount(),
+    queryFn: () => notificationApi.getUnreadCount({ excludeCategory: NOTIFICATION_EXCLUDED_CATEGORY }),
     enabled: !!userId,
     staleTime: 0,
     refetchInterval: NOTIFICATION_POLL_INTERVAL_MS,

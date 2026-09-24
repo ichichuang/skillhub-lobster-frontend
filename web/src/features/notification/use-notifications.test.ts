@@ -6,13 +6,19 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { NotificationItem, PagedResponse } from '@/api/types'
 
-const { getUnreadCount } = vi.hoisted(() => ({
+const { getUnreadCount, list, markRead, markAllRead } = vi.hoisted(() => ({
   getUnreadCount: vi.fn().mockResolvedValue({ count: 1 }),
+  list: vi.fn().mockResolvedValue({ items: [], total: 0, page: 0, size: 20 }),
+  markRead: vi.fn().mockResolvedValue(undefined),
+  markAllRead: vi.fn().mockResolvedValue({ count: 0 }),
 }))
 
 vi.mock('@/api/client', () => ({
   notificationApi: {
     getUnreadCount,
+    list,
+    markRead,
+    markAllRead,
   },
 }))
 
@@ -22,6 +28,8 @@ import {
   markAllCachedNotificationsRead,
   markCachedNotificationRead,
   removeCachedNotification,
+  useMarkAllRead,
+  useMarkRead,
   useUnreadCount,
 } from './use-notifications'
 
@@ -63,6 +71,26 @@ describe('useUnreadCount polling lifecycle', () => {
     queryClient.clear()
   })
 
+  it('keeps polling the excluded unread count on every cycle', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+    })
+    const { unmount } = renderHook(() => useUnreadCount('user-a'), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    await vi.waitFor(() => expect(getUnreadCount).toHaveBeenCalledTimes(1))
+    await act(() => vi.advanceTimersByTimeAsync(10_000))
+    await vi.waitFor(() => expect(getUnreadCount).toHaveBeenCalledTimes(2))
+
+    for (const call of getUnreadCount.mock.calls) {
+      expect(call[0]).toEqual({ excludeCategory: 'PROMOTION' })
+    }
+
+    unmount()
+    queryClient.clear()
+  })
+
   it('uses a separate cache key after the authenticated user changes', async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false, gcTime: Infinity } },
@@ -75,10 +103,10 @@ describe('useUnreadCount polling lifecycle', () => {
     await vi.waitFor(() => expect(getUnreadCount).toHaveBeenCalledTimes(1))
     rerender({ userId: 'user-b' })
     await vi.waitFor(() => expect(
-      queryClient.getQueryData(['notifications', 'user-b', 'unread-count']),
+      queryClient.getQueryData(['notifications', 'user-b', 'unread-count', 'excludeCategory', 'PROMOTION']),
     ).toEqual({ count: 1 }))
 
-    expect(queryClient.getQueryData(['notifications', 'user-a', 'unread-count'])).toEqual({ count: 1 })
+    expect(queryClient.getQueryData(['notifications', 'user-a', 'unread-count', 'excludeCategory', 'PROMOTION'])).toEqual({ count: 1 })
 
     unmount()
     queryClient.clear()
@@ -105,8 +133,8 @@ describe('useUnreadCount polling lifecycle', () => {
 })
 
 describe('notification mutation cache updates', () => {
-  const userAKey = ['notifications', 'user-a', 'list', 0, 20] as const
-  const userBKey = ['notifications', 'user-b', 'list', 0, 20] as const
+  const userAKey = ['notifications', 'user-a', 'list', 0, 20, 'excludeCategory', 'PROMOTION'] as const
+  const userBKey = ['notifications', 'user-b', 'list', 0, 20, 'excludeCategory', 'PROMOTION'] as const
   const page: PagedResponse<NotificationItem> = {
     items: [
       { id: 1, category: 'REVIEW' as const, eventType: 'A', title: 'A', status: 'UNREAD' as const, createdAt: '2026-09-03T00:00:00Z' },
@@ -144,17 +172,51 @@ describe('notification mutation cache updates', () => {
       total: 1,
     })
   })
+
+  it('invalidates the whole user notification scope so excluded list and count refetch', async () => {
+    const queryClient = new QueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useMarkRead('user-a'), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    result.current.mutate(11)
+    await vi.waitFor(() => expect(markRead).toHaveBeenCalledWith(11))
+    await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['notifications', 'user-a'] }))
+
+    invalidateSpy.mockRestore()
+    queryClient.clear()
+  })
+
+  it('invalidates the whole user notification scope after mark-all-read', async () => {
+    const queryClient = new QueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+    const { result } = renderHook(() => useMarkAllRead('user-a'), {
+      wrapper: createWrapper(queryClient),
+    })
+
+    result.current.mutate()
+    await vi.waitFor(() => expect(markAllRead).toHaveBeenCalled())
+    await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['notifications', 'user-a'] }))
+
+    invalidateSpy.mockRestore()
+    queryClient.clear()
+  })
 })
 
 describe('getUnreadCountQueryOptions', () => {
-  it('polls the unread count over HTTP every ten seconds while the user is signed in', () => {
+  it('polls the excluded unread count over HTTP every ten seconds while the user is signed in', () => {
     const options = getUnreadCountQueryOptions('user-a')
 
-    expect(options.queryKey).toEqual(['notifications', 'user-a', 'unread-count'])
+    expect(options.queryKey).toEqual(['notifications', 'user-a', 'unread-count', 'excludeCategory', 'PROMOTION'])
     expect(options.enabled).toBe(true)
     expect(options.staleTime).toBe(0)
     expect(options.refetchInterval).toBe(10_000)
     expect(options.refetchOnWindowFocus).toBe(true)
+
+    void options.queryFn?.().then(() => {
+      expect(getUnreadCount).toHaveBeenCalledWith({ excludeCategory: 'PROMOTION' })
+    })
   })
 
   it('does not poll before an authenticated user is available', () => {
@@ -165,13 +227,27 @@ describe('getUnreadCountQueryOptions', () => {
 })
 
 describe('getNotificationListQueryOptions', () => {
-  it('polls an active notification list every ten seconds', () => {
+  it('polls an excluded notification list every ten seconds', () => {
     const options = getNotificationListQueryOptions('user-a', 0, 20, 'REVIEW')
 
-    expect(options.queryKey).toEqual(['notifications', 'user-a', 'list', 0, 20, 'REVIEW'])
+    expect(options.queryKey).toEqual(['notifications', 'user-a', 'list', 0, 20, 'REVIEW', 'excludeCategory', 'PROMOTION'])
     expect(options.enabled).toBe(true)
     expect(options.staleTime).toBe(0)
     expect(options.refetchInterval).toBe(10_000)
     expect(options.refetchOnWindowFocus).toBe(true)
+
+    void options.queryFn?.().then(() => {
+      expect(list).toHaveBeenCalledWith({ page: 0, size: 20, category: 'REVIEW', excludeCategory: 'PROMOTION' })
+    })
+  })
+
+  it('keeps the exclusion on the unfiltered ALL list', () => {
+    const options = getNotificationListQueryOptions('user-a', 2, 20)
+
+    expect(options.queryKey).toEqual(['notifications', 'user-a', 'list', 2, 20, 'excludeCategory', 'PROMOTION'])
+
+    void options.queryFn?.().then(() => {
+      expect(list).toHaveBeenCalledWith({ page: 2, size: 20, category: undefined, excludeCategory: 'PROMOTION' })
+    })
   })
 })

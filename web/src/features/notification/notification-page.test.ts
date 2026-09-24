@@ -23,6 +23,32 @@ describe('getNotificationItems', () => {
   it('falls back to an empty array when page data is missing', () => {
     expect(getNotificationItems(undefined)).toEqual([])
   })
+
+  it('drops stale cached promotion rows defensively', () => {
+    expect(getNotificationItems({
+      items: [
+        {
+          id: 1,
+          category: 'REVIEW',
+          eventType: 'REVIEW_SUBMITTED',
+          title: 'Review submitted',
+          status: 'UNREAD',
+          createdAt: '2026-03-20T00:00:00Z',
+        },
+        {
+          id: 2,
+          category: 'PROMOTION',
+          eventType: 'PROMOTION_SUBMITTED',
+          title: 'Promotion submitted',
+          status: 'UNREAD',
+          createdAt: '2026-03-20T00:00:01Z',
+        },
+      ],
+      total: 2,
+      page: 0,
+      size: 20,
+    }).map((item) => item.id)).toEqual([1])
+  })
 })
 
 describe('getNotificationTotal', () => {

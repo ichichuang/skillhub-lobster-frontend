@@ -31,15 +31,15 @@ describe('resolveNotificationTarget', () => {
   it('ignores protocol-relative targetRoute values', () => {
     expect(resolveNotificationTarget({
       id: 1,
-      category: 'PROMOTION',
-      eventType: 'PROMOTION_SUBMITTED',
-      title: 'Promotion submitted',
+      category: 'REVIEW',
+      eventType: 'REVIEW_SUBMITTED',
+      title: 'Review submitted',
       targetRoute: '//evil.example/steal',
-      entityType: 'PROMOTION',
+      entityType: 'REVIEW',
       entityId: 44,
       status: 'UNREAD',
       createdAt: '2026-03-20T00:00:00Z',
-    })).toBe('/dashboard/promotions')
+    })).toBe('/dashboard/reviews/44')
   })
 
   it('falls back to legacy review detail route', () => {
@@ -68,7 +68,7 @@ describe('resolveNotificationTarget', () => {
     })).toBe('/dashboard/reports')
   })
 
-  it('routes legacy promotion notifications to the promotions page', () => {
+  it('never routes promotion notifications to the promotions page', () => {
     expect(resolveNotificationTarget({
       id: 1,
       category: 'PROMOTION',
@@ -78,7 +78,34 @@ describe('resolveNotificationTarget', () => {
       entityId: 44,
       status: 'UNREAD',
       createdAt: '2026-03-20T00:00:00Z',
-    })).toBe('/dashboard/promotions')
+    })).toBe('/dashboard/notifications')
+  })
+
+  it('neutralizes a stale promotion targetRoute left in an old browser cache', () => {
+    expect(resolveNotificationTarget({
+      id: 2,
+      category: 'PROMOTION',
+      eventType: 'PROMOTION_SUBMITTED',
+      title: 'Promotion submitted',
+      targetRoute: '/dashboard/promotions',
+      targetType: 'PROMOTION',
+      targetId: 44,
+      status: 'READ',
+      createdAt: '2026-03-20T00:00:00Z',
+    })).toBe('/dashboard/notifications')
+  })
+
+  it('neutralizes a promotion entity fallback even without category metadata', () => {
+    expect(resolveNotificationTarget({
+      id: 3,
+      category: 'PROMOTION',
+      eventType: 'PROMOTION_APPROVED',
+      title: 'Promotion approved',
+      entityType: 'promotion',
+      entityId: 44,
+      status: 'UNREAD',
+      createdAt: '2026-03-20T00:00:00Z',
+    })).toBe('/dashboard/notifications')
   })
 
   it('falls back to notifications page for unsupported items', () => {

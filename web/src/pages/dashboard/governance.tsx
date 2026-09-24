@@ -22,7 +22,14 @@ import {
   useMarkGovernanceNotificationRead,
 } from '@/features/governance/use-governance'
 
-type GovernanceInboxTab = 'ALL' | 'REVIEW' | 'PROMOTION' | 'REPORT'
+type GovernanceInboxTab = 'ALL' | 'REVIEW' | 'REPORT'
+
+/**
+ * The Lobster Factory governance page intentionally does not expose the
+ * promotion workflow: the server request itself excludes PROMOTION tasks and
+ * notifications, and no promotion UI is rendered anywhere on this surface.
+ */
+const PROMOTION_EXCLUSION = 'PROMOTION'
 
 /**
  * Dashboard page that aggregates governance summary counts, inbox queues, notifications, and
@@ -50,11 +57,13 @@ export function GovernancePage() {
     inboxType === 'ALL' ? undefined : inboxType,
     inboxPage,
     GOVERNANCE_PAGE_SIZE,
+    PROMOTION_EXCLUSION,
   )
   const { data: activityPageData, isLoading: isActivityLoading } = useGovernanceActivity(activityPage, GOVERNANCE_PAGE_SIZE)
   const { data: notificationsPageData, isLoading: isNotificationsLoading } = useGovernanceNotifications(
     notificationsPage,
     GOVERNANCE_PAGE_SIZE,
+    PROMOTION_EXCLUSION,
   )
   const markReadMutation = useMarkGovernanceNotificationRead()
   const rebuildSearchIndexMutation = useRebuildSearchIndex()
@@ -78,9 +87,8 @@ export function GovernancePage() {
     <div className="space-y-8 animate-fade-up">
       <DashboardPageHeader title={t('governance.title')} subtitle={t('governance.subtitle')} />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <SummaryCard label={t('governance.pendingReviews')} value={isSummaryLoading ? undefined : summary?.pendingReviews} />
-        <SummaryCard label={t('governance.pendingPromotions')} value={isSummaryLoading ? undefined : summary?.pendingPromotions} />
         <SummaryCard label={t('governance.pendingReports')} value={isSummaryLoading ? undefined : summary?.pendingReports} />
         <SummaryCard label={t('governance.unreadNotifications')} value={isSummaryLoading ? undefined : summary?.unreadNotifications} />
       </div>
@@ -101,7 +109,6 @@ export function GovernancePage() {
           <TabsList>
             <TabsTrigger value="ALL">{t('governance.tabAll')}</TabsTrigger>
             <TabsTrigger value="REVIEW">{t('governance.tabReview')}</TabsTrigger>
-            <TabsTrigger value="PROMOTION">{t('governance.tabPromotion')}</TabsTrigger>
             <TabsTrigger value="REPORT">{t('governance.tabReport')}</TabsTrigger>
           </TabsList>
           <TabsContent value="ALL" className="mt-6">
@@ -109,10 +116,6 @@ export function GovernancePage() {
             {inboxTotalPages > 1 ? <Pagination page={inboxPage} totalPages={inboxTotalPages} onPageChange={setInboxPage} /> : null}
           </TabsContent>
           <TabsContent value="REVIEW" className="mt-6">
-            <GovernanceInbox items={inboxPageData?.items} isLoading={isInboxLoading} />
-            {inboxTotalPages > 1 ? <Pagination page={inboxPage} totalPages={inboxTotalPages} onPageChange={setInboxPage} /> : null}
-          </TabsContent>
-          <TabsContent value="PROMOTION" className="mt-6">
             <GovernanceInbox items={inboxPageData?.items} isLoading={isInboxLoading} />
             {inboxTotalPages > 1 ? <Pagination page={inboxPage} totalPages={inboxTotalPages} onPageChange={setInboxPage} /> : null}
           </TabsContent>
