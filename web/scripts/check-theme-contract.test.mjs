@@ -23,9 +23,11 @@ function createFixedThemeFixture() {
       "export function applyThemeMode(mode: string, root: HTMLElement) { root.classList.toggle('dark', mode === 'dark'); root.style.colorScheme = mode }",
     ].join('\n')],
     ['src/bootstrap.ts', [
-      "import { applyThemeMode, parseParentUrlTheme, resolveParentThemeMode } from './shared/lib/url-theme'",
+      "import { applyThemeMode, parseParentThemeMessage, parseParentUrlTheme, resolveParentThemeMode, syncThemeUrlParam } from './shared/lib/url-theme'",
       'const parentTheme = parseParentUrlTheme(window.location.search)',
       'applyThemeMode(resolveParentThemeMode(parentTheme))',
+      "function handleParentThemeMessage(event: MessageEvent) { const theme = parseParentThemeMessage(event.data); if (!theme?.dark) return; applyThemeMode(resolveParentThemeMode(theme)); syncThemeUrlParam(theme.dark) }",
+      "window.addEventListener('message', handleParentThemeMessage)",
     ].join('\n')],
     ['src/app/router.tsx', [
       "export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark', 'showHeader'] as const",
@@ -39,6 +41,7 @@ function createFixedThemeFixture() {
       '  const root = document.documentElement',
       "  root.classList.toggle('dark', isDark)",
       "  root.style.colorScheme = isDark ? 'dark' : 'light'",
+      "  root.style.backgroundColor = isDark ? '#0c1526' : '#f6f6f6'",
       '</script>',
     ].join('\n')],
     ['src/index.css', [
@@ -141,6 +144,30 @@ describe('fixed dual-theme contract gate', () => {
 
     expect(result.status).not.toBe(0)
     expect(result.output).toContain('index.html prepaint must not write semantic palette CSS variables')
+  })
+
+  it('rejects prepaint background colors beyond the frozen page anchors', async () => {
+    const result = await runGate((files) => {
+      files.set(
+        'index.html',
+        files.get('index.html').replace('#f6f6f6', '#ffffff'),
+      )
+    })
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('must write only the frozen page anchors')
+  })
+
+  it('rejects bootstrap without the embedded parent theme listener', async () => {
+    const result = await runGate((files) => {
+      files.set(
+        'src/bootstrap.ts',
+        files.get('src/bootstrap.ts').replace(/function handleParentThemeMessage[\s\S]*?addEventListener\('message', handleParentThemeMessage\)/, ''),
+      )
+    })
+
+    expect(result.status).not.toBe(0)
+    expect(result.output).toContain('bootstrap.ts must listen for parent theme messages')
   })
 
   it('rejects dynamic palette derivation or adapter calls in bootstrap', async () => {

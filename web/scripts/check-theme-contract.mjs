@@ -12,6 +12,9 @@ const sourceExceptions = new Map([
   ['features/skill/code-renderer.tsx', 'escaped source rendering'],
 ])
 const themeModeWriterFiles = new Set(['shared/lib/url-theme.ts'])
+// The prepaint and the parent postMessage channel may only switch the fixed mode (dark=0|1);
+// the two hex values must stay identical to --theme-page-anchor in index.css.
+const prepaintPageAnchors = { dark: '#0c1526', light: '#f6f6f6' }
 const retiredUrlThemeKeys = ['theme', 'color', 'bg', 'surface']
 const dynamicThemeRuntimeApis = [
   'resolveParentThemeAnchors',
@@ -102,12 +105,29 @@ function collectPrepaintViolations(indexSource) {
   if (!/style\.colorScheme\s*=/.test(indexSource)) {
     violations.push('index.html prepaint must apply color-scheme')
   }
+  const backgroundColorWrite = indexSource.match(/style\.backgroundColor\s*=\s*([^;\n]+)/)?.[1]?.trim()
+  if (backgroundColorWrite !== `isDark ? '${prepaintPageAnchors.dark}' : '${prepaintPageAnchors.light}'`) {
+    violations.push(
+      `index.html prepaint must write only the frozen page anchors as backgroundColor: isDark ? '${prepaintPageAnchors.dark}' : '${prepaintPageAnchors.light}'`,
+    )
+  }
+  for (const hex of Object.values(prepaintPageAnchors)) {
+    const occurrences = indexSource.split(hex).length - 1
+    if (occurrences !== 1) {
+      violations.push(`index.html must reference ${hex} exactly once in the prepaint`)
+    }
+  }
   if (
     /style\.setProperty\(\s*['"]--/.test(indexSource)
-    || /style\.(?:backgroundColor|color)\s*=/.test(indexSource)
+    || /style\.color\s*=/.test(indexSource)
     || /--theme-(?:primary|page|surface)-anchor/.test(indexSource)
   ) {
     violations.push('index.html prepaint must not write semantic palette CSS variables')
+  }
+  // Embedded-mode theme switching is mode-level only: receiving the parent's dark|light message is
+  // allowed, but the page must never SEND colors or accept palette values at runtime.
+  if (/postMessage\s*\(/.test(indexSource)) {
+    violations.push('index.html must not send runtime theme messages')
   }
   for (const api of dynamicThemeRuntimeApis) {
     if (new RegExp(`\\b${api}\\b`).test(indexSource)) {
@@ -123,6 +143,14 @@ function collectBootstrapViolations(bootstrapSource) {
     if (!bootstrapSource.includes(requiredStage)) {
       violations.push(`bootstrap.ts is missing fixed theme-mode stage: ${requiredStage}`)
     }
+  }
+  for (const requiredStage of ['parseParentThemeMessage', 'syncThemeUrlParam']) {
+    if (!bootstrapSource.includes(requiredStage)) {
+      violations.push(`bootstrap.ts is missing embedded parent theme stage: ${requiredStage}`)
+    }
+  }
+  if (!/addEventListener\(\s*['"]message['"]/.test(bootstrapSource)) {
+    violations.push('bootstrap.ts must listen for parent theme messages')
   }
   for (const api of dynamicThemeRuntimeApis) {
     if (new RegExp(`\\b${api}\\b`).test(bootstrapSource)) {

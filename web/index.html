@@ -17,6 +17,9 @@
 
         root.classList.toggle('dark', isDark)
         root.style.colorScheme = isDark ? 'dark' : 'light'
+        // Must match the frozen dark/light page anchor colors in index.css; the app CSS only
+        // arrives after the JS bundle, so without this inline color an iframe reload paints white.
+        root.style.backgroundColor = isDark ? '#0c1526' : '#f6f6f6'
       })()
     </script>
     <title>技能中心</title>

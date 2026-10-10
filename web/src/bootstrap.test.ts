@@ -122,6 +122,52 @@ describe('bootstrap fixed theme mode', () => {
   })
 })
 
+describe('bootstrap parent theme message channel', () => {
+  it('applies a parent theme message and rewrites the dark param without reload', async () => {
+    const runtimeConfigScript = await startBootstrap('?embed=true&dark=1')
+    await finishRuntimeConfigLoad(runtimeConfigScript)
+
+    window.parent.dispatchEvent(new MessageEvent('message', {
+      source: window.parent,
+      data: { type: 'skillhub:theme', dark: '0' },
+    }))
+
+    const root = document.documentElement
+    expect(root.classList.contains('dark')).toBe(true)
+    expect(root.style.colorScheme).toBe('dark')
+    expect(new URL(window.location.href).searchParams.get('dark')).toBe('0')
+    expect(new URL(window.location.href).searchParams.get('embed')).toBe('true')
+  })
+
+  it('ignores theme messages that do not come from the parent frame', async () => {
+    const runtimeConfigScript = await startBootstrap('?dark=1')
+    await finishRuntimeConfigLoad(runtimeConfigScript)
+
+    window.dispatchEvent(new MessageEvent('message', {
+      source: null,
+      data: { type: 'skillhub:theme', dark: '0' },
+    }))
+
+    const root = document.documentElement
+    expect(root.classList.contains('dark')).toBe(false)
+    expect(new URL(window.location.href).searchParams.get('dark')).toBe('1')
+  })
+
+  it('ignores messages with unsupported dark values', async () => {
+    const runtimeConfigScript = await startBootstrap('?dark=1')
+    await finishRuntimeConfigLoad(runtimeConfigScript)
+
+    window.parent.dispatchEvent(new MessageEvent('message', {
+      source: window.parent,
+      data: { type: 'skillhub:theme', dark: 'true' },
+    }))
+
+    const root = document.documentElement
+    expect(root.classList.contains('dark')).toBe(false)
+    expect(new URL(window.location.href).searchParams.get('dark')).toBe('1')
+  })
+})
+
 describe('bootstrap URL auto-login', () => {
   it('loads runtime config before the API client and waits for local login before importing main', async () => {
     const login = createDeferred<unknown>()

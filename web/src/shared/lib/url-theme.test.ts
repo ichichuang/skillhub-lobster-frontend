@@ -5,9 +5,11 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   applyThemeMode,
+  parseParentThemeMessage,
   parseParentThemeRecord,
   parseParentUrlTheme,
   resolveParentThemeMode,
+  syncThemeUrlParam,
 } from './url-theme'
 
 // @ts-expect-error Vitest's jsdom URL is HTTP-based; resolve the fixture from its web cwd.
@@ -119,6 +121,10 @@ describe('applyThemeMode', () => {
   })
 })
 
+// jsdom and browsers may serialize the same color as hex or rgb(), accept either form.
+const darkPrepaintBackground = expect.stringMatching(/^(#0c1526|rgb\(12, 21, 38\))$/)
+const lightPrepaintBackground = expect.stringMatching(/^(#f6f6f6|rgb\(246, 246, 246\))$/)
+
 describe('index.html prepaint', () => {
   it.each([
     ['dark=0', '?dark=0', true, 'dark'],
@@ -133,7 +139,7 @@ describe('index.html prepaint', () => {
       false,
       'light',
     ],
-  ] as const)('uses the fixed mapping for %s without writing colors', (
+  ] as const)('uses the fixed mapping for %s and prepaints only the mode colors', (
     _caseName,
     search,
     isDark,
@@ -142,12 +148,56 @@ describe('index.html prepaint', () => {
     expect(runPrepaint(search)).toEqual({
       isDark,
       colorScheme,
-      backgroundColor: '',
+      backgroundColor: isDark ? darkPrepaintBackground : lightPrepaintBackground,
       primaryAnchor: '',
       pageAnchor: '',
       surfaceAnchor: '',
       background: '',
       primary: '',
     })
+  })
+})
+
+describe('parseParentThemeMessage', () => {
+  it.each([
+    ['dark 0', { type: 'skillhub:theme', dark: '0' }, { dark: '0' }],
+    ['dark 1', { type: 'skillhub:theme', dark: '1' }, { dark: '1' }],
+    ['extra keys ignored', { type: 'skillhub:theme', dark: '0', theme: 'blue' }, { dark: '0' }],
+  ] as const)('accepts %s', (_caseName, data, parsed) => {
+    expect(parseParentThemeMessage(data)).toEqual(parsed)
+  })
+
+  it.each([
+    ['non-object payload', 'skillhub:theme'],
+    ['null payload', null],
+    ['wrong message type', { type: 'skillhub:resize', dark: '0' }],
+    ['missing dark', { type: 'skillhub:theme' }],
+    ['numeric dark', { type: 'skillhub:theme', dark: 0 }],
+    ['array dark', { type: 'skillhub:theme', dark: ['0'] }],
+    ['unsupported dark', { type: 'skillhub:theme', dark: '2' }],
+  ] as const)('rejects %s', (_caseName, data) => {
+    expect(parseParentThemeMessage(data)).toBeUndefined()
+  })
+})
+
+describe('syncThemeUrlParam', () => {
+  it('rewrites dark in place while preserving the path and other params', () => {
+    window.history.replaceState(null, '', '/skills?embed=true&dark=1&page=2')
+
+    syncThemeUrlParam('0')
+
+    const url = new URL(window.location.href)
+    expect(url.pathname).toBe('/skills')
+    expect(url.searchParams.get('dark')).toBe('0')
+    expect(url.searchParams.get('embed')).toBe('true')
+    expect(url.searchParams.get('page')).toBe('2')
+  })
+
+  it('adds dark when the URL has no theme param yet', () => {
+    window.history.replaceState(null, '', '/skills')
+
+    syncThemeUrlParam('1')
+
+    expect(new URL(window.location.href).searchParams.get('dark')).toBe('1')
   })
 })

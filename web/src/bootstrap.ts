@@ -5,10 +5,13 @@
  * that config or a safe fallback object before importing the main entry.
  */
 import './legacy-polyfills'
+import './index.css'
 import {
   applyThemeMode,
+  parseParentThemeMessage,
   parseParentUrlTheme,
   resolveParentThemeMode,
+  syncThemeUrlParam,
 } from './shared/lib/url-theme'
 import {
   parseUrlAutoLoginCredentials,
@@ -17,6 +20,22 @@ import {
 
 const parentTheme = parseParentUrlTheme(window.location.search)
 applyThemeMode(resolveParentThemeMode(parentTheme))
+
+// Runtime theme channel for iframe embedding: the parent platform can switch the theme without
+// reloading this document by posting `{ type: 'skillhub:theme', dark: '0' | '1' }` to this frame.
+function handleParentThemeMessage(event: MessageEvent): void {
+  if (event.source !== window.parent) {
+    return
+  }
+  const theme = parseParentThemeMessage(event.data)
+  if (!theme?.dark) {
+    return
+  }
+  applyThemeMode(resolveParentThemeMode(theme))
+  syncThemeUrlParam(theme.dark)
+}
+
+window.addEventListener('message', handleParentThemeMessage)
 
 async function loadRuntimeConfig() {
   await new Promise<void>((resolve, reject) => {
