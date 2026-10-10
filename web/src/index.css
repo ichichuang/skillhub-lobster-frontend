@@ -311,6 +311,14 @@
 }
 
 /* ─── Scrollbar ─── */
+/* Always keep the viewport scrollbar channel present: scrollable routes are otherwise
+   8px narrower than fixed ones (e.g. /admin/skills) and the layout jumps on navigation.
+   scrollbar-gutter alone does not apply to a visible-overflow root; the track below is
+   painted with the page background, so the reserved channel is invisible. */
+html {
+  overflow-y: scroll;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
