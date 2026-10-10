@@ -183,7 +183,7 @@ $env:CLAWHUB_REGISTRY = '${baseUrl}'`
               {t(`${ns}.quickStart.title`)}
             </h2>
             <p className="text-sm uppercase tracking-widest font-medium mb-2" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              快速开始
+              {t(`${ns}.quickStart.eyebrow`)}
             </p>
             <p className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: 'hsl(var(--text-secondary))' }}>
               {t(`${ns}.quickStart.description`, { defaultValue: t(`${ns}.quickStart.subtitle`) })}

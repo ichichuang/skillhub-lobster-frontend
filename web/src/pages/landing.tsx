@@ -76,7 +76,7 @@ export function LandingPage() {
               {t('landing.hero.eyebrow')}
             </div>
             <h1 className="mb-5 text-[52px] font-bold leading-[0.94] tracking-[-0.04em] text-brand-gradient sm:text-[64px] md:text-[76px]">
-              技能中心
+              {t('nav.home')}
             </h1>
             <h2 className="max-w-3xl text-2xl font-semibold tracking-tight md:text-[2rem]">
               {t('landing.hero.title')}

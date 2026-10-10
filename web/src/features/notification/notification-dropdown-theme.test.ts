@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-
+import '@/i18n/config'
 import {
   NOTIFICATION_DROPDOWN_CLASS_NAME,
   NOTIFICATION_ITEM_CLASS_NAME,
@@ -20,7 +20,7 @@ describe('notification dropdown theme contract', () => {
     expect(NOTIFICATION_ITEM_CLASS_NAME).not.toContain('gray')
   })
 
-  it('uses fixed Chinese relative time regardless of the active language', () => {
+  it('renders relative time in the runtime language (defaults to Simplified Chinese)', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-03-20T12:00:00Z'))
 

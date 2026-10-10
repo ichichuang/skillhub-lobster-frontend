@@ -59,7 +59,7 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        加载中…
+        {t('common.loading')}
       </div>
     )
   }

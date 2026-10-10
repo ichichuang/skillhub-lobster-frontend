@@ -100,10 +100,10 @@ describe('LandingPage', () => {
     expect(typeof LandingPage).toBe('function')
   })
 
-  it('renders the brand name in the hero section', () => {
+  it('renders the i18n brand title in the hero section', () => {
     const html = renderToStaticMarkup(<LandingPage />)
 
-    expect(html).toContain('技能中心')
+    expect(html).toContain('nav.home')
     expect(html).toContain('landing.hero.title')
   })
 

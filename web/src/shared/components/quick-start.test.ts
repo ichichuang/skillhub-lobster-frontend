@@ -40,9 +40,9 @@ describe('QuickStartSection', () => {
     expect(QuickStartSection).toBeTypeOf('function')
   })
 
-  it('renders a Chinese landing quick-start eyebrow', () => {
+  it('renders the landing quick-start eyebrow through i18n', () => {
     const html = renderToStaticMarkup(createElement(QuickStartSection, { variant: 'landing' }))
 
-    expect(html).toContain('快速开始')
+    expect(html).toContain('landing.quickStart.eyebrow')
   })
 })

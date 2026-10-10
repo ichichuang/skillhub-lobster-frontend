@@ -22,6 +22,9 @@ vi.mock('@/shared/lib/search-query', () => ({
   normalizeSearchQuery: (q: string) => q.trim(),
 }))
 
+// The lazy-route loading and not-found components render through react-i18next.
+import '@/i18n/config'
+
 import {
   ORIGINAL_URL_SEARCH,
   ROOT_RETAINED_SEARCH_KEYS,
@@ -67,8 +70,16 @@ describe('validateRootSearch', () => {
     }
   })
 
+  it('keeps only valid parent language values', () => {
+    expect(validateRootSearch({ embed: true, lang: '1' })).toEqual({ embed: true, lang: '1' })
+    expect(validateRootSearch({ lang: '2' })).toEqual({ lang: '2' })
+    for (const lang of [undefined, 0, 2, '3', 'zh', 'en', 'zh-TW', true, ['0', '1']]) {
+      expect(validateRootSearch({ embed: true, lang })).toEqual({ embed: true })
+    }
+  })
+
   it('retains the parent-owned global keys', () => {
-    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark', 'showHeader'])
+    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark', 'showHeader', 'lang'])
   })
 })
 
@@ -105,7 +116,7 @@ describe('validateDashboardSkillsSearch', () => {
       filter: undefined,
       label: undefined,
     })
-    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark', 'showHeader'])
+    expect(ROOT_RETAINED_SEARCH_KEYS).toEqual(['embed', 'dark', 'showHeader', 'lang'])
   })
 })
 

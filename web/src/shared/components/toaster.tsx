@@ -1,14 +1,16 @@
 import { createPortal } from 'react-dom'
 import { Toaster as Sonner } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { getPortalContainer } from '@/shared/lib/portal-container'
 import { CENTER_TOASTER_ID } from '@/shared/lib/toast'
 
 export function Toaster() {
+  const { t } = useTranslation()
   const node = (
     <div translate="no">
       <Sonner
         id={CENTER_TOASTER_ID}
-        containerAriaLabel="通知中心"
+        containerAriaLabel={t('notification.center')}
         position="top-center"
         className="!left-1/2 !right-auto !top-4 !-translate-x-1/2 !z-[100]"
         offset={16}

@@ -127,7 +127,7 @@ describe('NotificationsPage', () => {
     expect(html).toContain('notification.empty')
   })
 
-  it('uses fixed Chinese relative time regardless of the active i18n language', () => {
+  it('renders relative time in the runtime language (defaults to Simplified Chinese)', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-03-20T12:00:00Z'))
 

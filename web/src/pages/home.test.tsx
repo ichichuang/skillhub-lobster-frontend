@@ -56,10 +56,10 @@ describe('HomePage', () => {
     expect(typeof HomePage).toBe('function')
   })
 
-  it('renders the hero section with brand name', () => {
+  it('renders the hero section with the i18n brand title', () => {
     const html = renderToStaticMarkup(<HomePage />)
 
-    expect(html).toContain('技能中心')
+    expect(html).toContain('nav.home')
     expect(html).toContain('home.subtitle')
   })
 })

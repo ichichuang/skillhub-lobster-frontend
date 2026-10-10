@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import type { NotificationItem } from '@/api/types'
+import i18n from '@/i18n/config'
 import { getNotificationItems } from './notification-page'
 import { resolveNotificationDisplay } from './notification-content'
 import { useAuth } from '@/features/auth/use-auth'
@@ -22,11 +23,11 @@ export function formatNotificationRelativeTime(dateStr: string): string {
   const hours = Math.floor(diff / 3_600_000)
   const days = Math.floor(diff / 86_400_000)
 
-  if (minutes < 1) return '刚刚'
-  if (minutes < 60) return `${minutes}分钟`
-  if (hours < 24) return `${hours}小时`
-  if (days < 30) return `${days}天`
-  return new Date(dateStr).toLocaleDateString('zh-CN')
+  if (minutes < 1) return i18n.t('notification.relativeTime.justNow')
+  if (minutes < 60) return i18n.t('notification.relativeTime.minutes', { n: minutes })
+  if (hours < 24) return i18n.t('notification.relativeTime.hours', { n: hours })
+  if (days < 30) return i18n.t('notification.relativeTime.days', { n: days })
+  return new Date(dateStr).toLocaleDateString(i18n.resolvedLanguage ?? i18n.language)
 }
 
 /**

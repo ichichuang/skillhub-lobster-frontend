@@ -1,5 +1,6 @@
 import { lazy, Suspense, type ComponentType } from 'react'
 import { createRouter, createRoute, createRootRoute, redirect, retainSearchParams } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { Layout } from './layout'
 import { getCurrentUser } from '@/api/client'
 import { RoleGuard } from '@/shared/components/role-guard'
@@ -8,6 +9,7 @@ import { createRequireAuth } from '@/shared/lib/auth-route'
 import { clearDynamicImportReloadGuard, recoverFromDynamicImportError } from '@/shared/lib/dynamic-import-recovery'
 import { isEmbeddedMode } from '@/shared/lib/embed-mode'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
+import { parseParentLanguageRecord, type ParentLangValue } from '@/shared/lib/url-language'
 import { parseParentThemeRecord, type ParentUrlTheme } from '@/shared/lib/url-theme'
 
 /**
@@ -42,11 +44,12 @@ function createLazyRouteComponent<TModule extends Record<string, unknown>>(
   })
 
   return function LazyRouteComponent(props: Record<string, unknown>) {
+    const { t } = useTranslation()
     return (
       <Suspense
         fallback={
           <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-            加载中…
+            {t('common.loading')}
           </div>
         }
       >
@@ -155,9 +158,10 @@ const AdminSkillsPage = createRoleProtectedRouteComponent(
 )
 
 function DefaultNotFound() {
+  const { t } = useTranslation()
   return (
     <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-      页面不存在
+      {t('common.notFound')}
     </div>
   )
 }
@@ -165,14 +169,16 @@ function DefaultNotFound() {
 export interface RootSearch extends ParentUrlTheme {
   readonly embed?: true
   readonly showHeader?: 1
+  readonly lang?: ParentLangValue
 }
 
-export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark', 'showHeader'] as const
+export const ROOT_RETAINED_SEARCH_KEYS = ['embed', 'dark', 'showHeader', 'lang'] as const
 
 export function validateRootSearch(search: Record<string, unknown>): RootSearch {
   return {
     ...(isEmbeddedMode(search) ? { embed: true as const } : {}),
     ...parseParentThemeRecord(search),
+    ...parseParentLanguageRecord(search),
     ...(search.showHeader === 1 ? { showHeader: 1 as const } : {}),
   }
 }

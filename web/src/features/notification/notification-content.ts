@@ -1,3 +1,4 @@
+import i18n from '@/i18n/config'
 import type { NotificationItem } from '@/api/types'
 
 export type NotificationDisplay = {
@@ -22,68 +23,68 @@ function parseBody(bodyJson?: string): NotificationBody {
   }
 }
 
-export function resolveNotificationDisplay(item: NotificationItem, _language?: string): NotificationDisplay {
-  void _language
+export function resolveNotificationDisplay(item: NotificationItem, language?: string): NotificationDisplay {
+  const t = language ? i18n.getFixedT(language) : i18n.t
   const body = parseBody(item.bodyJson)
   const skillName = body.skillName ?? ''
   const version = body.version ?? ''
-  const versionSuffix = version ? `（${version}）` : ''
+  const versionSuffix = version ? t('notification.versionSuffix', { version }) : ''
 
   switch (item.eventType) {
     case 'REVIEW_SUBMITTED':
       return {
-        title: '技能审核提交',
-        description: skillName ? `${skillName}${versionSuffix}已提交审核。` : '',
+        title: t('notification.event.reviewSubmitted.title'),
+        description: skillName ? t('notification.event.reviewSubmitted.description', { skillName, versionSuffix }) : '',
       }
     case 'REVIEW_APPROVED':
       return {
-        title: '技能审核通过',
-        description: skillName ? `${skillName}${versionSuffix}已审核通过。` : '',
+        title: t('notification.event.reviewApproved.title'),
+        description: skillName ? t('notification.event.reviewApproved.description', { skillName, versionSuffix }) : '',
       }
     case 'REVIEW_REJECTED':
       return {
-        title: '技能审核驳回',
-        description: skillName ? `${skillName}${versionSuffix}审核未通过。` : '',
+        title: t('notification.event.reviewRejected.title'),
+        description: skillName ? t('notification.event.reviewRejected.description', { skillName, versionSuffix }) : '',
       }
     case 'PROMOTION_SUBMITTED':
       return {
-        title: '技能推广提交',
-        description: skillName ? `${skillName}${versionSuffix}已提交推广。` : '',
+        title: t('notification.event.promotionSubmitted.title'),
+        description: skillName ? t('notification.event.promotionSubmitted.description', { skillName, versionSuffix }) : '',
       }
     case 'PROMOTION_APPROVED':
       return {
-        title: '技能推广通过',
-        description: skillName ? `${skillName}${versionSuffix}推广已通过。` : '',
+        title: t('notification.event.promotionApproved.title'),
+        description: skillName ? t('notification.event.promotionApproved.description', { skillName, versionSuffix }) : '',
       }
     case 'PROMOTION_REJECTED':
       return {
-        title: '技能推广驳回',
-        description: skillName ? `${skillName}${versionSuffix}推广未通过。` : '',
+        title: t('notification.event.promotionRejected.title'),
+        description: skillName ? t('notification.event.promotionRejected.description', { skillName, versionSuffix }) : '',
       }
     case 'REPORT_SUBMITTED':
       return {
-        title: '技能举报提交',
-        description: skillName ? `${skillName} 收到新的举报。` : '',
+        title: t('notification.event.reportSubmitted.title'),
+        description: skillName ? t('notification.event.reportSubmitted.description', { skillName }) : '',
       }
     case 'REPORT_RESOLVED':
       return {
-        title: '技能举报已处理',
-        description: skillName ? `${skillName} 的举报已处理。` : '',
+        title: t('notification.event.reportResolved.title'),
+        description: skillName ? t('notification.event.reportResolved.description', { skillName }) : '',
       }
     case 'SKILL_PUBLISHED':
       return {
-        title: '技能发布成功',
-        description: skillName ? `${skillName}${versionSuffix}已发布。` : '',
+        title: t('notification.event.skillPublished.title'),
+        description: skillName ? t('notification.event.skillPublished.description', { skillName, versionSuffix }) : '',
       }
     case 'SUBSCRIPTION_NEW_VERSION':
       return {
-        title: '订阅技能更新',
-        description: skillName ? `${skillName}${versionSuffix}发布了新版本。` : '',
+        title: t('notification.event.subscriptionNewVersion.title'),
+        description: skillName ? t('notification.event.subscriptionNewVersion.description', { skillName, versionSuffix }) : '',
       }
     case 'SUBSCRIPTION_VERSION_YANKED':
       return {
-        title: '订阅技能版本撤回',
-        description: skillName ? `${skillName}${versionSuffix}版本已撤回。` : '',
+        title: t('notification.event.subscriptionVersionYanked.title'),
+        description: skillName ? t('notification.event.subscriptionVersionYanked.description', { skillName, versionSuffix }) : '',
       }
     default:
       return {

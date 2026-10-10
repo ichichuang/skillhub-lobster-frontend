@@ -37,7 +37,7 @@ describe('RoleGuard', () => {
     expect(RoleGuard).toBeTypeOf('function')
   })
 
-  it('renders a Chinese loading state while authentication is resolving', () => {
+  it('renders an i18n loading state while authentication is resolving', () => {
     useAuthMock.mockReturnValue({ user: null, isLoading: true })
 
     const html = renderToStaticMarkup(createElement(RoleGuard, {
@@ -45,7 +45,7 @@ describe('RoleGuard', () => {
       children: createElement('span', null, 'protected content'),
     }))
 
-    expect(html).toContain('加载中…')
+    expect(html).toContain('common.loading')
     expect(html).not.toContain('protected content')
   })
 })

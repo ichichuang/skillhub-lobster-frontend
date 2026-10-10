@@ -141,10 +141,10 @@ describe('ProfileReviewTable', () => {
     expect(typeof ProfileReviewTable).toBe('function')
   })
 
-  it('renders Chinese labels for machine pass and fail results', () => {
+  it('renders i18n labels for machine pass and fail results', () => {
     const html = renderToStaticMarkup(createElement(ProfileReviewTable))
 
-    expect(html).toContain('通过')
-    expect(html).toContain('未通过')
+    expect(html).toContain('reviews.machinePass')
+    expect(html).toContain('reviews.machineFail')
   })
 })

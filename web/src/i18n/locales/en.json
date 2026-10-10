@@ -136,7 +136,8 @@
           "description": "Share your skills with the team",
           "code": "# Publish skill\nclawhub publish\n\n# Or use web interface\n# Click \"Publish Skill\""
         }
-      }
+      },
+      "eyebrow": "Quick start"
     }
   },
   "home": {
@@ -169,7 +170,8 @@
           "description": "Share your skills with the team",
           "code": "# Publish skill\nclawhub publish\n\n# Or use web interface\n# Click \"Publish Skill\""
         }
-      }
+      },
+      "eyebrow": "Quick start"
     }
   },
   "search": {
@@ -313,7 +315,8 @@
     "windowsUrlBug": "Known Windows issue: the browser opened an incomplete URL. Please copy the full URL from the CLI output (the line starting with 'Opening browser:') and paste it into your browser address bar.",
     "tokenCreationFailed": "Token creation failed",
     "loginRequired": "Please log in first to authorize CLI access",
-    "goToLogin": "Go to Login"
+    "goToLogin": "Go to Login",
+    "defaultTokenLabel": "CLI token"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -504,7 +507,9 @@
     "sortOldest": "Oldest first",
     "pageSummary": "Total {{total}} records, page {{page}}",
     "prevPage": "Previous",
-    "nextPage": "Next"
+    "nextPage": "Next",
+    "machinePass": "Pass",
+    "machineFail": "Fail"
   },
   "profileReview": {
     "queueTitle": "Profile Review Queue",
@@ -1683,6 +1688,230 @@
       "promotionDesc": "Notify on promotion request, approval, or rejection",
       "report": "Report Notifications",
       "reportDesc": "Notify on report submission or resolution"
+    },
+    "center": "Notification center",
+    "relativeTime": {
+      "justNow": "Just now",
+      "minutes": "{{n}} min",
+      "hours": "{{n}} h",
+      "days": "{{n}} d"
+    },
+    "versionSuffix": "({{version}})",
+    "event": {
+      "reviewSubmitted": {
+        "title": "Skill review submitted",
+        "description": "{{skillName}}{{versionSuffix}} has been submitted for review."
+      },
+      "reviewApproved": {
+        "title": "Skill review approved",
+        "description": "{{skillName}}{{versionSuffix}} passed review."
+      },
+      "reviewRejected": {
+        "title": "Skill review rejected",
+        "description": "{{skillName}}{{versionSuffix}} did not pass review."
+      },
+      "promotionSubmitted": {
+        "title": "Skill promotion submitted",
+        "description": "{{skillName}}{{versionSuffix}} has been submitted for promotion."
+      },
+      "promotionApproved": {
+        "title": "Skill promotion approved",
+        "description": "{{skillName}}{{versionSuffix}} has been approved for promotion."
+      },
+      "promotionRejected": {
+        "title": "Skill promotion rejected",
+        "description": "{{skillName}}{{versionSuffix}} was not approved for promotion."
+      },
+      "reportSubmitted": {
+        "title": "Skill report submitted",
+        "description": "A new report was received for {{skillName}}."
+      },
+      "reportResolved": {
+        "title": "Skill report resolved",
+        "description": "The report for {{skillName}} has been resolved."
+      },
+      "skillPublished": {
+        "title": "Skill published",
+        "description": "{{skillName}}{{versionSuffix}} has been published."
+      },
+      "subscriptionNewVersion": {
+        "title": "Subscribed skill update",
+        "description": "{{skillName}}{{versionSuffix}} published a new version."
+      },
+      "subscriptionVersionYanked": {
+        "title": "Subscribed skill version yanked",
+        "description": "The version {{skillName}}{{versionSuffix}} has been yanked."
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading…",
+    "notFound": "Page not found",
+    "close": "Close"
+  },
+  "terms": {
+    "eyebrow": "Legal & Policies",
+    "title": "Terms of Service",
+    "summary": "These terms apply to your access to and use of the skill browsing, publishing, review, download, account management, and API services provided by this service. By using the service you agree to be bound by these terms.",
+    "lastUpdated": "Last updated: March 14, 2026",
+    "note": "If your organization runs a privately deployed instance of this service, that organization may add its own internal rules, information-security requirements, or acceptable-use policies on top of these terms.",
+    "sections": {
+      "s1": {
+        "title": "1. Acceptance of Terms and Scope",
+        "paragraphs": [
+          "When you access, register for, or use the service, you agree to these Terms of Service together with the related privacy policy and instance operating rules.",
+          "If you use the service on behalf of a team, company, or other organization, you confirm that you are authorized to accept these terms on that entity’s behalf."
+        ],
+        "bullets": []
+      },
+      "s2": {
+        "title": "2. Accounts and Access Security",
+        "paragraphs": [],
+        "bullets": [
+          "You must provide true, complete, and up-to-date registration and login information, and safeguard your account, password, OAuth sessions, and API tokens.",
+          "You are responsible for activity that occurs through your account, including publishing, reviewing, downloading, generating tokens, and managing namespaces.",
+          "If you discover unauthorized access, credential leakage, or other security incidents, notify the instance administrators or operators promptly."
+        ]
+      },
+      "s3": {
+        "title": "3. Skills, Namespaces, and User Content",
+        "paragraphs": [
+          "You retain your rights to content you upload or submit, but you grant the service operator a non-exclusive, worldwide, sublicensable license to host, store, reproduce, process, display, and distribute that content as necessary to provide the service.",
+          "You are responsible for the skill packages, READMEs, descriptions, screenshots, review comments, and other materials you submit, and you warrant that you have the right to upload them."
+        ],
+        "bullets": [
+          "Do not upload malicious code, illegal content, infringing content, fraudulent content, or material intended to mislead users.",
+          "Do not impersonate others, occupy namespaces without authorization, or circumvent the platform’s review and access-control mechanisms.",
+          "When downloading and redistributing skills, you must also comply with the skill’s own license, its third-party dependency licenses, and applicable law."
+        ]
+      },
+      "s4": {
+        "title": "4. Review, Governance, and Enforcement",
+        "paragraphs": [
+          "The service may perform governance actions on published content, including review, hiding, takedown, rejection, version yanking, access restriction, or account suspension, to keep the platform secure, compliant, and reliable.",
+          "Where abuse, infringement, security risks, illegal activity, or violations of these terms exist, the platform or instance administrators may retain relevant logs and take necessary action."
+        ],
+        "bullets": []
+      },
+      "s5": {
+        "title": "5. Downloads, API, and Acceptable Use",
+        "paragraphs": [],
+        "bullets": [
+          "You must not interfere with service stability or bypass authentication, rate limiting, security policies, or access resources without authorization.",
+          "You must not scrape, stress-test, scan, or call the service in an automated and destructive manner, or use the platform to spread viruses, trojans, or other malicious payloads.",
+          "Skills downloaded through the service are the responsibility of their providers and are used under their respective licenses and risk notices; evaluate compatibility, security, and compliance yourself."
+        ]
+      },
+      "s6": {
+        "title": "6. Open-Source Components, IP, and Branding",
+        "paragraphs": [
+          "The service may include open-source components governed by the Apache License 2.0 or other third-party licenses; those components remain under their own licenses.",
+          "Unless explicitly stated, trademarks, brand elements, interface designs, and site content related to the service remain the property of their respective owners and are not transferred by your use of the service."
+        ],
+        "bullets": []
+      },
+      "s7": {
+        "title": "7. Availability and Disclaimer",
+        "paragraphs": [
+          "We may adjust, update, restrict, or discontinue features at any time, including search, download, review, login methods, and API capabilities, and we do not guarantee that any feature will remain continuously available.",
+          "To the extent permitted by applicable law, the service is provided “as is” and “as available”, with no express or implied warranties of merchantability, fitness for a particular purpose, uninterrupted or error-free operation, or content accuracy."
+        ],
+        "bullets": []
+      },
+      "s8": {
+        "title": "8. Limitation of Liability",
+        "paragraphs": [
+          "To the maximum extent permitted by applicable law, the service and its operators are not liable for any indirect, incidental, special, or consequential damages, or losses of profit, data, or goodwill.",
+          "If your use, content, or violations lead third parties to file claims against the service operator or instance operator, you agree to bear the corresponding responsibility and cooperate as permitted by law."
+        ],
+        "bullets": []
+      },
+      "s9": {
+        "title": "9. Termination, Changes, and Contact",
+        "paragraphs": [
+          "You may stop using the service at any time. We may also suspend or terminate your access when you violate these terms, create security risks, or when required by law.",
+          "We may update these terms. Continued use of the service after an update means you accept the revised version. For contact, use the documentation, community, or administrator channels provided by the current instance."
+        ],
+        "bullets": []
+      }
+    }
+  },
+  "privacy": {
+    "eyebrow": "Legal & Privacy",
+    "title": "Privacy Policy",
+    "summary": "This policy explains how the service collects, uses, shares, and protects information related to you when providing skill registration, publishing, review, download, account login, and related API services.",
+    "lastUpdated": "Last updated: March 14, 2026",
+    "note": "If you are using an instance of this service deployed by an organization, that instance’s operator may also process data according to its internal policies and bears independent responsibility for data in its deployment environment.",
+    "sections": {
+      "s1": {
+        "title": "1. Scope",
+        "paragraphs": [
+          "This policy applies to the service website, web console, public skill pages, login flows, device authorization flows, and the interfaces and services related to those capabilities.",
+          "When you browse skills, publish versions, take part in reviews, generate tokens, or download content, this policy describes how we process information related to you."
+        ],
+        "bullets": []
+      },
+      "s2": {
+        "title": "2. Information We Collect",
+        "paragraphs": [],
+        "bullets": [
+          "Account and identity information, such as username, email, avatar, OAuth provider identifiers, platform roles, and namespace memberships.",
+          "Content you actively submit, such as skill packages, READMEs, release notes, namespace profiles, ratings, stars, and review comments.",
+          "Usage and security information, such as IP addresses, browser or device information, request logs, download records, login events, API token metadata, error logs, and audit logs."
+        ]
+      },
+      "s3": {
+        "title": "3. How We Use Information",
+        "paragraphs": [],
+        "bullets": [
+          "Providing login, session management, access control, device authorization, account security, and basic customer support.",
+          "Displaying public skill pages and supporting search, download, rating, starring, namespace collaboration, and governance workflows.",
+          "Performing reviews, rate limiting, risk control, troubleshooting, performance analysis, and product improvements.",
+          "Sending important notices about security, policy updates, or service availability when necessary."
+        ]
+      },
+      "s4": {
+        "title": "4. Public Information and Sharing",
+        "paragraphs": [
+          "Skills you publish as public, release notes, namespace names, public ratings, and some profile information may be shown to other users or visitors.",
+          "Except as necessary to provide hosting, authentication, monitoring, and compliance support, or to comply with legal requirements and protect the platform and its users, we do not sell your personal information.",
+          "In private deployments, data may also be accessed, processed, or retained by the deployment operator according to its internal governance and compliance requirements."
+        ],
+        "bullets": []
+      },
+      "s5": {
+        "title": "5. Data Retention",
+        "paragraphs": [
+          "We retain account profiles, skill metadata, review records, and security logs for as long as needed to fulfill business purposes, and may extend retention where required by law, audit, or compliance obligations.",
+          "Revoked API tokens become invalid, but related security and audit records may be retained. After a skill is deleted or retired, related information in backups, replicas, or logs may persist for a reasonable period."
+        ],
+        "bullets": []
+      },
+      "s6": {
+        "title": "6. Your Choices and Rights",
+        "paragraphs": [],
+        "bullets": [
+          "You can update your account profile, change your password, and revoke or recreate API tokens.",
+          "You can contact the instance administrators to request export, correction, or deletion of information related to you, though some records may not be immediately deletable due to security, audit, or compliance obligations.",
+          "For private deployments, privacy requests should generally be submitted first to that instance’s operator or administrators."
+        ]
+      },
+      "s7": {
+        "title": "7. Security Measures",
+        "paragraphs": [
+          "We take reasonable technical and organizational measures to protect data, such as access control, authentication, auditing, token management, and transport security.",
+          "However, no internet service can guarantee absolute security. Safeguard your credentials and notify the instance operator promptly when you notice abnormal logins, leakage, or abuse."
+        ],
+        "bullets": []
+      },
+      "s8": {
+        "title": "8. Policy Updates and Contact",
+        "paragraphs": [
+          "We may update this policy as product capabilities, legal requirements, or operating practices change. The new version will be displayed in appropriate places on the site, with the update time noted on the page.",
+          "For contact, reach the current instance operator through the documentation, community, support channels, or administrator contact information provided by the current instance."
+        ],
+        "bullets": []
+      }
     }
   }
 }

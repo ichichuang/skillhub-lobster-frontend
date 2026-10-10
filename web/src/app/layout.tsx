@@ -44,7 +44,8 @@ export function Layout() {
 
   useEffect(() => {
     syncDocumentLanguage(i18n.resolvedLanguage ?? i18n.language)
-  }, [i18n.language, i18n.resolvedLanguage])
+    document.title = t('nav.home')
+  }, [i18n.language, i18n.resolvedLanguage, t])
 
   useEffect(() => {
     const updateHeaderElevation = () => {
@@ -105,7 +106,7 @@ export function Layout() {
         >
           <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-2 sm:gap-6">
             <Link to="/" className="text-xl font-bold tracking-[0.02em] text-foreground">
-              技能中心
+              {t('nav.home')}
             </Link>
 
             <nav className="hidden items-center gap-8 text-[15px] font-normal text-foreground-secondary md:flex">

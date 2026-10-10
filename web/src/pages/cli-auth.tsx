@@ -23,7 +23,7 @@ function isValidRedirectUri(uri: string): boolean {
   }
 }
 
-export function decodeLabel(labelB64?: string, labelPlain?: string): string {
+export function decodeLabel(labelB64?: string, labelPlain?: string, fallbackLabel = 'CLI 令牌'): string {
   if (labelB64) {
     try {
       // Base64-URL decode
@@ -33,7 +33,7 @@ export function decodeLabel(labelB64?: string, labelPlain?: string): string {
       // Fallback to plain label
     }
   }
-  return labelPlain || 'CLI 令牌'
+  return labelPlain || fallbackLabel
 }
 
 export function resolveCliRegistryUrl(appBaseUrl: string | undefined, origin: string, basePath = BASE_PATH): string {
@@ -54,7 +54,7 @@ export function CliAuthPage() {
   const state = ORIGINAL_PARAMS.get('state')?.trim() || undefined
   const labelB64 = ORIGINAL_PARAMS.get('label_b64')?.trim() || undefined
   const labelPlain = ORIGINAL_PARAMS.get('label')?.trim() || undefined
-  const label = decodeLabel(labelB64, labelPlain)
+  const label = decodeLabel(labelB64, labelPlain, t('cliAuth.defaultTokenLabel'))
 
   // Debug: log search params and raw URL
   console.log('CLI Auth - Original search (from router.tsx):', ORIGINAL_URL_SEARCH)

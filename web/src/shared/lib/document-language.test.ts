@@ -20,6 +20,16 @@ describe('syncDocumentLanguage', () => {
     expect(document.getElementById('root')?.getAttribute('translate')).toBe('no')
   })
 
+  it('keeps Traditional Chinese regions on zh-TW', () => {
+    document.body.innerHTML = '<div id="root"></div>'
+    for (const language of ['zh-TW', 'zh-tw', 'zh-Hant']) {
+      syncDocumentLanguage(language)
+      expect(document.documentElement.lang).toBe('zh-TW')
+    }
+    syncDocumentLanguage('zh-CN')
+    expect(document.documentElement.lang).toBe('zh-CN')
+  })
+
   it('uses the primary subtag for other locales', () => {
     document.body.innerHTML = '<div id="root"></div>'
     syncDocumentLanguage('ru-RU')
